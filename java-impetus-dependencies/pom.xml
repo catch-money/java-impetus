@@ -4,18 +4,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version>
+        <version>3.3.0</version>
         <relativePath/>
     </parent>
 
     <groupId>io.github.jocker-cn</groupId>
     <artifactId>java-impetus-dependencies</artifactId>
-    <version>1.0.0-Beta</version>
+    <version>1.0.1-Beta</version>
+    <name>java-impetus-dependencies</name>
     <description>Java Impetus framework All dependency</description>
+    <packaging>pom</packaging>
 
     <properties>
         <java.version>21</java.version>

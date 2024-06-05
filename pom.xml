@@ -4,9 +4,20 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.jocker-cn</groupId>
+    <parent>
+        <groupId>io.github.jocker-cn</groupId>
+        <artifactId>java-impetus-dependencies</artifactId>
+        <version>1.0.1-Beta</version>
+        <relativePath/>
+    </parent>
+    
     <artifactId>java-impetus</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-Beta</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>java-impetus-jpa</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -14,5 +25,4 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <dependencies></dependencies>
 </project>
