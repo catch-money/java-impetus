@@ -68,7 +68,8 @@ public abstract class AbstractJpaQuery implements JpaQuery {
         // 字段where条件
         for (Map.Entry<String, FieldMetadata> fieldMetadataEntry : fieldsMetadataMap.entrySet()) {
             FieldMetadata fieldMetadata = fieldMetadataEntry.getValue();
-            predicates.add(fieldMetadata.buildQueryParam(criteriaBuilder, root, queryParams));
+            Object object = fieldMetadata.getInvoke().apply(queryParams);
+            predicates.add(fieldMetadata.buildQueryParam(criteriaBuilder, root, object));
         }
         criteriaQuery.where(predicates.toArray(new Predicate[]{}));
 
