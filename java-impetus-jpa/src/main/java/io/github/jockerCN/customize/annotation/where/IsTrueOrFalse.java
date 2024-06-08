@@ -8,6 +8,9 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Limit {
+public @interface IsTrueOrFalse {
 
+    String value() default "";
+
+    boolean not() default false;
 }

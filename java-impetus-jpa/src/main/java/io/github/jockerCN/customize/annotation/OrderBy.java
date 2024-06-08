@@ -1,5 +1,7 @@
 package io.github.jockerCN.customize.annotation;
 
+import io.github.jockerCN.customize.OderByCondition;
+
 import java.lang.annotation.*;
 
 /**
@@ -9,4 +11,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface OrderBy {
+
+    OderByCondition value() default OderByCondition.ASC;
+
 }

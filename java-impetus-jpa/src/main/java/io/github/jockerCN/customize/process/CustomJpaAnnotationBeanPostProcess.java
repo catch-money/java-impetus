@@ -1,7 +1,9 @@
 package io.github.jockerCN.customize.process;
 
 import io.github.jockerCN.customize.annotation.JpaQuery;
+import io.github.jockerCN.customize.util.JpaQueryEntityProcess;
 import jakarta.annotation.Nonnull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -13,6 +15,7 @@ import java.util.Objects;
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 @Component
+@Slf4j
 public class CustomJpaAnnotationBeanPostProcess implements BeanPostProcessor {
 
 
@@ -21,8 +24,10 @@ public class CustomJpaAnnotationBeanPostProcess implements BeanPostProcessor {
         JpaQuery jpaQuery = AnnotationUtils.findAnnotation(bean.getClass(), JpaQuery.class);
 
         if (Objects.nonNull(jpaQuery)) {
-            System.out.println("JpaQuery Bean:" + bean);
+            log.info("@JpaQuery Process {}", bean.getClass());
+            JpaQueryEntityProcess.createQueryParam(jpaQuery,bean);
         }
+
         return BeanPostProcessor.super.postProcessAfterInitialization(bean, beanName);
     }
 }

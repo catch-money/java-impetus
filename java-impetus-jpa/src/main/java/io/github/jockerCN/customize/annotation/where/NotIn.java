@@ -1,4 +1,4 @@
-package io.github.jockerCN.customize.annotation;
+package io.github.jockerCN.customize.annotation.where;
 
 import java.lang.annotation.*;
 
@@ -8,5 +8,6 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Columns {
+public @interface NotIn {
+    String value() default "";
 }

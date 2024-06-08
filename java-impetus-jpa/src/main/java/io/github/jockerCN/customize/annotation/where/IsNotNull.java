@@ -10,4 +10,5 @@ import java.lang.annotation.*;
 @Documented
 public @interface IsNotNull {
 
+    String value() default "";
 }
