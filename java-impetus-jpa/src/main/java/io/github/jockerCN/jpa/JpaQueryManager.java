@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-public interface JpaQuery {
+public interface JpaQueryManager{
 
     <T> T query(Object queryParam);
 

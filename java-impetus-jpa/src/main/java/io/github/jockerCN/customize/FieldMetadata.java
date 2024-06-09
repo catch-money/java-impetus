@@ -8,7 +8,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -24,7 +23,7 @@ import java.util.function.Function;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-@Setter
+
 @Getter
 public class FieldMetadata {
 
@@ -47,7 +46,7 @@ public class FieldMetadata {
 
     private Function<Object, QueryPredicate> predicate;
 
-    private Function<Object, Object> invoke;
+    private final Function<Object, Object> invoke;
 
     public FieldMetadata(Field field, Annotation annotationType) {
         this.fieldName = field.getName();
@@ -55,7 +54,7 @@ public class FieldMetadata {
         this.annotationType = annotationType;
         this.annotationValue = field.getName();
         ReflectionUtils.makeAccessible(field);
-        MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field,annotationType.annotationType().getName());
+        MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, annotationType.annotationType().getName());
         this.invoke = (object) -> {
             try {
                 return methodHandle.invoke(object);
@@ -81,7 +80,12 @@ public class FieldMetadata {
         if (object.getClass().isArray() && Array.getLength(object) == 0) {
             return Optional.empty();
         }
-        return Optional.ofNullable(predicate.apply(object).createPredicate(criteriaBuilder, root));
+        QueryPredicate queryPredicate = predicate.apply(object);
+        if (Objects.isNull(queryPredicate)) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(queryPredicate.createPredicate(criteriaBuilder, root));
+
     }
 
     public <T extends Comparable<? super T>> void betweenAndInit() {
@@ -157,5 +161,13 @@ public class FieldMetadata {
 
     public void notInInit() {
         setPredicate((Ob) -> QueryPredicate.notIn(getAnnotationValue(), TypeConvert.cast(Ob)));
+    }
+
+    private void setPredicate(Function<Object, QueryPredicate> predicate) {
+        this.predicate = predicate;
+    }
+
+    private void setAnnotationValue(String annotationValue) {
+        this.annotationValue = annotationValue;
     }
 }

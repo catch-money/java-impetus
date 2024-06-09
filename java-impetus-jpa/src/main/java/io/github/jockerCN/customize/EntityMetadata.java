@@ -43,6 +43,8 @@ public class EntityMetadata {
 
     private final Map<String, Function<Object, Object>> pageQueryMap;
 
+    private final Map<String, Function<Object, Object>> tmpPageQueryMap;
+
     private String pageFieldName;
 
     private String pageSizeFieldName;
@@ -54,14 +56,14 @@ public class EntityMetadata {
 
     public EntityMetadata(Class<?> entityType, Map<Field, Annotation> fieldsAnnotationMap) {
         this.entityType = entityType;
-        this.fieldsMetadataMap = new HashMap<>();
-        this.criteriaQueryMap = new HashMap<>();
-        this.pageQueryMap = new HashMap<>();
+        Map<String, FieldMetadata> tempfieldsMetadataMap = new HashMap<>();
+        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> tempCriteriaQueryMap = new HashMap<>();
+        this.tmpPageQueryMap = new HashMap<>();
         fieldsAnnotationMap.forEach((field, annotation) -> {
             ReflectionUtils.makeAccessible(field);
             Optional<FieldMetadata> fieldMetadata = JpaQueryEntityBuilder.buildFieldMetadata(field, annotation);
             if (fieldMetadata.isPresent()) {
-                fieldsMetadataMap.put(field.getName(), fieldMetadata.get());
+                tempfieldsMetadataMap.put(field.getName(), fieldMetadata.get());
                 return;
             }
 
@@ -80,7 +82,7 @@ public class EntityMetadata {
             if (consumerFunctionOption.isPresent()) {
                 Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
                 JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object> jpaConsumer = jpaConsumerFunction.apply(new FieldAnnotationWrapper(field, annotation, entityType));
-                criteriaQueryMap.put(field.getName(), jpaConsumer);
+                tempCriteriaQueryMap.put(field.getName(), jpaConsumer);
             }
 
             if (annotation.annotationType().equals(Page.class)) {
@@ -92,6 +94,9 @@ public class EntityMetadata {
             }
         });
 
+        this.fieldsMetadataMap = Map.copyOf(tempfieldsMetadataMap);
+        this.criteriaQueryMap = Map.copyOf(tempCriteriaQueryMap);
+        this.pageQueryMap = Map.copyOf(tmpPageQueryMap);
         // 同时使用了@Page和@PageSize
         if (StringUtils.hasLength(pageFieldName) && StringUtils.hasLength(pageSizeFieldName)) {
             enablePage = true;
@@ -103,7 +108,7 @@ public class EntityMetadata {
         validateFieldType(field, "@Page", Integer.class);
         pageFieldName = field.getName();
         MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@Page");
-        pageQueryMap.put("page", (obj) -> {
+        tmpPageQueryMap.put("page", (obj) -> {
             try {
                 return methodHandle.invoke(obj);
             } catch (Throwable e) {
@@ -121,7 +126,7 @@ public class EntityMetadata {
         validateFieldType(field, "@PageSize", Integer.class);
         pageSizeFieldName = field.getName();
         MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@PageSize");
-        pageQueryMap.put("pageSize", (obj) -> {
+        tmpPageQueryMap.put("pageSize", (obj) -> {
             try {
                 return methodHandle.invoke(obj);
             } catch (Throwable e) {

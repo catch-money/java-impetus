@@ -20,7 +20,7 @@ import java.util.Set;
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 
-public abstract class AbstractJpaQuery implements JpaQuery {
+public abstract class AbstractJpaQueryManager implements JpaQueryManager {
 
     @Autowired
     private EntityManager manager;
@@ -60,7 +60,7 @@ public abstract class AbstractJpaQuery implements JpaQuery {
     }
 
 
-    private TypedQuery<?> getTypeQuery(Object queryParams, Class<?> findType) {
+    protected TypedQuery<?> getTypeQuery(Object queryParams, Class<?> findType) {
         EntityMetadata metadata = JpaQueryEntityProcess.getEntityMetadata(queryParams);
 
         if (Objects.isNull(findType)) {

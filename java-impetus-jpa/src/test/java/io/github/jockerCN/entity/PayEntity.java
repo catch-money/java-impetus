@@ -1,4 +1,4 @@
-package io.github.jockerCN.param;
+package io.github.jockerCN.entity;
 
 import io.github.jockerCN.jpa.pojo.JpaPojo;
 import jakarta.persistence.Column;

@@ -1,9 +1,10 @@
 package io.github.jockerCN.jpa.pojo;
 
+import io.github.jockerCN.customize.OderByCondition;
+import io.github.jockerCN.customize.annotation.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -12,11 +13,15 @@ import java.util.Set;
 @Data
 public abstract class BaseQueryParam {
 
-    private int pageSize;
+    @PageSize
+    private Integer pageSize;
 
-    private int page;
+    @Page
+    private Integer page;
 
-    private int limitCount;
+    @Limit
+    private Integer limitCount;
+
 
     private LocalDateTime startTime;
 
@@ -24,15 +29,12 @@ public abstract class BaseQueryParam {
 
     private int deleted = 1;
 
-    private Set<String> queryColumns = new HashSet<>();
+    @Columns
+    private Set<String> queryColumns;
 
-    private Set<String> descColumns = new HashSet<>();
+    @OrderBy(OderByCondition.DESC)
+    private Set<String> descColumns;
 
-    private Set<String> ascColumns = new HashSet<>();
-
-
-    public boolean enablePage() {
-        return pageSize > 0 && page >= 0;
-    }
-
+    @OrderBy
+    private Set<String> ascColumns;
 }

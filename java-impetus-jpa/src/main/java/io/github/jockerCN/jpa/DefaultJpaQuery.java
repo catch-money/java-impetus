@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
  */
 
 @Repository
-public class DefaultJpaQuery extends AbstractJpaQuery {
+public class DefaultJpaQuery extends AbstractJpaQueryManager {
 }

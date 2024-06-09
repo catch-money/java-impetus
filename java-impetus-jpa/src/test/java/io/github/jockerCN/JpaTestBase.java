@@ -1,15 +1,27 @@
 package io.github.jockerCN;
 
+import io.github.jockerCN.query.likeAndNotLike.LikeAndNotLikeQueryTest;
+import io.github.jockerCN.query.limit.LimitQueryTest;
+import io.github.jockerCN.query.ltAndLeAndGtAndGe.LtAndLeAndGtAndGeQueryTest;
+import io.github.jockerCN.query.nullAndNotNull.NullAndNotNullQueryTest;
+import io.github.jockerCN.query.orderBy.OrderByQueryTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@Import(value = {
+        OrderByQueryTest.class,
+        LikeAndNotLikeQueryTest.class,
+        LimitQueryTest.class,
+        NullAndNotNullQueryTest.class,
+        LtAndLeAndGtAndGeQueryTest.class,
+})
 @SpringBootTest
 public class JpaTestBase {
-
     @DynamicPropertySource
     static void dynamicProperties(DynamicPropertyRegistry registry) {
         // 数据源配置

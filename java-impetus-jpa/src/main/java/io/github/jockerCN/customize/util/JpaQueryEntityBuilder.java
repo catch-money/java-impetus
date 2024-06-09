@@ -138,7 +138,7 @@ public abstract class JpaQueryEntityBuilder {
         criteriaQueryMap = Map.of(Columns.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
             Columns columns = (Columns) fieldWrapper.annotation();
-            validateFieldType(field, "@Columns", Collection.class);
+            validateFieldType(field, "@Columns", Set.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
             return (criteriaBuilder, criteriaQuery, obj) -> {
                 Set<String> o;
@@ -195,7 +195,7 @@ public abstract class JpaQueryEntityBuilder {
             };
         }), GroupBy.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
-            validateFieldType(field, "@GroupBy", Collection.class);
+            validateFieldType(field, "@GroupBy", Set.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
             return (criteriaBuilder, criteriaQuery, obj) -> {
                 Set<String> o;
@@ -224,7 +224,7 @@ public abstract class JpaQueryEntityBuilder {
         }), OrderBy.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
             OrderBy orderBy = (OrderBy) fieldWrapper.annotation();
-            validateFieldType(field, "@OrderBy", Collection.class);
+            validateFieldType(field, "@OrderBy", Set.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
             return (criteriaBuilder, criteriaQuery, obj) -> {
                 Set<String> o;
