@@ -1,8 +1,6 @@
 package io.github.jockerCN.jpa;
 
 import io.github.jockerCN.customize.EntityMetadata;
-import io.github.jockerCN.customize.FieldMetadata;
-import io.github.jockerCN.customize.JpaConsumer;
 import io.github.jockerCN.customize.util.JpaQueryEntityProcess;
 import io.github.jockerCN.customize.util.TypeConvert;
 import jakarta.persistence.EntityManager;
@@ -13,8 +11,10 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -27,87 +27,76 @@ public abstract class AbstractJpaQuery implements JpaQuery {
 
 
     @Override
-    public Object query(Object queryParam) {
-        return null;
+    public <T> T query(Object queryParam) {
+        TypedQuery<?> typeQuery = getTypeQuery(queryParam, null);
+        List<?> list = typeQuery.getResultList();
+        return TypeConvert.cast(!list.isEmpty() ? list.getFirst() : null);
     }
 
     @Override
     public <T> T query(Object queryParam, Class<T> findType) {
-        return null;
+        TypedQuery<?> typeQuery = getTypeQuery(queryParam, findType);
+        List<?> list = typeQuery.getResultList();
+        return TypeConvert.cast(!list.isEmpty() ? list.getFirst() : null);
     }
 
     @Override
-    public List<Object> queryList(Object queryParam) {
-        return List.of();
+    public <T> List<T> queryList(Object queryParam) {
+        TypedQuery<?> typeQuery = getTypeQuery(queryParam, null);
+        return TypeConvert.cast(typeQuery.getResultList());
     }
 
     @Override
     public <T> List<T> queryList(Object queryParam, Class<T> findType) {
-        return List.of();
+        TypedQuery<?> typeQuery = getTypeQuery(queryParam, findType);
+        return TypeConvert.cast(typeQuery.getResultList());
     }
 
     @Override
     public Long count(Object queryParams) {
-        return 0L;
+        TypedQuery<?> typeQuery = getQueryCount(queryParams);
+        Long singleResult = TypeConvert.cast(typeQuery.getSingleResult());
+        return Optional.ofNullable(singleResult).orElse(0L);
     }
 
 
-    private TypedQuery<?> getTypeQuery(Object queryParams) {
+    private TypedQuery<?> getTypeQuery(Object queryParams, Class<?> findType) {
         EntityMetadata metadata = JpaQueryEntityProcess.getEntityMetadata(queryParams);
 
+        if (Objects.isNull(findType)) {
+            findType = metadata.getEntityType();
+        }
         final CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
-        CriteriaQuery<?> criteriaQuery = criteriaBuilder.createQuery(metadata.getEntityType());
 
-        Root<?> root = criteriaQuery.from(metadata.getEntityType());
-        criteriaQuery.select(TypeConvert.cast(root));
-        //构建查询条件
-        final Map<String, FieldMetadata> fieldsMetadataMap = metadata.getFieldsMetadataMap();
-
-
-        Set<Predicate> predicates = new HashSet<>();
-        // 字段where条件
-        for (Map.Entry<String, FieldMetadata> fieldMetadataEntry : fieldsMetadataMap.entrySet()) {
-            FieldMetadata fieldMetadata = fieldMetadataEntry.getValue();
-            Object object = fieldMetadata.getInvoke().apply(queryParams);
-            predicates.add(fieldMetadata.buildQueryParam(criteriaBuilder, root, object));
-        }
-        criteriaQuery.where(predicates.toArray(new Predicate[]{}));
-
-        //其他条件
-        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> queryMap = metadata.getCriteriaQueryMap();
-
-        for (Map.Entry<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> jpaConsumerEntry : queryMap.entrySet()) {
-            JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object> entryValue = jpaConsumerEntry.getValue();
-            entryValue.accept(criteriaBuilder, criteriaQuery, queryParams);
-        }
+        CriteriaQuery<?> criteriaQuery = buildCriteriaQuery(criteriaBuilder, metadata, queryParams, findType);
 
         TypedQuery<?> typedQuery = manager.createQuery(criteriaQuery);
-        // limit 限制
-        if (Objects.nonNull(metadata.getLimit())) {
-            final Integer limit = metadata.getLimit().apply(queryParams);
-            if (Objects.nonNull(limit)) {
-                typedQuery.setMaxResults(limit);
-            }
-        }
 
-        if (metadata.isEnablePage()) {
-            Map<String, Function<Object, Integer>> pageQueryMap = metadata.getPageQueryMap();
-            Integer page = -1;
-            Integer pageSize = 0;
-            for (Map.Entry<String, Function<Object, Integer>> pageQueryEntry : pageQueryMap.entrySet()) {
-                if (pageQueryEntry.getKey().contains("page")) {
-                    page = pageQueryEntry.getValue().apply(queryParams);
-                }
-                if (pageQueryEntry.getKey().contains("pageSize")) {
-                    pageSize = pageQueryEntry.getValue().apply(queryParams);
-                }
-            }
-            if (pageSize > 0 && page >= 0) {
-                page = Math.max(page - 1, 0);
-                typedQuery.setFirstResult(page * pageSize);
-                typedQuery.setMaxResults(pageSize);
-            }
-        }
+        metadata.buildLimitAndPage(typedQuery, queryParams);
+
         return typedQuery;
     }
+
+    private TypedQuery<?> getQueryCount(Object queryParams) {
+        EntityMetadata metadata = JpaQueryEntityProcess.getEntityMetadata(queryParams);
+        final CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
+        CriteriaQuery<?> criteriaQuery = buildCriteriaQuery(criteriaBuilder, metadata, queryParams, Long.class);
+        Root<?> root = criteriaQuery.getRoots().iterator().next();
+        criteriaQuery.select(TypeConvert.cast(criteriaBuilder.count(root)));
+        return manager.createQuery(criteriaQuery);
+    }
+
+
+    private CriteriaQuery<?> buildCriteriaQuery(CriteriaBuilder criteriaBuilder, EntityMetadata metadata, Object queryParams, Class<?> findType) {
+        CriteriaQuery<?> criteriaQuery = criteriaBuilder.createQuery(findType);
+
+        Root<?> root = criteriaQuery.from(metadata.getEntityType());
+        // 字段where条件
+        Set<Predicate> predicates = metadata.buildPersistenceList(criteriaBuilder, root, queryParams);
+        criteriaQuery.where(predicates.toArray(new Predicate[]{}));
+        //其他条件
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, queryParams);
+        return criteriaQuery;
+    }
+
 }

@@ -2,6 +2,7 @@ package io.github.jockerCN.customize;
 
 import io.github.jockerCN.customize.annotation.QueryPredicate;
 import io.github.jockerCN.customize.exception.JpaProcessException;
+import io.github.jockerCN.customize.util.FieldValueLookup;
 import io.github.jockerCN.customize.util.TypeConvert;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -12,7 +13,12 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -47,23 +53,35 @@ public class FieldMetadata {
         this.fieldName = field.getName();
         this.type = field.getType();
         this.annotationType = annotationType;
+        this.annotationValue = field.getName();
         ReflectionUtils.makeAccessible(field);
+        MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field,annotationType.annotationType().getName());
         this.invoke = (object) -> {
             try {
-                return field.get(object);
-            } catch (IllegalAccessException e) {
+                return methodHandle.invoke(object);
+            } catch (Throwable e) {
                 String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
                         field.getName(),
                         field.getDeclaringClass().getName(),
-                        annotationType.annotationType().getName(),
+                        annotationType.annotationType(),
                         e.getMessage());
                 throw new JpaProcessException(errorMessage, e);
             }
         };
     }
 
-    public Predicate buildQueryParam(CriteriaBuilder criteriaBuilder, Root<?> root, Object o) {
-        return predicate.apply(o).createPredicate(criteriaBuilder, root);
+    public Optional<Predicate> buildQueryParam(CriteriaBuilder criteriaBuilder, Root<?> root, Object o) {
+        Object object = invoke.apply(o);
+        if (Objects.isNull(object)) {
+            return Optional.empty();
+        }
+        if (object instanceof Collection<?> collection && collection.isEmpty()) {
+            return Optional.empty();
+        }
+        if (object.getClass().isArray() && Array.getLength(object) == 0) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(predicate.apply(object).createPredicate(criteriaBuilder, root));
     }
 
     public <T extends Comparable<? super T>> void betweenAndInit() {
@@ -97,11 +115,23 @@ public class FieldMetadata {
     }
 
     public void isNotNullInit() {
-        setPredicate((Ob) -> QueryPredicate.isNotNull(getAnnotationValue()));
+        setPredicate((Ob) -> {
+            Boolean bool = TypeConvert.cast(Ob);
+            if (bool) {
+                return QueryPredicate.isNotNull(getAnnotationValue());
+            }
+            return null;
+        });
     }
 
     public void isNullInit() {
-        setPredicate((Ob) -> QueryPredicate.isNotNull(getAnnotationValue()));
+        setPredicate((Ob) -> {
+            Boolean bool = TypeConvert.cast(Ob);
+            if (bool) {
+                return QueryPredicate.isNull(getAnnotationValue());
+            }
+            return null;
+        });
     }
 
     public void leInit() {

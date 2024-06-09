@@ -1,0 +1,291 @@
+package io.github.jockerCN.customize.util;
+
+import io.github.jockerCN.customize.*;
+import io.github.jockerCN.customize.annotation.*;
+import io.github.jockerCN.customize.annotation.where.*;
+import io.github.jockerCN.customize.exception.JpaProcessException;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.*;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static io.github.jockerCN.customize.util.JpaQueryEntityProcess.validateFieldType;
+
+/**
+ * @author jokerCN <a href="https://github.com/jocker-cn">
+ */
+public abstract class JpaQueryEntityBuilder {
+
+
+    private static final Map<Class<? extends Annotation>, BiFunction<Field, Annotation, FieldMetadata>> fieldMetadataBuild;
+
+    private static final Map<Class<? extends Annotation>, BiFunction<Field, Object, Function<Object, Integer>>> limitQueryBuild;
+
+    private static final Map<Class<? extends Annotation>, Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>>> criteriaQueryMap;
+
+    static {
+        fieldMetadataBuild = Map.ofEntries(Map.entry(BetweenAnd.class, (field, annotation) -> {
+            BetweenAnd betweenAnd = (BetweenAnd) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            validateFieldType(field, "@BetweenAnd", QueryPair.class);
+            metadata.fillAnnotationValue(betweenAnd.value());
+            metadata.betweenAndInit();
+            return metadata;
+        }), Map.entry(Equals.class, (field, annotation) -> {
+            Equals equals = (Equals) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(equals.value());
+            metadata.equalsInit();
+            return metadata;
+        }), Map.entry(GE.class, (field, annotation) -> {
+            GE ge = (GE) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(ge.value());
+            metadata.geInit();
+            return metadata;
+        }), Map.entry(GT.class, (field, annotation) -> {
+            GT gt = (GT) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(gt.value());
+            metadata.gtInit();
+            return metadata;
+        }), Map.entry(IN.class, (field, annotation) -> {
+            IN in = (IN) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            validateFieldType(field, "@IN", Collection.class);
+            metadata.fillAnnotationValue(in.value());
+            metadata.inInit();
+            return metadata;
+        }), Map.entry(NotIn.class, (field, annotation) -> {
+            NotIn notIn = (NotIn) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            validateFieldType(field, "@NotIn", Collection.class);
+            metadata.fillAnnotationValue(notIn.value());
+            metadata.notInInit();
+            return metadata;
+        }), Map.entry(IsNotNull.class, (field, annotation) -> {
+            IsNotNull isNotNull = (IsNotNull) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            validateFieldType(field, "@IsNotNull", Boolean.class);
+            metadata.fillAnnotationValue(isNotNull.value());
+            metadata.isNotNullInit();
+            return metadata;
+        }), Map.entry(IsNull.class, (field, annotation) -> {
+            IsNull isNull = (IsNull) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            validateFieldType(field, "@IsNull", Boolean.class);
+            metadata.fillAnnotationValue(isNull.value());
+            metadata.isNullInit();
+            return metadata;
+        }), Map.entry(IsTrueOrFalse.class, (field, annotation) -> {
+            IsTrueOrFalse isTrueOrFalse = (IsTrueOrFalse) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            validateFieldType(field, "@IsTrueOrFalse", Boolean.class);
+            metadata.fillAnnotationValue(isTrueOrFalse.value());
+            metadata.isTrueOrFalseInit();
+            return metadata;
+        }), Map.entry(LE.class, (field, annotation) -> {
+            LE le = (LE) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(le.value());
+            metadata.leInit();
+            return metadata;
+        }), Map.entry(Like.class, (field, annotation) -> {
+            Like like = (Like) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(like.value());
+            metadata.likeInit();
+            return metadata;
+        }), Map.entry(LT.class, (field, annotation) -> {
+            LT lt = (LT) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(lt.value());
+            metadata.ltInit();
+            return metadata;
+        }), Map.entry(NotLike.class, (field, annotation) -> {
+            NotLike notLike = (NotLike) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(notLike.value());
+            metadata.notLikeInit();
+            return metadata;
+        }));
+
+
+        limitQueryBuild = Map.of(Limit.class, (field, obj) -> {
+            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@Limit");
+            return (ob) -> {
+                try {
+                    return (Integer) methodHandle.invoke(ob);
+                } catch (Throwable e) {
+                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                            field.getName(),
+                            field.getDeclaringClass().getName(),
+                            "@Limit",
+                            e.getMessage());
+                    throw new JpaProcessException(errorMessage, e);
+                }
+
+            };
+        });
+        criteriaQueryMap = Map.of(Columns.class, (fieldWrapper -> {
+            Field field = fieldWrapper.field();
+            Columns columns = (Columns) fieldWrapper.annotation();
+            validateFieldType(field, "@Columns", Collection.class);
+            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
+            return (criteriaBuilder, criteriaQuery, obj) -> {
+                Set<String> o;
+                try {
+                    o = TypeConvert.cast(methodHandle.invoke(obj));
+                } catch (Throwable e) {
+                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                            field.getName(),
+                            field.getDeclaringClass().getName(),
+                            "@Columns",
+                            e.getMessage());
+                    throw new JpaProcessException(errorMessage, e);
+                }
+                if (!CollectionUtils.isEmpty(o)) {
+                    Set<Root<?>> roots = criteriaQuery.getRoots();
+                    Root<?> root;
+                    if (roots.isEmpty()) {
+                        root = criteriaQuery.from(fieldWrapper.entityType());
+                    } else {
+                        root = roots.iterator().next();
+                    }
+                    Selection<?>[] array = o.stream().filter(StringUtils::hasLength).map(root::get).toArray(Selection[]::new);
+                    Class<?> findType = columns.value();
+                    if (findType == Tuple.class) {
+                        criteriaQuery.multiselect(array);
+                    } else if (findType == Object[].class) {
+                        CompoundSelection<Object[]> arrayed = criteriaBuilder.array(array);
+                        criteriaQuery.select(TypeConvert.cast(arrayed));
+                    } else {
+                        CompoundSelection<?> construct = criteriaBuilder.construct(fieldWrapper.entityType(), array);
+                        criteriaQuery.select(TypeConvert.cast(construct));
+                    }
+                }
+            };
+        }), Distinct.class, (fieldWrapper -> {
+            Field field = fieldWrapper.field();
+            validateFieldType(field, "@Distinct", Boolean.class);
+            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
+            return (criteriaBuilder, criteriaQuery, obj) -> {
+                Boolean o;
+                try {
+                    o = TypeConvert.cast(methodHandle.invoke(obj));
+                } catch (Throwable e) {
+                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                            field.getName(),
+                            field.getDeclaringClass().getName(),
+                            "@Distinct",
+                            e.getMessage());
+                    throw new JpaProcessException(errorMessage, e);
+                }
+                if (Objects.nonNull(o)) {
+                    criteriaQuery.distinct(o);
+                }
+            };
+        }), GroupBy.class, (fieldWrapper -> {
+            Field field = fieldWrapper.field();
+            validateFieldType(field, "@GroupBy", Collection.class);
+            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
+            return (criteriaBuilder, criteriaQuery, obj) -> {
+                Set<String> o;
+                try {
+                    o = TypeConvert.cast(methodHandle.invoke(obj));
+                } catch (Throwable e) {
+                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                            field.getName(),
+                            field.getDeclaringClass().getName(),
+                            "@Distinct",
+                            e.getMessage());
+                    throw new JpaProcessException(errorMessage, e);
+                }
+                Set<Root<?>> roots = criteriaQuery.getRoots();
+                Root<?> root;
+                if (roots.isEmpty()) {
+                    root = criteriaQuery.from(fieldWrapper.entityType());
+                } else {
+                    root = roots.iterator().next();
+                }
+                if (!CollectionUtils.isEmpty(o)) {
+                    List<Expression<?>> collect = o.stream().filter(StringUtils::hasLength).map(root::get).collect(Collectors.toList());
+                    criteriaQuery.groupBy(collect);
+                }
+            };
+        }), OrderBy.class, (fieldWrapper -> {
+            Field field = fieldWrapper.field();
+            OrderBy orderBy = (OrderBy) fieldWrapper.annotation();
+            validateFieldType(field, "@OrderBy", Collection.class);
+            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
+            return (criteriaBuilder, criteriaQuery, obj) -> {
+                Set<String> o;
+                try {
+                    o = TypeConvert.cast(methodHandle.invoke(obj));
+                } catch (Throwable e) {
+                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                            field.getName(),
+                            field.getDeclaringClass().getName(),
+                            "@Distinct",
+                            e.getMessage());
+                    throw new JpaProcessException(errorMessage, e);
+                }
+                if (!CollectionUtils.isEmpty(o)) {
+                    Set<Root<?>> roots = criteriaQuery.getRoots();
+                    Root<?> root;
+                    if (roots.isEmpty()) {
+                        root = criteriaQuery.from(fieldWrapper.entityType());
+                    } else {
+                        root = roots.iterator().next();
+                    }
+                    OderByCondition condition = orderBy.value();
+                    List<Order> orders = new ArrayList<>();
+                    switch (condition) {
+                        case ASC ->
+                                orders = o.stream().filter(StringUtils::hasLength).map((k) -> criteriaBuilder.asc(root.get(k))).collect(Collectors.toList());
+                        case DESC ->
+                                orders = o.stream().filter(StringUtils::hasLength).map((k) -> criteriaBuilder.desc(root.get(k))).collect(Collectors.toList());
+                    }
+                    if (!CollectionUtils.isEmpty(orders)) {
+                        criteriaQuery.orderBy(orders);
+                    }
+                }
+            };
+        }));
+
+    }
+
+
+    public static Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>>> buildCriteriaQueryMap(Annotation annotation) {
+        if (!criteriaQueryMap.containsKey(annotation.annotationType())) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(criteriaQueryMap.get(annotation.annotationType()));
+    }
+
+    public static Optional<BiFunction<Field, Object, Function<Object, Integer>>> buildLimitQuery(Annotation annotation) {
+        if (!limitQueryBuild.containsKey(annotation.annotationType())) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(limitQueryBuild.get(annotation.annotationType()));
+    }
+
+    public static boolean isFieldMetadata(Annotation annotation) {
+        return fieldMetadataBuild.containsKey(annotation.annotationType());
+    }
+
+    public static Optional<FieldMetadata> buildFieldMetadata(Field field, Annotation annotation) {
+        if (isFieldMetadata(annotation)) {
+            return Optional.ofNullable(fieldMetadataBuild.get(annotation.annotationType()).apply(field, annotation));
+        }
+        return Optional.empty();
+    }
+}

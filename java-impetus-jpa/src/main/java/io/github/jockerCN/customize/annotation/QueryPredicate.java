@@ -1,14 +1,11 @@
 package io.github.jockerCN.customize.annotation;
 
-import io.github.jockerCN.customize.OderByCondition;
 import io.github.jockerCN.customize.annotation.where.*;
-import jakarta.persistence.criteria.*;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -164,44 +161,5 @@ public interface QueryPredicate {
      */
     static QueryPredicate isTrueOrFalse(String property, boolean trueOrFalse) {
         return (cb, root) -> trueOrFalse ? cb.isTrue(root.get(property)) : cb.isFalse(root.get(property));
-    }
-
-    /**
-     * 实现{@link OrderBy}
-     *
-     * @return CriteriaQuery
-     */
-    static List<Order> orderBy(CriteriaBuilder cb, Root<?> root, Collection<String> collection, OderByCondition condition) {
-        return switch (condition) {
-            case ASC ->
-                    collection.stream().filter(StringUtils::hasLength).map((k) -> cb.asc(root.get(k))).collect(Collectors.toList());
-            case DESC ->
-                    collection.stream().filter(StringUtils::hasLength).map((k) -> cb.desc(root.get(k))).collect(Collectors.toList());
-        };
-    }
-
-
-    /**
-     * 实现{@link GroupBy}
-     *
-     * @param criteriaQuery CriteriaQuery
-     * @return CriteriaQuery
-     */
-    static CriteriaQuery<?> groupBy(CriteriaQuery<?> criteriaQuery,Root<?> root,Collection<String> collection) {
-        List<Expression<?>> collect = collection.stream().filter(StringUtils::hasLength).map(root::get).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(collect)) {
-            return criteriaQuery.groupBy(collect);
-        }
-        return criteriaQuery;
-    }
-
-    /**
-     * 实现{@link Distinct}
-     *
-     * @param criteriaQuery CriteriaQuery
-     * @return CriteriaQuery
-     */
-    static CriteriaQuery<?> distinct(CriteriaQuery<?> criteriaQuery) {
-        return criteriaQuery.distinct(true);
     }
 }

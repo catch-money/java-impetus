@@ -1,22 +1,27 @@
 package io.github.jockerCN.customize;
 
-import io.github.jockerCN.customize.annotation.*;
-import io.github.jockerCN.customize.annotation.where.*;
+import io.github.jockerCN.customize.annotation.Page;
+import io.github.jockerCN.customize.annotation.PageSize;
 import io.github.jockerCN.customize.exception.JpaProcessException;
-import io.github.jockerCN.customize.util.TypeConvert;
-import jakarta.persistence.criteria.*;
+import io.github.jockerCN.customize.util.FieldValueLookup;
+import io.github.jockerCN.customize.util.JpaQueryEntityBuilder;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.Getter;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static io.github.jockerCN.customize.util.JpaQueryEntityProcess.validateFieldType;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -36,7 +41,7 @@ public class EntityMetadata {
 
     private final Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> criteriaQueryMap;
 
-    private final Map<String, Function<Object, Integer>> pageQueryMap;
+    private final Map<String, Function<Object, Object>> pageQueryMap;
 
     private String pageFieldName;
 
@@ -47,337 +52,142 @@ public class EntityMetadata {
     private Function<Object, Integer> limit;
 
 
-
     public EntityMetadata(Class<?> entityType, Map<Field, Annotation> fieldsAnnotationMap) {
         this.entityType = entityType;
         this.fieldsMetadataMap = new HashMap<>();
         this.criteriaQueryMap = new HashMap<>();
         this.pageQueryMap = new HashMap<>();
         fieldsAnnotationMap.forEach((field, annotation) -> {
-            FieldMetadata metadata = new FieldMetadata(field, annotation);
-            fieldsMetadataMap.put(field.getName(), metadata);
-            switch (annotation) {
-                case BetweenAnd betweenAnd -> {
-                    betweenAndTypeCheck(field);
-                    metadata.fillAnnotationValue(betweenAnd.value());
-                    metadata.betweenAndInit();
-                }
-                case Equals equals -> {
-                    metadata.fillAnnotationValue(equals.value());
-                    metadata.equalsInit();
-                }
-                case GE ge -> {
-                    metadata.fillAnnotationValue(ge.value());
-                    metadata.geInit();
-                }
-                case GT gt -> {
-                    metadata.fillAnnotationValue(gt.value());
-                    metadata.gtInit();
-                }
-                case IN in -> {
-                    InTypeCheck(field);
-                    metadata.fillAnnotationValue(in.value());
-                    metadata.inInit();
-                }
-                case NotIn notIn -> {
-                    InTypeCheck(field);
-                    metadata.fillAnnotationValue(notIn.value());
-                    metadata.notInInit();
-                }
-                case IsNotNull isNotNull -> {
-                    metadata.fillAnnotationValue(isNotNull.value());
-                    metadata.isNotNullInit();
-                }
-                case IsNull isNull -> {
-                    metadata.fillAnnotationValue(isNull.value());
-                    metadata.isNullInit();
-                }
-                case IsTrueOrFalse isTrueOrFalse -> {
-                    metadata.fillAnnotationValue(isTrueOrFalse.value());
-                    metadata.isTrueOrFalseInit();
-                }
-                case LE le -> {
-                    metadata.fillAnnotationValue(le.value());
-                    metadata.leInit();
-                }
-                case Like like -> {
-                    metadata.fillAnnotationValue(like.value());
-                    metadata.likeInit();
-                }
-                case LT lt -> {
-                    metadata.fillAnnotationValue(lt.value());
-                    metadata.ltInit();
-                }
-                case NotLike notLike -> {
-                    metadata.fillAnnotationValue(notLike.value());
-                    metadata.notLikeInit();
-                }
-                case Limit ignored -> {
-                    integerTypeCheck(field, "@Limit");
-                    configLimitQuery(field);
-                    fieldsMetadataMap.remove(field.getName());
-                }
-                case Page ignored -> {
-                    integerTypeCheck(field, "@Page");
-                    pageFieldName = field.getName();
-                    pageQueryMap.put("page", (obj) -> {
-                        try {
-                            return (Integer) field.get(obj);
-                        } catch (IllegalAccessException e) {
-                            String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                                    field.getName(),
-                                    field.getDeclaringClass().getName(),
-                                    "@Page",
-                                    e.getMessage());
-                            throw new JpaProcessException(errorMessage, e);
-                        }
-                    });
-                    fieldsMetadataMap.remove(field.getName());
-                }
-                case PageSize ignored -> {
-                    integerTypeCheck(field, "@PageSize");
-                    pageSizeFieldName = field.getName();
-                    pageQueryMap.put("pageSize", (obj) -> {
-                        try {
-                            return (Integer) field.get(obj);
-                        } catch (IllegalAccessException e) {
-                            String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                                    field.getName(),
-                                    field.getDeclaringClass().getName(),
-                                    "@PageSize",
-                                    e.getMessage());
-                            throw new JpaProcessException(errorMessage, e);
-                        }
-                    });
-                    fieldsMetadataMap.remove(field.getName());
-                }
-                case Columns ignored -> {
-                    setTypeCheck(field, "@Columns");
-                    configColumnsQuery(field);
-                    fieldsMetadataMap.remove(field.getName());
-                }
-                case Distinct ignored -> {
-                    boolTypeCheck(field, "@Distinct");
-                    configDistinctQuery(field);
-                    fieldsMetadataMap.remove(field.getName());
-                }
-                case GroupBy ignored -> {
-                    setTypeCheck(field,"@GroupBy");
-                    configGroupByQuery(field);
-                    fieldsMetadataMap.remove(field.getName());
-                }
-                case OrderBy groupBy -> {
-                    setTypeCheck(field,"@OrderBy");
-                    configOrderByQuery(field,groupBy);
-                    fieldsMetadataMap.remove(field.getName());
-                }
-                case Having having -> {
+            ReflectionUtils.makeAccessible(field);
+            Optional<FieldMetadata> fieldMetadata = JpaQueryEntityBuilder.buildFieldMetadata(field, annotation);
+            if (fieldMetadata.isPresent()) {
+                fieldsMetadataMap.put(field.getName(), fieldMetadata.get());
+                return;
+            }
 
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + annotation);
+
+            Optional<BiFunction<Field, Object, Function<Object, Integer>>> biFunction = JpaQueryEntityBuilder.buildLimitQuery(annotation);
+
+            if (biFunction.isPresent()) {
+                BiFunction<Field, Object, Function<Object, Integer>> function = biFunction.get();
+                limit = function.apply(field, null);
+                return;
+            }
+
+
+            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation);
+
+            if (consumerFunctionOption.isPresent()) {
+                Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
+                JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object> jpaConsumer = jpaConsumerFunction.apply(new FieldAnnotationWrapper(field, annotation, entityType));
+                criteriaQueryMap.put(field.getName(), jpaConsumer);
+            }
+
+            if (annotation.annotationType().equals(Page.class)) {
+                processPageAnnotation(field);
+            }
+
+            if (annotation.annotationType().equals(PageSize.class)) {
+                processPageSizeAnnotation(field);
             }
         });
+
         // 同时使用了@Page和@PageSize
         if (StringUtils.hasLength(pageFieldName) && StringUtils.hasLength(pageSizeFieldName)) {
             enablePage = true;
         }
-
     }
 
-    private void configOrderByQuery(Field field, OrderBy groupBy) {
-        criteriaQueryMap.put(field.getName(), (criteriaBuilder,criteriaQuery, obj) -> {
-            ReflectionUtils.makeAccessible(field);
-            Set<String> o;
+
+    private void processPageAnnotation(Field field) {
+        validateFieldType(field, "@Page", Integer.class);
+        pageFieldName = field.getName();
+        MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@Page");
+        pageQueryMap.put("page", (obj) -> {
             try {
-                o = TypeConvert.cast(field.get(obj));
-            } catch (IllegalAccessException e) {
+                return methodHandle.invoke(obj);
+            } catch (Throwable e) {
                 String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
                         field.getName(),
                         field.getDeclaringClass().getName(),
-                        "@Distinct",
+                        "@Page",
                         e.getMessage());
                 throw new JpaProcessException(errorMessage, e);
             }
-            Root<?> root = criteriaQuery.from(entityType);
-            if (!CollectionUtils.isEmpty(o)) {
-                OderByCondition condition = groupBy.value();
-                List<Order> orders = new ArrayList<>();
-                switch (condition) {
-                    case ASC ->
-                            orders =  o.stream().filter(StringUtils::hasLength).map((k) -> criteriaBuilder.asc(root.get(k))).collect(Collectors.toList());
-                    case DESC ->
-                            orders=  o.stream().filter(StringUtils::hasLength).map((k) -> criteriaBuilder.desc(root.get(k))).collect(Collectors.toList());
-                };
-                if (!CollectionUtils.isEmpty(orders)) {
-                    criteriaQuery.orderBy(orders);
+        });
+    }
+
+    private void processPageSizeAnnotation(Field field) {
+        validateFieldType(field, "@PageSize", Integer.class);
+        pageSizeFieldName = field.getName();
+        MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@PageSize");
+        pageQueryMap.put("pageSize", (obj) -> {
+            try {
+                return methodHandle.invoke(obj);
+            } catch (Throwable e) {
+                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                        field.getName(),
+                        field.getDeclaringClass().getName(),
+                        "@PageSize",
+                        e.getMessage());
+                throw new JpaProcessException(errorMessage, e);
+            }
+        });
+    }
+
+    public Set<Predicate> buildPersistenceList(CriteriaBuilder criteriaBuilder, Root<?> root, Object queryParams) {
+        Set<Predicate> predicates = new HashSet<>();
+        for (Map.Entry<String, FieldMetadata> fieldMetadataEntry : fieldsMetadataMap.entrySet()) {
+            FieldMetadata fieldMetadata = fieldMetadataEntry.getValue();
+            Optional<Predicate> predicate = fieldMetadata.buildQueryParam(criteriaBuilder, root, queryParams);
+            predicate.ifPresent(predicates::add);
+        }
+        return predicates;
+    }
+
+
+    public void buildCriteriaQuery(CriteriaBuilder criteriaBuilder, CriteriaQuery<?> criteriaQuery, Object queryParams) {
+        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> queryMap = getCriteriaQueryMap();
+        for (Map.Entry<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> jpaConsumerEntry : queryMap.entrySet()) {
+            JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object> entryValue = jpaConsumerEntry.getValue();
+            entryValue.accept(criteriaBuilder, criteriaQuery, queryParams);
+        }
+    }
+
+
+    public void buildLimitAndPage(TypedQuery<?> typedQuery, Object queryParams) {
+        if (Objects.nonNull(getLimit())) {
+            final Integer limit = getLimit().apply(queryParams);
+            if (Objects.nonNull(limit)) {
+                typedQuery.setMaxResults(limit);
+            }
+        }
+
+        if (isEnablePage()) {
+            Map<String, Function<Object, Object>> pageQueryMap = getPageQueryMap();
+            int page = -1;
+            int pageSize = 0;
+            for (Map.Entry<String, Function<Object, Object>> pageQueryEntry : pageQueryMap.entrySet()) {
+                if (pageQueryEntry.getKey().contains("page")) {
+                    Object object = pageQueryEntry.getValue().apply(queryParams);
+                    if (Objects.nonNull(object)) {
+                        page = (Integer) object;
+                    }
+                }
+                if (pageQueryEntry.getKey().contains("pageSize")) {
+                    Object object = pageQueryEntry.getValue().apply(queryParams);
+                    if (Objects.nonNull(object)) {
+                        pageSize = (Integer) object;
+                    }
                 }
             }
-        });
-    }
-
-    private void configGroupByQuery(Field field) {
-        criteriaQueryMap.put(field.getName(), (criteriaBuilder,criteriaQuery, obj) -> {
-            ReflectionUtils.makeAccessible(field);
-            Set<String> o;
-            try {
-                o = TypeConvert.cast(field.get(obj));
-            } catch (IllegalAccessException e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        "@Distinct",
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-            Root<?> root = criteriaQuery.from(entityType);
-            if (!CollectionUtils.isEmpty(o)) {
-                List<Expression<?>> collect = o.stream().filter(StringUtils::hasLength).map(root::get).collect(Collectors.toList());
-                criteriaQuery.groupBy(collect);
-            }
-        });
-    }
-
-    private void configDistinctQuery(Field field) {
-        criteriaQueryMap.put(field.getName(), (criteriaBuilder,criteriaQuery, obj) -> {
-            ReflectionUtils.makeAccessible(field);
-            Boolean o;
-            try {
-                o = TypeConvert.cast(field.get(obj));
-            } catch (IllegalAccessException e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        "@Distinct",
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-            if (Objects.nonNull(o)) {
-                criteriaQuery.distinct(o);
-            }
-        });
-    }
-
-    private void boolTypeCheck(Field field, String annotation) {
-        Class<?> fieldType = field.getType();
-        if (fieldType != boolean.class && fieldType != Boolean.class) {
-            // Constructing the error message
-            String errorMessage = String.format("Field [%s] in class [%s] annotated with [%s] must be of type boolean or Boolean.",
-                    field.getName(),
-                    field.getDeclaringClass().getName(),
-                    annotation);
-
-            // Throwing an exception with the message
-            throw new IllegalArgumentException(errorMessage);
-        }
-    }
-
-    private void configColumnsQuery(Field field) {
-        criteriaQueryMap.put(field.getName(), (criteriaBuilder,criteriaQuery, obj) -> {
-            ReflectionUtils.makeAccessible(field);
-            Set<String> o;
-            try {
-                o = TypeConvert.cast(field.get(obj));
-            } catch (IllegalAccessException e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        "@Columns",
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-            Root<?> root = criteriaQuery.from(entityType);
-            Selection<?>[] array = o.stream().map(name -> root.get(name).alias(name)).toArray(Selection[]::new);
-            criteriaQuery.multiselect(array);
-        });
-    }
-
-
-    private void configLimitQuery(Field field) {
-        limit = (obj) -> {
-            try {
-                return (Integer) field.get(obj);
-            } catch (IllegalAccessException e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        "@Limit",
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-        };
-       /* criteriaQueryMap.put(field.getName(), (criteriaBuilder,criteriaQuery, typedQuery, obj) -> {
-            ReflectionUtils.makeAccessible(field);
-            Object o;
-            try {
-                o = field.get(obj);
-            } catch (IllegalAccessException e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        "@Limit",
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-            Integer limitCount = (Integer) o;
-            if (limitCount > 0) {
-                typedQuery.setMaxResults(limitCount);
-            }
-        });*/
-    }
-
-    private void setTypeCheck(Field field, String annotation) {
-        Class<?> fieldType = field.getType();
-        // Check if the field is of type Set
-        if (Set.class.isAssignableFrom(fieldType)) {
-            // Check if the generic type is String
-            Type genericType = field.getGenericType();
-            if (genericType instanceof ParameterizedType pType) {
-                Type[] argTypes = pType.getActualTypeArguments();
-                if (argTypes.length == 1 && argTypes[0] == String.class) {
-                    return;
-                }
+            if (pageSize > 0 && page >= 0) {
+                page = Math.max(page - 1, 0);
+                typedQuery.setFirstResult(page * pageSize);
+                typedQuery.setMaxResults(pageSize);
             }
         }
-
-        String errorMessage = String.format("Field [%s] in class [%s] annotated with [%s] must be of type Set<String>.",
-                field.getName(),
-                field.getDeclaringClass().getName(),
-                annotation);
-
-        throw new JpaProcessException(errorMessage);
     }
 
-    private void integerTypeCheck(Field field, String annotation) {
-        Class<?> fieldType = field.getType();
-        if (fieldType != int.class && fieldType != Integer.class) {
-            // Constructing the error message
-            String errorMessage = String.format("Field [%s] in class [%s] annotated with [%s] must be of type int or Integer.",
-                    field.getName(),
-                    field.getDeclaringClass().getName(),
-                    annotation);
 
-            // Throwing an exception with the message
-            throw new IllegalArgumentException(errorMessage);
-        }
-    }
-
-    private void InTypeCheck(Field field) {
-        final Class<?> fieldType = field.getType();
-        if (!Collection.class.isAssignableFrom(fieldType)) {
-            String errorMessage = String.format("Field [%s] in class [%s] with annotation [%s] must be a java.util.Collection type.",
-                    field.getName(),
-                    field.getDeclaringClass().getName(),
-                    "@IN");
-            throw new JpaProcessException(errorMessage);
-        }
-    }
-
-    private void betweenAndTypeCheck(Field field) {
-        final Class<?> fieldType = field.getType();
-        // 检查字段类型是否是记录类型
-        if (!(fieldType.isRecord() && "io.github.jockerCN.customize.Pair".equals(fieldType.getName()))) {
-            throw new JpaProcessException("Field " + field.getName() + " in class " + fieldType.getDeclaringClass().getName() +
-                    " must be of type io.github.jockerCN.customize.Pair to use @BetweenAnd");
-        }
-    }
 }

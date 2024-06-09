@@ -7,11 +7,11 @@ import java.util.List;
  */
 public interface JpaQuery {
 
-    Object query(Object queryParam);
+    <T> T query(Object queryParam);
 
     <T> T query(Object queryParam, Class<T> findType);
 
-    List<Object> queryList(Object queryParam);
+    <T> List<T> queryList(Object queryParam);
 
     <T> List<T> queryList(Object queryParam, Class<T> findType);
 
