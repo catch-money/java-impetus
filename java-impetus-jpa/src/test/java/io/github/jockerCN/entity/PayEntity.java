@@ -50,6 +50,9 @@ public class PayEntity extends JpaPojo {
     @Column(name = "payment_status", nullable = false)
     private Integer paymentStatus;
 
+    @Column(name = "active", nullable = false)
+    private boolean active;
+
     @Column(name = "payment_time", nullable = false)
     private LocalDateTime paymentTime;
 
@@ -64,6 +67,10 @@ public class PayEntity extends JpaPojo {
 
     @Column(name = "trade_type", nullable = false)
     private String tradeType;
+
+    public PayEntity(String customerName) {
+        this.customerName = customerName;
+    }
 
     public static final String _payId = "payId";
     public static final String _orderId = "orderId";

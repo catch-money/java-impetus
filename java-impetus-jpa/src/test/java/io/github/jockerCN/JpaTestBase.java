@@ -1,11 +1,20 @@
 package io.github.jockerCN;
 
+import io.github.jockerCN.query.betweenAnd.BetweenAndQueryTest;
+import io.github.jockerCN.query.distinct.DistinctQueryTest;
+import io.github.jockerCN.query.equals.EqualsQueryTest;
+import io.github.jockerCN.query.groupBy.GroupByQueryTest;
+import io.github.jockerCN.query.inAndNotIn.InAndNotInQueryTest;
+import io.github.jockerCN.query.isTrueOrFalse.IsTrueOrFalseQueryTest;
 import io.github.jockerCN.query.likeAndNotLike.LikeAndNotLikeQueryTest;
 import io.github.jockerCN.query.limit.LimitQueryTest;
 import io.github.jockerCN.query.ltAndLeAndGtAndGe.LtAndLeAndGtAndGeQueryTest;
 import io.github.jockerCN.query.nullAndNotNull.NullAndNotNullQueryTest;
 import io.github.jockerCN.query.orderBy.OrderByQueryTest;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -19,9 +28,16 @@ import org.springframework.test.context.DynamicPropertySource;
         LimitQueryTest.class,
         NullAndNotNullQueryTest.class,
         LtAndLeAndGtAndGeQueryTest.class,
+        IsTrueOrFalseQueryTest.class,
+        InAndNotInQueryTest.class,
+        GroupByQueryTest.class,
+        EqualsQueryTest.class,
+        DistinctQueryTest.class,
+        BetweenAndQueryTest.class,
 })
-@SpringBootTest
+@SpringBootTest(classes = JpaTestBase.JpaTestConfig.class)
 public class JpaTestBase {
+
     @DynamicPropertySource
     static void dynamicProperties(DynamicPropertyRegistry registry) {
         // 数据源配置
@@ -49,5 +65,22 @@ public class JpaTestBase {
         registry.add("spring.jpa.properties.hibernate.query.interpretation_cache_max_size", () -> "64");
         registry.add("spring.jpa.properties.hibernate.query.interpretation_cache_concurrency_level", () -> "4"); // 最多4个线程同时访问缓存
         registry.add("spring.jpa.properties.hibernate.default_batch_fetch_size", () -> "5"); // 批量抓取大小 抓取5个关联实体
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
+
+
+        // 数据库执行
+        registry.add("spring.sql.init.platform", () -> "mysql");
+        registry.add("spring.sql.init.schema-locations", () -> "classpath:sql/schema.sql");
+        registry.add("spring.sql.init.mode", () -> "always");
+        registry.add("spring.sql.init.data-locations", () -> "classpath:sql/data.sql");
+        registry.add("spring.threads.virtual.enabled", () -> "true");
+
+    }
+
+    @Configuration
+    @EnableAutoConfiguration
+    @ComponentScan(basePackages = "io.github.jockerCN")
+    static class JpaTestConfig{
+
     }
 }
