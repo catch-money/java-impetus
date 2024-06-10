@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>java-impetus-jpa</artifactId>
+    <version>1.0.0-Beta</version>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -37,10 +38,11 @@
             <scope>test</scope>
         </dependency>
 
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
+
     </dependencies>
 </project>
