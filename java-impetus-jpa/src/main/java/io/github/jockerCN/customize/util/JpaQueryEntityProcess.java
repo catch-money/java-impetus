@@ -32,10 +32,6 @@ public abstract class JpaQueryEntityProcess {
 
         Map<Field, Annotation> annotationsOnFields = JpaAnnotationUtils.validateAnnotationsOnFields(jpaQueryClass);
 
-        if (CollectionUtils.isEmpty(annotationsOnFields)) {
-            return;
-        }
-
         entityMetadata.put(jpaQueryClass, new EntityMetadata(jpaQuery.value(),annotationsOnFields));
     }
 
