@@ -4,7 +4,6 @@ import io.github.jockerCN.customize.EntityMetadata;
 import io.github.jockerCN.customize.annotation.JpaQuery;
 import io.github.jockerCN.customize.exception.JpaProcessException;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.CollectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
