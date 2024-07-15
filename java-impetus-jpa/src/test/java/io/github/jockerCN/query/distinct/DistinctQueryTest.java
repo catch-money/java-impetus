@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -31,6 +32,11 @@ public class DistinctQueryTest implements QueryAnnotationTest {
         param.setCol(Set.of("orderPrice"));
         param.setDistinct(true);
         List<Tuple> queryList = jpaQueryManager.queryList(param, Tuple.class);
+
+        for (Tuple tuple : queryList) {
+            Object object = tuple.get("orderPrice");
+            asserts(Objects.nonNull(object), "@Distinct");
+        }
 
         asserts(queryList.size() == 2, "@Distinct");
     }

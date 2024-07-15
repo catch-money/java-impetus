@@ -160,7 +160,7 @@ public abstract class JpaQueryEntityBuilder {
                     } else {
                         root = roots.iterator().next();
                     }
-                    Selection<?>[] array = o.stream().filter(StringUtils::hasLength).map(root::get).toArray(Selection[]::new);
+                    Selection<?>[] array = o.stream().filter(StringUtils::hasLength).map(name -> root.get(name).alias(name)).toArray(Selection[]::new);
                     Class<?> findType = columns.value();
                     if (findType == Tuple.class) {
                         criteriaQuery.multiselect(array);
