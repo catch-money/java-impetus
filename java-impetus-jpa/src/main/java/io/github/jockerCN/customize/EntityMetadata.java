@@ -173,13 +173,13 @@ public class EntityMetadata {
             int page = -1;
             int pageSize = 0;
             for (Map.Entry<String, Function<Object, Object>> pageQueryEntry : pageQueryMap.entrySet()) {
-                if (pageQueryEntry.getKey().contains("page")) {
+                if (pageQueryEntry.getKey().equalsIgnoreCase("page")) {
                     Object object = pageQueryEntry.getValue().apply(queryParams);
                     if (Objects.nonNull(object)) {
                         page = (Integer) object;
                     }
                 }
-                if (pageQueryEntry.getKey().contains("pageSize")) {
+                if (pageQueryEntry.getKey().equalsIgnoreCase("pageSize")) {
                     Object object = pageQueryEntry.getValue().apply(queryParams);
                     if (Objects.nonNull(object)) {
                         pageSize = (Integer) object;
@@ -187,7 +187,6 @@ public class EntityMetadata {
                 }
             }
             if (pageSize > 0 && page >= 0) {
-                page = Math.max(page - 1, 0);
                 typedQuery.setFirstResult(page * pageSize);
                 typedQuery.setMaxResults(pageSize);
             }
