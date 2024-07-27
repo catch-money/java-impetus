@@ -1,6 +1,7 @@
 package io.github.jockerCN.entity;
 
-import io.github.jockerCN.jpa.pojo.JpaPojo;
+
+import io.github.jockerCN.jpa.pojo.BaseJpaPojo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity(name = "PayEntity")
 @Table(schema = "jpa", name = "pay")
-public class PayEntity extends JpaPojo {
+public class PayEntity extends BaseJpaPojo {
 
     @Column(name = "pay_id", nullable = false, unique = true)
     private String payId;

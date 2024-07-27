@@ -1,13 +1,13 @@
 package io.github.jockerCN.jpa.pojo;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-
-import java.time.LocalDateTime;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -20,25 +20,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @SuperBuilder
 @AllArgsConstructor
-public abstract class JpaPojo {
+public class BaseJpaPojo extends JpaPojo {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private long id;
 
-    @Column(name = "create_time", insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime createTime;
-
-    @Column(name = "update_time", insertable = false, updatable = true, columnDefinition = "TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)")
-    private LocalDateTime updateTime;
-
-    @Transient
     @Column(name = "creator")
+    @Transient
     private String creator;
 
-    @Transient
     @Column(name = "updater")
+    @Transient
     private String updater;
 
     @Column(name = "deleted", insertable = false, updatable = true)
@@ -51,15 +41,14 @@ public abstract class JpaPojo {
     public static final String _updater = "updater";
     public static final String _deleted = "deleted";
 
-    @PrePersist
-    public void prePersist() {
-        this.createTime = LocalDateTime.now(); // Set the current time before persisting
+    @Override
+    public void customizePreUpdate() {
+
     }
 
+    @Override
+    public void customizePrePersist() {
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updateTime = LocalDateTime.now(); // Set the current time before persisting
     }
 
 

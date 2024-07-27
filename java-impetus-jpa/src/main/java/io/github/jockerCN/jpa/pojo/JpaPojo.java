@@ -33,34 +33,28 @@ public abstract class JpaPojo {
     @Column(name = "update_time", insertable = false, updatable = true, columnDefinition = "TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)")
     private LocalDateTime updateTime;
 
-    @Transient
-    @Column(name = "creator")
-    private String creator;
-
-    @Transient
-    @Column(name = "updater")
-    private String updater;
-
-    @Column(name = "deleted", insertable = false, updatable = true)
-    private int deleted;
-
     public static final String _id = "id";
     public static final String _createTime = "createTime";
     public static final String _updateTime = "updateTime";
-    public static final String _creator = "creator";
-    public static final String _updater = "updater";
-    public static final String _deleted = "deleted";
 
     @PrePersist
     public void prePersist() {
         this.createTime = LocalDateTime.now(); // Set the current time before persisting
+        customizePrePersist();
     }
-
 
     @PreUpdate
     public void preUpdate() {
         this.updateTime = LocalDateTime.now(); // Set the current time before persisting
+        customizePreUpdate();
     }
+
+
+    public abstract void customizePreUpdate();
+
+
+    public abstract void customizePrePersist();
+
 
 
 }
