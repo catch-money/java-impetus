@@ -17,6 +17,7 @@
 
     <modules>
         <module>java-impetus-jpa</module>
+        <module>java-impetus-native-image</module>
     </modules>
 
     <properties>
