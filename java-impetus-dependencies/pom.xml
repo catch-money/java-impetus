@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.5</version>
         <relativePath/>
     </parent>
 
     <groupId>io.github.jocker-cn</groupId>
     <artifactId>java-impetus-dependencies</artifactId>
-    <version>1.0.2-Beta</version>
+    <version>1.0.3-Beta</version>
     <name>java-impetus-dependencies</name>
     <description>Java Impetus framework All dependency</description>
     <packaging>pom</packaging>
