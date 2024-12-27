@@ -3,7 +3,7 @@ package io.github.jockerCN.customize;
 import io.github.jockerCN.customize.annotation.QueryPredicate;
 import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.customize.util.FieldValueLookup;
-import io.github.jockerCN.customize.util.TypeConvert;
+import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;

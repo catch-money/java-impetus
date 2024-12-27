@@ -1,4 +1,4 @@
-package io.github.jockerCN.customize.util;
+package io.github.jockerCN.type;
 
 import java.util.Objects;
 

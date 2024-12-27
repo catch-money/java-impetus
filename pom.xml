@@ -7,17 +7,20 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus-dependencies</artifactId>
-        <version>1.0.4-Beta</version>
+        <version>1.0.5-Beta</version>
         <relativePath/>
     </parent>
     
     <artifactId>java-impetus</artifactId>
-    <version>1.0.4-Beta</version>
+    <version>1.0.5-Beta</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>java-impetus-jpa</module>
         <module>java-impetus-native-image</module>
+        <module>java-impetus-common</module>
+        <module>java-impetus-spring-common</module>
+        <module>java-impetus-web-common</module>
+        <module>java-impetus-jpa</module>
     </modules>
 
     <properties>

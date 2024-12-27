@@ -55,6 +55,4 @@ public abstract class JpaPojo {
 
     public abstract void customizePrePersist();
 
-
-
 }

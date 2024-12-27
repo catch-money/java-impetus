@@ -4,6 +4,7 @@ import io.github.jockerCN.customize.*;
 import io.github.jockerCN.customize.annotation.*;
 import io.github.jockerCN.customize.annotation.where.*;
 import io.github.jockerCN.customize.exception.JpaProcessException;
+import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.*;
 import org.springframework.util.CollectionUtils;

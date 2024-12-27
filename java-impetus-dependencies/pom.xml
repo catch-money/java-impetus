@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.0</version>
+        <version>3.4.1</version>
         <relativePath/>
     </parent>
 
     <groupId>io.github.jocker-cn</groupId>
     <artifactId>java-impetus-dependencies</artifactId>
-    <version>1.0.4-Beta</version>
+    <version>1.0.5-Beta</version>
     <name>java-impetus-dependencies</name>
     <description>Java Impetus framework All dependency</description>
     <packaging>pom</packaging>
@@ -23,7 +23,10 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-        <java-impetus-jpa.version>1.0.5-Beta</java-impetus-jpa.version>
+        <java-impetus-jpa.version>1.0.6-Beta</java-impetus-jpa.version>
+        <java-impetus-common.version>1.0.5-Beta</java-impetus-common.version>
+        <java-impetus-spring-common.version>1.0.5-Beta</java-impetus-spring-common.version>
+        <java-impetus-web-common.version>1.0.5-Beta</java-impetus-web-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <springdoc.version>2.7.0</springdoc.version>
@@ -41,6 +44,8 @@
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
+        <bcprov-jdk18on.version>1.78.1</bcprov-jdk18on.version>
+        <commons-compress.version>1.26.2</commons-compress.version>
     </properties>
 
     <url>https://github.com/catch-money/java-impetus</url>
@@ -72,6 +77,37 @@
 
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-common</artifactId>
+                <version>${java-impetus-common.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-web-common</artifactId>
+                <version>${java-impetus-web-common.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-spring-common</artifactId>
+                <version>${java-impetus-spring-common.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bcprov-jdk18on.version}</version>
+            </dependency>
+
             <!--  spring doc - swagger-ui -->
             <dependency>
                 <groupId>org.springdoc</groupId>
