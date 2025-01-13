@@ -22,6 +22,8 @@ public @interface Validator {
 
     Class<?> enumType() default Class.class;
 
+    Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 
     Class<? extends ValidationAdapter>[] adapter() default {};

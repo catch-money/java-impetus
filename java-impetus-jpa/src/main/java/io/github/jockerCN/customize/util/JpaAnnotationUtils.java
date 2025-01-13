@@ -25,6 +25,7 @@ public abstract class JpaAnnotationUtils {
         jpaAnnotations = new HashSet<>() {{
             add(BetweenAnd.class);
             add(Equals.class);
+            add(NoEquals.class);
             add(GE.class);
             add(GT.class);
             add(IN.class);

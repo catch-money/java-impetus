@@ -46,6 +46,12 @@ public abstract class JpaQueryEntityBuilder {
             metadata.fillAnnotationValue(equals.value());
             metadata.equalsInit();
             return metadata;
+        }), Map.entry(NoEquals.class, (field, annotation) -> {
+            NoEquals noEquals = (NoEquals) annotation;
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(noEquals.value());
+            metadata.noEqualsInit();
+            return metadata;
         }), Map.entry(GE.class, (field, annotation) -> {
             GE ge = (GE) annotation;
             FieldMetadata metadata = new FieldMetadata(field, annotation);

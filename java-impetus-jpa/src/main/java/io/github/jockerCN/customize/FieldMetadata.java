@@ -99,6 +99,10 @@ public class FieldMetadata {
         setPredicate((Ob) -> QueryPredicate.eq(getAnnotationValue(), Ob));
     }
 
+    public void noEqualsInit() {
+        setPredicate((Ob) -> QueryPredicate.noeq(getAnnotationValue(), Ob));
+    }
+
     public void geInit() {
         setPredicate((Ob) -> QueryPredicate.ge(getAnnotationValue(), TypeConvert.cast(Ob)));
     }

@@ -28,6 +28,17 @@ public interface QueryPredicate {
     }
 
     /**
+     * 实现{@link NoEquals}
+     *
+     * @param property 字段名
+     * @param value    字段值
+     * @return QueryPredicate
+     */
+    static QueryPredicate noeq(String property, Object value) {
+        return (cb, root) -> cb.notEqual(root.get(property), value);
+    }
+
+    /**
      * 实现{@link IN}
      *
      * @param property 字段名
