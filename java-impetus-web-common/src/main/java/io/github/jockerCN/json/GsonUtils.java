@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import io.github.jockerCN.SpringProvider;
+import io.github.jockerCN.common.SpringProvider;
 
 import java.io.File;
 import java.io.FileReader;

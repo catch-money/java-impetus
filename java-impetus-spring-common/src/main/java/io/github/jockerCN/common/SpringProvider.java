@@ -1,10 +1,10 @@
-package io.github.jockerCN;
+package io.github.jockerCN.common;
 
 
 import io.github.jockerCN.type.TypeConvert;
 import org.apache.commons.collections4.MapUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Map;
@@ -12,12 +12,13 @@ import java.util.Map;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-@Component
+
 public class SpringProvider {
 
     private static ApplicationContext APPLICATION_CONTEXT;
 
-    public SpringProvider(ApplicationContext applicationContext) {
+    @Autowired
+    public void setApplicationContext(ApplicationContext applicationContext) {
         APPLICATION_CONTEXT = applicationContext;
     }
 

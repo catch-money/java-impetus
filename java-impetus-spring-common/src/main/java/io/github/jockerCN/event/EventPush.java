@@ -1,18 +1,17 @@
 package io.github.jockerCN.event;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-
-@Component
 public class EventPush {
 
     private static ApplicationEventPublisher EVENT_PUBLISHER;
 
-    public EventPush( ApplicationEventPublisher eventPublisher) {
+    @Autowired
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
         EVENT_PUBLISHER = eventPublisher;
     }
 

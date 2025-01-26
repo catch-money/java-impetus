@@ -9,6 +9,7 @@
         <version>1.0.5-Beta</version>
     </parent>
 
+    <version>1.0.6-Beta</version>
     <artifactId>java-impetus-web-common</artifactId>
 
     <properties>
@@ -19,9 +20,11 @@
 
 
     <dependencies>
+
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
             <artifactId>java-impetus-spring-common</artifactId>
+            <version>1.0.7-Beta</version>
         </dependency>
 
         <dependency>
@@ -51,12 +54,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
             <scope>provided</scope>
         </dependency>
 
@@ -74,21 +71,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j2</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-spring-boot</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
         </dependency>
     </dependencies>
 </project>

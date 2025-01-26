@@ -2,11 +2,11 @@ package io.github.jockerCN.redis;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.*;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.*;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
@@ -17,9 +17,8 @@ import java.util.concurrent.TimeUnit;
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 
-@Component
-public class RedisUtils {
 
+public class RedisUtils {
 
     private static StringRedisTemplate stringRedisTemplate;
 
@@ -27,12 +26,12 @@ public class RedisUtils {
 
     private static ZSetOperations<String, String> zSetOperations;
 
-    public RedisUtils(StringRedisTemplate stringRedisTemplate) {
+    @Autowired
+    public void setApplicationContext(StringRedisTemplate stringRedisTemplate) {
         RedisUtils.stringRedisTemplate = stringRedisTemplate;
         RedisUtils.geoOperations = stringRedisTemplate.opsForGeo();
         RedisUtils.zSetOperations = stringRedisTemplate.opsForZSet();
     }
-
 
     public static boolean zSetAdd(String zSetKey, String value, double score) {
         return Boolean.TRUE.equals(zSetOperations.add(zSetKey, value, score));

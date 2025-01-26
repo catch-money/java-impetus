@@ -6,7 +6,6 @@ package io.github.jockerCN.event;
 public interface EventProcess {
 
 
-
     void process(Object source);
 
 
