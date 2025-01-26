@@ -13,16 +13,49 @@ import java.util.Base64;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+
 public class CryptoUtils {
-    private static final byte[] keys;
+
+    private final byte[] keys;
+
+    public static final CryptoUtils DEFAULT_CRYPTO;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
-        keys = new byte[]{115, 104, 101, 110, 45, 119, 97, 110, 103, 45, 121, 117, 110, 45, 115, 101, 99, 114, 101, 116, 45, 107, 101, 121};
+        DEFAULT_CRYPTO = new CryptoUtils(new byte[]{101, 94, 57, 37, 84, 45, 77, 41, 112, 94, 107, 45, 111, 118, 66, 100, 37, 45, 37, 48, 89, 103, 105, 45, 48, 98, 84, 41, 115, 45, 78, 50});
     }
 
-    public static String decrypt(String encryptedData) throws Exception {
-        SecretKeySpec keySpec = new SecretKeySpec(keys, "AES");
+    public CryptoUtils() {
+        this.keys = SecureRandomCharacter.getDefaultRandomCharactersAsByte(4, 32);
+    }
+
+    public CryptoUtils(byte[] keys) {
+        this.keys = keys;
+    }
+
+    public CryptoUtils(int segmentLength, int totalLength) {
+        this.keys = SecureRandomCharacter.getDefaultRandomCharactersAsByte(segmentLength, totalLength);
+    }
+
+
+    public static String simpleDecrypt(String data) throws Exception {
+        return DEFAULT_CRYPTO.decrypt(data);
+    }
+
+    public static String simpleEncrypt(String data) throws Exception {
+        return DEFAULT_CRYPTO.encrypt(data);
+    }
+
+    public byte[] simpleKey() {
+        return DEFAULT_CRYPTO.getKeys();
+    }
+
+    private byte[] getKeys() {
+        return keys;
+    }
+
+    public String decrypt(String encryptedData) throws Exception {
+        SecretKeySpec keySpec = new SecretKeySpec(getKeys(), "AES");
 
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
         cipher.init(Cipher.DECRYPT_MODE, keySpec);
@@ -31,8 +64,8 @@ public class CryptoUtils {
         return new String(original);
     }
 
-    public static String encrypt(String data) throws Exception {
-        SecretKeySpec keySpec = new SecretKeySpec(keys, "AES");
+    public String encrypt(String data) throws Exception {
+        SecretKeySpec keySpec = new SecretKeySpec(getKeys(), "AES");
 
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, keySpec);
