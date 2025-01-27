@@ -18,7 +18,7 @@ public class CryptoUtils {
 
     private final byte[] keys;
 
-    public static final CryptoUtils DEFAULT_CRYPTO;
+    private static final CryptoUtils DEFAULT_CRYPTO;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -38,15 +38,23 @@ public class CryptoUtils {
     }
 
 
-    public static String simpleDecrypt(String data) throws Exception {
+    public static String simpleDecryptAsString(String data) throws Exception {
+        return DEFAULT_CRYPTO.decryptAsString(data);
+    }
+
+    public static byte[] simpleDecrypt(String data) throws Exception {
         return DEFAULT_CRYPTO.decrypt(data);
     }
 
-    public static String simpleEncrypt(String data) throws Exception {
+    public static String simpleEncryptAsString(String data) throws Exception {
+        return DEFAULT_CRYPTO.encryptAsString(data);
+    }
+
+    public static byte[] simpleEncrypt(String data) throws Exception {
         return DEFAULT_CRYPTO.encrypt(data);
     }
 
-    public byte[] simpleKey() {
+    public static byte[] simpleKey() {
         return DEFAULT_CRYPTO.getKeys();
     }
 
@@ -54,24 +62,28 @@ public class CryptoUtils {
         return keys;
     }
 
-    public String decrypt(String encryptedData) throws Exception {
-        SecretKeySpec keySpec = new SecretKeySpec(getKeys(), "AES");
-
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
-        cipher.init(Cipher.DECRYPT_MODE, keySpec);
-
-        byte[] original = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
-        return new String(original);
+    public String decryptAsString(String decryptData) throws Exception {
+        return new String(decrypt(decryptData));
     }
 
-    public String encrypt(String data) throws Exception {
-        SecretKeySpec keySpec = new SecretKeySpec(getKeys(), "AES");
 
+    public byte[] decrypt(String decryptData) throws Exception {
+        SecretKeySpec keySpec = new SecretKeySpec(getKeys(), "AES");
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
+        cipher.init(Cipher.DECRYPT_MODE, keySpec);
+        return cipher.doFinal(Base64.getDecoder().decode(decryptData));
+    }
+
+    public String encryptAsString(String data) throws Exception {
+        return Base64.getEncoder().encodeToString(encrypt(data));
+    }
+
+
+    public byte[] encrypt(String data) throws Exception {
+        SecretKeySpec keySpec = new SecretKeySpec(getKeys(), "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
         cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-
-        byte[] encrypted = cipher.doFinal(data.getBytes());
-        return Base64.getEncoder().encodeToString(encrypted);
+        return cipher.doFinal(data.getBytes());
     }
 
     public static String toSHA256(String input) {

@@ -9,7 +9,7 @@
         <version>1.0.5-Beta</version>
     </parent>
 
-    <version>1.0.5-Beta</version>
+    <version>1.0.6-Beta</version>
     <artifactId>java-impetus-common</artifactId>
 
     <properties>
