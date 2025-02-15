@@ -13,7 +13,7 @@
 
     <groupId>io.github.jocker-cn</groupId>
     <artifactId>java-impetus-dependencies</artifactId>
-    <version>1.0.5-Beta</version>
+    <version>1.0.7-Beta</version>
     <name>java-impetus-dependencies</name>
     <description>Java Impetus framework All dependency</description>
     <packaging>pom</packaging>
@@ -23,10 +23,10 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-        <java-impetus-jpa.version>1.0.6-Beta</java-impetus-jpa.version>
-        <java-impetus-common.version>1.0.5-Beta</java-impetus-common.version>
-        <java-impetus-spring-common.version>1.0.5-Beta</java-impetus-spring-common.version>
-        <java-impetus-web-common.version>1.0.5-Beta</java-impetus-web-common.version>
+        <java-impetus-jpa.version>1.0.7-Beta</java-impetus-jpa.version>
+        <java-impetus-common.version>1.0.7-Beta</java-impetus-common.version>
+        <java-impetus-spring-common.version>1.0.7-Beta</java-impetus-spring-common.version>
+        <java-impetus-web-common.version>1.0.8-Beta</java-impetus-web-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <springdoc.version>2.7.0</springdoc.version>

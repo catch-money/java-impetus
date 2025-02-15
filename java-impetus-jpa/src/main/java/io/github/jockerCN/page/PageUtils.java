@@ -1,6 +1,7 @@
 package io.github.jockerCN.page;
 
-import io.github.jockerCN.SpringProvider;
+
+import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
 import org.apache.commons.collections4.CollectionUtils;

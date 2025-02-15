@@ -41,7 +41,7 @@ public class GsonConfig {
                 if (localDate == null) {
                     jsonWriter.nullValue();
                 } else {
-                    jsonWriter.value(localDate.format(TimeFormatterTemplate.FORMATTER_YMD_COMPACT));
+                    jsonWriter.value(localDate.format(TimeFormatterTemplate.FORMATTER_YMD));
                 }
             }
 
@@ -52,9 +52,21 @@ public class GsonConfig {
                     return null;
                 }
                 try {
-                    return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_YMD_COMPACT);
+                    return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_YMD);
                 } catch (Exception e) {
-                    throw new JsonSyntaxException(e);
+                    try {
+                        return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_YMD_COMPACT);
+                    } catch (Exception ex) {
+                        try {
+                            return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_YM);
+                        } catch (Exception exc) {
+                            try {
+                                return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_MD);
+                            } catch (Exception exception) {
+                                throw new RuntimeException(exception);
+                            }
+                        }
+                    }
                 }
             }
         };

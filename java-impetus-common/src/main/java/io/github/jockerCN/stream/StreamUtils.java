@@ -1,7 +1,11 @@
 package io.github.jockerCN.stream;
 
 
-import org.springframework.util.CollectionUtils;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import org.apache.commons.collections4.CollectionUtils;
+
 
 import java.util.*;
 import java.util.function.BinaryOperator;
@@ -16,21 +20,21 @@ public class StreamUtils {
 
     public static <E, K> Map<K, List<E>> groupByKey(Collection<E> collection, Function<E, K> keyFunc) {
         if (CollectionUtils.isEmpty(collection)) {
-            return Collections.emptyMap();
+            return Maps.newConcurrentMap();
         }
         return collection.stream().collect(Collectors.groupingBy(keyFunc, Collectors.toList()));
     }
 
     public static <E, K, V> Map<K, V> toMap(Collection<E> collection, Function<E, K> keyFunc, Function<E, V> valueFunc, BinaryOperator<V> mergeFunction) {
         if (CollectionUtils.isEmpty(collection)) {
-            return Collections.emptyMap();
+            return Maps.newConcurrentMap();
         }
         return collection.stream().collect(Collectors.toMap(keyFunc, valueFunc, mergeFunction));
     }
 
     public static <E, R> List<R> toList(Collection<E> collection, Function<E, R> mapper) {
         if (CollectionUtils.isEmpty(collection)) {
-            return Collections.emptyList();
+            return Lists.newArrayList();
         }
         return collection.stream().map(mapper).collect(Collectors.toList());
     }
@@ -41,7 +45,7 @@ public class StreamUtils {
 
     public static <E, K> Set<K> toSet(Collection<E> collection, Function<E, K> mapper) {
         if (CollectionUtils.isEmpty(collection)) {
-            return Collections.emptySet();
+            return Sets.newHashSet();
         }
         return collection.stream()
                 .map(mapper)

@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus</artifactId>
-        <version>1.0.5-Beta</version>
+        <version>1.0.7-Beta</version>
     </parent>
 
     <artifactId>java-impetus-jpa</artifactId>

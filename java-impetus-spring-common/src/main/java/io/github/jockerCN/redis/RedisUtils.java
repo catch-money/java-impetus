@@ -174,6 +174,10 @@ public class RedisUtils {
         return Boolean.TRUE.equals(stringRedisTemplate.delete(key));
     }
 
+    public static boolean delKeys(Set<String> keys) {
+        return stringRedisTemplate.delete(keys) == keys.size();
+    }
+
 
     public static List<String> getValues(Set<String> keys) {
         return stringRedisTemplate.opsForValue().multiGet(keys);
