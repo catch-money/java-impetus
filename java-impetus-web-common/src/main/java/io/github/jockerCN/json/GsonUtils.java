@@ -13,6 +13,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -38,6 +39,12 @@ public class GsonUtils {
 
     public static <T> T toMap(String json) {
         return GSON.fromJson(json, new TypeToken<Map<String, Object>>() {
+        }.getType());
+    }
+
+
+    public static <T> T toSet(String json) {
+        return GSON.fromJson(json, new TypeToken<Set<Object>>() {
         }.getType());
     }
 

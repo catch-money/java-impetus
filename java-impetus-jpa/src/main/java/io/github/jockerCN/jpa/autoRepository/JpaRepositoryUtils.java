@@ -1,12 +1,15 @@
 package io.github.jockerCN.jpa.autoRepository;
 
 
+import com.google.common.collect.Lists;
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
 import io.github.jockerCN.type.TypeConvert;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -56,5 +59,42 @@ public abstract class JpaRepositoryUtils {
 
     public static <T> List<T> queryList(BaseQueryParam queryParam) {
         return JPA_QUERY_MANAGER.queryList(queryParam);
+    }
+
+    public static <T> List<T> queryListPage(BaseQueryParam queryParam, Class<T> tClass,int pageSize) {
+        if (pageSize <= 0) {
+            return Lists.newArrayList();
+        }
+        Long counted = count(queryParam);
+        List<T> arrayList = new ArrayList<>(Integer.parseInt(String.valueOf(counted)));
+        int totalPages = (int) Math.ceil(counted.doubleValue() / pageSize);
+        for (int page = 0; page < totalPages; page++) {
+            queryParam.setPage(page);
+            queryParam.setPageSize(pageSize);
+            List<T> list = queryList(queryParam,tClass);
+            if (CollectionUtils.isNotEmpty(list)) {
+                arrayList.addAll(list);
+            }
+        }
+        return arrayList;
+    }
+
+
+    public static <T> List<T> queryListPage(BaseQueryParam queryParam, int pageSize) {
+        if (pageSize <= 0) {
+            return Lists.newArrayList();
+        }
+        Long counted = count(queryParam);
+        List<T> arrayList = new ArrayList<>(Integer.parseInt(String.valueOf(counted)));
+        int totalPages = (int) Math.ceil(counted.doubleValue() / pageSize);
+        for (int page = 0; page < totalPages; page++) {
+            queryParam.setPage(page);
+            queryParam.setPageSize(pageSize);
+            List<T> list = queryList(queryParam);
+            if (CollectionUtils.isNotEmpty(list)) {
+                arrayList.addAll(list);
+            }
+        }
+        return arrayList;
     }
 }
