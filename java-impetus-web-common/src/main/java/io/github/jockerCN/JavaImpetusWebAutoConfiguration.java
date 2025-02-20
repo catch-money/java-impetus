@@ -1,13 +1,10 @@
 package io.github.jockerCN;
 
-import com.google.gson.Gson;
 import io.github.jockerCN.common.SpringProvider;
-import io.github.jockerCN.json.GsonConfig;
 import io.github.jockerCN.page.ModuleParamArgumentResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -26,13 +23,5 @@ public class JavaImpetusWebAutoConfiguration {
     public ModuleParamArgumentResolver moduleParamArgumentResolver() {
         log.info("### WebCommonAutoConfiguration#ModuleParamArgumentResolver ###");
         return new ModuleParamArgumentResolver();
-    }
-
-
-    @Bean
-    @ConditionalOnMissingBean(Gson.class)
-    public Gson gson() {
-        log.info("### WebCommonAutoConfiguration#Gson ###");
-        return GsonConfig.gson();
     }
 }

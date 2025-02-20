@@ -23,10 +23,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-        <java-impetus-jpa.version>1.0.7-Beta</java-impetus-jpa.version>
-        <java-impetus-common.version>1.0.7-Beta</java-impetus-common.version>
-        <java-impetus-spring-common.version>1.0.7-Beta</java-impetus-spring-common.version>
-        <java-impetus-web-common.version>1.0.8-Beta</java-impetus-web-common.version>
+        <java-impetus.version>1.0.7-Beta</java-impetus.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <springdoc.version>2.7.0</springdoc.version>
@@ -82,19 +79,37 @@
             <dependency>
                 <groupId>io.github.jocker-cn</groupId>
                 <artifactId>java-impetus-common</artifactId>
-                <version>${java-impetus-common.version}</version>
+                <version>${java-impetus.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.github.jocker-cn</groupId>
                 <artifactId>java-impetus-web-common</artifactId>
-                <version>${java-impetus-web-common.version}</version>
+                <version>${java-impetus.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>io.github.jocker-cn</groupId>
                 <artifactId>java-impetus-spring-common</artifactId>
-                <version>${java-impetus-spring-common.version}</version>
+                <version>${java-impetus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-json</artifactId>
+                <version>${java-impetus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-jpa</artifactId>
+                <version>${java-impetus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-auth</artifactId>
+                <version>${java-impetus.version}</version>
             </dependency>
 
             <dependency>
@@ -183,11 +198,6 @@
                 <version>${caffeine.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>io.github.jocker-cn</groupId>
-                <artifactId>java-impetus-jpa</artifactId>
-                <version>${java-impetus-jpa.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 

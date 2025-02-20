@@ -1,8 +1,10 @@
 package io.github.jockerCN;
 
 import io.github.jockerCN.config.AuthUserInfoProperties;
+import io.github.jockerCN.config.url.DefaultAuthUrlConfig;
 import io.github.jockerCN.filter.DefaultRequestFilter;
 import io.github.jockerCN.http.request.RequestHeaderProperties;
+import io.github.jockerCN.token.TokenProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,7 +15,7 @@ import org.springframework.context.annotation.Bean;
  */
 @Slf4j
 @AutoConfiguration
-@EnableConfigurationProperties({AuthUserInfoProperties.class, RequestHeaderProperties.class})
+@EnableConfigurationProperties({AuthUserInfoProperties.class, RequestHeaderProperties.class, TokenProperties.class, DefaultAuthUrlConfig.class})
 public class JavaImpetusAuthAutoConfiguration {
 
     @Bean

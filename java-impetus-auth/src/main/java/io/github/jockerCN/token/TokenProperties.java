@@ -4,13 +4,11 @@ import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.dao.enums.TokenExpiryStrategy;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 @Data
-@Component
 @ConfigurationProperties("jocker-cn.token.config")
 public class TokenProperties {
 
