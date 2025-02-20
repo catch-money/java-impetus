@@ -9,9 +9,9 @@ import io.github.jockerCN.dao.enums.PermissionTypeEnum;
 import io.github.jockerCN.dao.module.UserPermissionAggregate;
 import io.github.jockerCN.json.GsonUtils;
 import io.github.jockerCN.redis.RedisUtils;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Set;

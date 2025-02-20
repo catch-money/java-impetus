@@ -22,12 +22,6 @@
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
             <artifactId>java-impetus-json</artifactId>
-            <version>1.0.7-Beta</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.github.jocker-cn</groupId>
-            <artifactId>java-impetus-spring-common</artifactId>
         </dependency>
 
         <dependency>
