@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Bean;
  */
 @Slf4j
 @AutoConfiguration
-public class WebCommonAutoConfiguration {
+public class JavaImpetusWebAutoConfiguration {
 
-    public WebCommonAutoConfiguration() {
+    public JavaImpetusWebAutoConfiguration() {
         log.info("### WebCommonAutoConfiguration#init ###");
     }
 

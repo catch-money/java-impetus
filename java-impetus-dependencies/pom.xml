@@ -46,6 +46,7 @@
         <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
         <bcprov-jdk18on.version>1.78.1</bcprov-jdk18on.version>
         <commons-compress.version>1.26.2</commons-compress.version>
+        <caffeine.version>3.2.0</caffeine.version>
     </properties>
 
     <url>https://github.com/catch-money/java-impetus</url>
@@ -174,6 +175,12 @@
                 <groupId>com.google.zxing</groupId>
                 <artifactId>core</artifactId>
                 <version>${google.zxing.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>${caffeine.version}</version>
             </dependency>
 
             <dependency>

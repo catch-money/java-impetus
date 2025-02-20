@@ -16,10 +16,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass(SpringProvider.class)
-public class CommonAutoConfiguration {
+public class JavaImpetusSpringAutoConfiguration {
 
-    public CommonAutoConfiguration() {
-      log.info("### CommonAutoConfiguration#init ###");
+    public JavaImpetusSpringAutoConfiguration() {
+        log.info("### CommonAutoConfiguration#init ###");
     }
 
     @Bean
@@ -32,8 +32,8 @@ public class CommonAutoConfiguration {
     @Bean
     @ConditionalOnClass({StringRedisTemplate.class})
     public RedisUtils redisUtils() {
-       log.info("### CommonAutoConfiguration#RedisUtils ###");
-       return new RedisUtils();
+        log.info("### CommonAutoConfiguration#RedisUtils ###");
+        return new RedisUtils();
     }
 
     @Bean

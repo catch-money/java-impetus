@@ -9,8 +9,7 @@
         <version>1.0.7-Beta</version>
     </parent>
 
-    <version>1.0.7-Beta</version>
-    <artifactId>java-impetus-common</artifactId>
+    <artifactId>java-impetus-auth</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -18,11 +17,38 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-
     <dependencies>
+
+        <dependency>
+            <groupId>io.github.jocker-cn</groupId>
+            <artifactId>java-impetus-json</artifactId>
+            <version>1.0.7-Beta</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.jocker-cn</groupId>
+            <artifactId>java-impetus-spring-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.jocker-cn</groupId>
+            <artifactId>java-impetus-jpa</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
@@ -32,53 +58,11 @@
             <scope>provided</scope>
         </dependency>
 
-
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-compress</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-log4j2</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
-
 
     </dependencies>
-
 </project>
