@@ -2,7 +2,7 @@ package io.github.jockerCN;
 
 import io.github.jockerCN.config.AuthUserInfoProperties;
 import io.github.jockerCN.config.url.DefaultAuthUrlConfig;
-import io.github.jockerCN.filter.DefaultRequestFilter;
+import io.github.jockerCN.filter.security.DefaultSecurityRequestFilter;
 import io.github.jockerCN.http.request.RequestHeaderProperties;
 import io.github.jockerCN.token.TokenProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Bean;
 public class JavaImpetusAuthAutoConfiguration {
 
     @Bean
-    public DefaultRequestFilter defaultRequestFilter() {
-        return new DefaultRequestFilter();
+    public DefaultSecurityRequestFilter defaultRequestFilter() {
+        return new DefaultSecurityRequestFilter();
     }
 }

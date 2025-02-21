@@ -1,22 +1,17 @@
 package io.github.jockerCN.security;
 
 
-import io.github.jockerCN.common.SpringUtils;
-import io.github.jockerCN.dao.module.PermissionInfo;
-import io.github.jockerCN.http.request.RequestContext;
-import io.github.jockerCN.permissions.GroupPermissionsProcess;
-import org.apache.commons.collections4.CollectionUtils;
+import io.github.jockerCN.access.RequestAuthorization;
+import io.github.jockerCN.access.SecurityRequestAuthorization;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
-import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -67,6 +62,8 @@ public interface SecurityAccessManagerConfig {
 
         return new SecurityAccessManagerConfig() {
 
+            final SecurityRequestAuthorization requestAuthorization = (SecurityRequestAuthorization) RequestAuthorization.getInstance();
+
             @Override
             public Set<String> authUrl() {
                 return Set.of("/**");
@@ -80,21 +77,7 @@ public interface SecurityAccessManagerConfig {
             @Override
             public boolean authorization(Authentication authentication, RequestAuthorizationContext context) {
                 User user = (User) authentication.getPrincipal();
-                final String requestURI = RequestContext.getRequestContext().requestURI();
-                Collection<GrantedAuthority> authorities = user.getAuthorities();
-                for (GrantedAuthority authority : authorities) {
-                    final String groupId = authority.getAuthority();
-                    Set<PermissionInfo> permissions = GroupPermissionsProcess.getInstance().getGroupPermissions(groupId);
-                    if (CollectionUtils.isNotEmpty(permissions)) {
-                        for (PermissionInfo permission : permissions) {
-                            if (SpringUtils.antPathMatch(permission.getResource(), requestURI)) {
-                                return true;
-                            }
-                        }
-                    }
-
-                }
-                return true;
+                return requestAuthorization.access(user.getAuthorities());
             }
         };
     }

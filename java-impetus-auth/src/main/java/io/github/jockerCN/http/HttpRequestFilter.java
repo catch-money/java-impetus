@@ -4,6 +4,7 @@ import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.http.request.RequestHeaderProperties;
 import io.github.jockerCN.http.request.RequestInfo;
 import io.github.jockerCN.http.request.UserInfo;
+import io.github.jockerCN.permissions.AuthUrlProcess;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 
@@ -29,6 +30,7 @@ public interface HttpRequestFilter {
         var requestInfo = new RequestInfo(
                 new UserInfo(),
                 request.getRequestURI(),
+                AuthUrlProcess.getInstance().isNoAuthUrl(request.getRequestURI()),
                 request.getHeader(headerProperties.getLoginMethodKey()),
                 request.getHeader(headerProperties.getDeviceInfoKey()),
                 request.getHeader(headerProperties.getAccessTokenKey()),

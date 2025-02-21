@@ -43,7 +43,6 @@ public interface AuthUrlProcess {
         return SpringProvider.getBeanOrDefault(AuthUrlProcess.class, new DefaultAuthUrlProcess());
     }
 
-
     class DefaultAuthUrlProcess implements AuthUrlProcess {
 
         private final Cache<String, Set<String>> cache;

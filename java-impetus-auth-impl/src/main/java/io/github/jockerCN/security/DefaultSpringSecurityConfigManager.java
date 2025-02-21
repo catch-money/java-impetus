@@ -1,10 +1,14 @@
 package io.github.jockerCN.security;
 
-import org.springframework.context.annotation.Configuration;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-@Configuration
+@Slf4j
 public class DefaultSpringSecurityConfigManager extends AbstractSpringSecurityConfigManager{
+
+    public DefaultSpringSecurityConfigManager() {
+        log.info("### DefaultSpringSecurityConfigManager#init ###");
+    }
 }

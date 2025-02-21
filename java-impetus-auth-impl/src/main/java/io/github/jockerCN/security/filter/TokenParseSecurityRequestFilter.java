@@ -1,7 +1,6 @@
 package io.github.jockerCN.security.filter;
 
-import io.github.jockerCN.common.SpringUtils;
-import io.github.jockerCN.filter.RequestFilter;
+import io.github.jockerCN.filter.security.SecurityRequestFilter;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.http.request.RequestInfo;
 import io.github.jockerCN.http.request.UserInfo;
@@ -11,7 +10,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,7 +18,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -28,12 +25,11 @@ import java.util.stream.Collectors;
  */
 @Order(FilterOrder.SECOND_LAST_PRIORITY)
 @Slf4j
-@Configuration
-public class TokenParseRequestFilter implements RequestFilter {
+public class TokenParseSecurityRequestFilter implements SecurityRequestFilter {
 
     @Override
     public String name() {
-        return TokenParseRequestFilter.class.getName();
+        return TokenParseSecurityRequestFilter.class.getName();
     }
 
     @Override
@@ -50,12 +46,6 @@ public class TokenParseRequestFilter implements RequestFilter {
 
     @Override
     public boolean supports(HttpServletRequest request) {
-        Set<String> permissionsURI = AuthUrlProcess.getInstance().getPublicPermissionsURI();
-        for (String uri : permissionsURI) {
-            if (SpringUtils.antPathMatch(uri, request.getRequestURI())) {
-                return false;
-            }
-        }
-        return true;
+        return !AuthUrlProcess.getInstance().isNoAuthUrl(request.getRequestURI());
     }
 }

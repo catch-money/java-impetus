@@ -7,10 +7,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 @Data
-@ConfigurationProperties("jocker-cn.request.header.config")
+@ConfigurationProperties("jocker-cn.auth.module.config")
 public class AuthModuleImplProperties {
 
-    private AuthModuleEnum authModuleEnum;
+    private AuthModuleEnum authModule;
 
     public enum AuthModuleEnum {
         SECURITY,

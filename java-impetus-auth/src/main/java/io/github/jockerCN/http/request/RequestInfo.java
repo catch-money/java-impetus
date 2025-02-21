@@ -7,9 +7,9 @@ import java.util.Set;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-
 public record RequestInfo(UserInfo userInfo,
                           String requestURI,
+                          boolean publicAccess,
                           String loginMethod,
                           String deviceInfo,
                           String accessToken,
@@ -38,5 +38,10 @@ public record RequestInfo(UserInfo userInfo,
     public RequestInfo setPermissionInfoSet( Set<PermissionInfo> permissionInfos) {
         userInfo.setPermissionInfoSet(permissionInfos);
         return this;
+    }
+
+
+    public boolean isPublicRequest() {
+        return publicAccess;
     }
 }

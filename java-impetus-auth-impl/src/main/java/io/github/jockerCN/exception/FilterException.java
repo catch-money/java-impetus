@@ -1,4 +1,4 @@
-package io.github.jockerCN.security.exception;
+package io.github.jockerCN.exception;
 
 import io.github.jockerCN.Result;
 import io.github.jockerCN.common.SpringProvider;
@@ -11,20 +11,20 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
-public interface SecurityFilterException {
+public interface FilterException {
 
 
     void doException(Exception e, HttpServletRequest request, HttpServletResponse response);
 
 
-    static SecurityFilterException getInstance() {
-        return SpringProvider.getBeanOrDefault(SecurityFilterException.class, defaultSecurityFilterException);
+    static FilterException getInstance() {
+        return SpringProvider.getBeanOrDefault(FilterException.class, defaultSecurityFilterException);
     }
 
-    DefaultSecurityFilterException defaultSecurityFilterException = new DefaultSecurityFilterException();
+    DefaultFilterException defaultSecurityFilterException = new DefaultFilterException();
 
     @Slf4j
-    class DefaultSecurityFilterException implements SecurityFilterException, HttpResponseFilter {
+    class DefaultFilterException implements FilterException, HttpResponseFilter {
 
         @Override
         public void doException(Exception e, HttpServletRequest request, HttpServletResponse response) {

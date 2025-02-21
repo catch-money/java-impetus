@@ -1,4 +1,4 @@
-package io.github.jockerCN.filter;
+package io.github.jockerCN.filter.security;
 
 import io.github.jockerCN.http.HttpRequestFilter;
 import io.github.jockerCN.http.HttpResponseFilter;
@@ -7,15 +7,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DefaultRequestFilter implements RequestFilter, HttpRequestFilter, HttpResponseFilter {
+public class DefaultSecurityRequestFilter implements SecurityRequestFilter, HttpRequestFilter, HttpResponseFilter {
 
-    public DefaultRequestFilter() {
+    public DefaultSecurityRequestFilter() {
         log.info("### DefaultRequestFilter#init ###");
     }
 
     @Override
     public String name() {
-        return DefaultRequestFilter.class.getName();
+        return DefaultSecurityRequestFilter.class.getName();
     }
 
     @Override

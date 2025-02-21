@@ -1,15 +1,13 @@
 package io.github.jockerCN.security.filter;
 
 
-import io.github.jockerCN.common.SpringUtils;
 import io.github.jockerCN.config.AuthUserInfoProperties;
-import io.github.jockerCN.filter.RequestFilter;
+import io.github.jockerCN.filter.security.SecurityRequestFilter;
 import io.github.jockerCN.permissions.AuthUrlProcess;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,12 +22,11 @@ import java.util.Set;
  */
 @Order(FilterOrder.THIRD_LAST_PRIORITY)
 @Slf4j
-@Configuration
-public class PublicResourceRequestFilter implements RequestFilter {
+public class PublicResourceSecurityRequestFilter implements SecurityRequestFilter {
 
     @Override
     public String name() {
-        return PublicResourceRequestFilter.class.getName();
+        return PublicResourceSecurityRequestFilter.class.getName();
     }
 
     @Override
@@ -42,12 +39,6 @@ public class PublicResourceRequestFilter implements RequestFilter {
 
     @Override
     public boolean supports(HttpServletRequest request) {
-        Set<String> permissionsURI = AuthUrlProcess.getInstance().getPublicPermissionsURI();
-        for (String uri : permissionsURI) {
-            if (SpringUtils.antPathMatch(uri, request.getRequestURI())) {
-                return true;
-            }
-        }
-        return false;
+        return AuthUrlProcess.getInstance().isNoAuthUrl(request.getRequestURI());
     }
 }
