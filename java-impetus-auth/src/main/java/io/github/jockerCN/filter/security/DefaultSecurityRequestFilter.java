@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DefaultSecurityRequestFilter implements SecurityRequestFilter, HttpRequestFilter, HttpResponseFilter {
 
     public DefaultSecurityRequestFilter() {
-        log.info("### DefaultRequestFilter#init ###");
+        log.info("### DefaultSecurityRequestFilter#init ###");
     }
 
     @Override

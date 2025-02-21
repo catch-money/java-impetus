@@ -151,7 +151,7 @@ public abstract class DaoUtils {
         UserGroups userGroups = getUserGroups(groupsQueryParam);
 
         if (Objects.nonNull(userGroups)) {
-            aggregateBuilder.groups(GsonUtils.toSet(userGroups.getGroupsId()));
+            aggregateBuilder.groups(GsonUtils.toSet(userGroups.getGroupsId(),String.class));
         }
 
         UserPermissionsQueryParam queryParam = new UserPermissionsQueryParam();

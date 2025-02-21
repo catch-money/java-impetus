@@ -152,7 +152,7 @@ public interface GroupPermissionsProcess {
                             RedisUtils.set(cacheKey, GsonUtils.toJson(permissionSetByGroupId));
                             return permissionSetByGroupId;
                         }
-                        return GsonUtils.toSet(permissionJson);
+                        return GsonUtils.toSet(permissionJson,PermissionInfo.class);
                     };
                     removeBiConsumer = (groupId, permissionId) -> {
                         final String cacheKey = String.join(":", cacheKeyPrefix, groupId);
@@ -160,7 +160,7 @@ public interface GroupPermissionsProcess {
                         if (StringUtils.isNotBlank(permissionJson)) {
                             return;
                         }
-                        Set<PermissionInfo> permissionInfoSet = GsonUtils.toSet(permissionJson);
+                        Set<PermissionInfo> permissionInfoSet = GsonUtils.toSet(permissionJson,PermissionInfo.class);
                         boolean removed = permissionInfoSet.removeIf(s -> Objects.equals(s.getPermissionId(), permissionId));
                         if (removed) {
                             RedisUtils.set(cacheKey, GsonUtils.toJson(permissionInfoSet));

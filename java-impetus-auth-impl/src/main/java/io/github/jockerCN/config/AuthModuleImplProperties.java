@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("jocker-cn.auth.module.config")
 public class AuthModuleImplProperties {
 
-    private AuthModuleEnum authModule;
+    private AuthModuleEnum type;
 
     public enum AuthModuleEnum {
         SECURITY,

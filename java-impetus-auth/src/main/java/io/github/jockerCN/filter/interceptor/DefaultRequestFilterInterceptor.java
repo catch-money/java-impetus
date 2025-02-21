@@ -3,7 +3,6 @@ package io.github.jockerCN.filter.interceptor;
 import io.github.jockerCN.filter.FilterOrder;
 import io.github.jockerCN.http.HttpRequestFilter;
 import io.github.jockerCN.http.HttpResponseFilter;
-import io.github.jockerCN.permissions.AuthUrlProcess;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +17,10 @@ import org.springframework.lang.NonNull;
 public class DefaultRequestFilterInterceptor implements RequestFilterInterceptor, HttpRequestFilter, HttpResponseFilter {
 
 
+    public DefaultRequestFilterInterceptor() {
+        log.info("### DefaultRequestFilterInterceptor#init ###");
+    }
+
     @Override
     public String name() {
         return DefaultRequestFilterInterceptor.class.getName();
@@ -31,7 +34,6 @@ public class DefaultRequestFilterInterceptor implements RequestFilterInterceptor
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         setRequestInfo(request);
-        AuthUrlProcess.getInstance().isNoAuthUrl(request.getRequestURI());
         return true;
     }
 }

@@ -44,9 +44,8 @@ public class GsonUtils {
     }
 
 
-    public static <T> T toSet(String json) {
-        return GSON.fromJson(json, new TypeToken<Set<Object>>() {
-        }.getType());
+    public static <T> Set<T> toSet(String json,Class<T> clazz) {
+        return GSON.fromJson(json, TypeToken.getParameterized(Set.class,clazz).getType());
     }
 
     public static JsonObject toJsonObject(String json) {

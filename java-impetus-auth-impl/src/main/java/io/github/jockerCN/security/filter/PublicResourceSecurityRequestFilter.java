@@ -24,6 +24,10 @@ import java.util.Set;
 @Slf4j
 public class PublicResourceSecurityRequestFilter implements SecurityRequestFilter {
 
+    public PublicResourceSecurityRequestFilter() {
+        log.info("### PublicResourceSecurityRequestFilter#init ###");
+    }
+
     @Override
     public String name() {
         return PublicResourceSecurityRequestFilter.class.getName();

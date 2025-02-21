@@ -27,6 +27,10 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TokenParseSecurityRequestFilter implements SecurityRequestFilter {
 
+    public TokenParseSecurityRequestFilter() {
+        log.info("### TokenParseSecurityRequestFilter#init ###");
+    }
+
     @Override
     public String name() {
         return TokenParseSecurityRequestFilter.class.getName();

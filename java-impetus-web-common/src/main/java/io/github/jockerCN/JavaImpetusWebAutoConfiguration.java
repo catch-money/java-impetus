@@ -15,13 +15,13 @@ import org.springframework.context.annotation.Bean;
 public class JavaImpetusWebAutoConfiguration {
 
     public JavaImpetusWebAutoConfiguration() {
-        log.info("### WebCommonAutoConfiguration#init ###");
+        log.info("### JavaImpetusWebAutoConfiguration#init ###");
     }
 
     @Bean
     @ConditionalOnBean(SpringProvider.class)
     public ModuleParamArgumentResolver moduleParamArgumentResolver() {
-        log.info("### WebCommonAutoConfiguration#ModuleParamArgumentResolver ###");
+        log.info("### JavaImpetusWebAutoConfiguration#ModuleParamArgumentResolver ###");
         return new ModuleParamArgumentResolver();
     }
 }

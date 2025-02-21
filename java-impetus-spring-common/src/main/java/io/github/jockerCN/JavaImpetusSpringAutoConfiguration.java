@@ -19,32 +19,31 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 public class JavaImpetusSpringAutoConfiguration {
 
     public JavaImpetusSpringAutoConfiguration() {
-        log.info("### CommonAutoConfiguration#init ###");
+        log.info("### JavaImpetusSpringAutoConfiguration#init ###");
     }
 
     @Bean
     public SpringProvider springProvider() {
-        log.info("### CommonAutoConfiguration#SpringProvider ###");
+        log.info("### JavaImpetusSpringAutoConfiguration#SpringProvider ###");
         return new SpringProvider();
     }
-
 
     @Bean
     @ConditionalOnClass({StringRedisTemplate.class})
     public RedisUtils redisUtils() {
-        log.info("### CommonAutoConfiguration#RedisUtils ###");
+        log.info("### JavaImpetusSpringAutoConfiguration#RedisUtils ###");
         return new RedisUtils();
     }
 
     @Bean
     public GenericEventListener genericEventListener() {
-        log.info("### CommonAutoConfiguration#GenericEventListener ###");
+        log.info("### JavaImpetusSpringAutoConfiguration#GenericEventListener ###");
         return new GenericEventListener();
     }
 
     @Bean
     public EventPush eventPush() {
-        log.info("### CommonAutoConfiguration#EventPush ###");
+        log.info("### JavaImpetusSpringAutoConfiguration#EventPush ###");
         return new EventPush();
     }
 }
