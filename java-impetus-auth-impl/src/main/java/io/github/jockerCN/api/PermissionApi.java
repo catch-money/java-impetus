@@ -134,7 +134,7 @@ public class PermissionApi {
             }
         });
 
-        return Result.ok(rootPermissions);
+        return Result.ok(StreamUtils.sortToList(rootPermissions, Comparator.comparingInt(PermissionVO::getSort)));
     }
 
     @Autowired

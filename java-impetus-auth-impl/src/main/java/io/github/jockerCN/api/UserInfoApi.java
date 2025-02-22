@@ -6,10 +6,7 @@ import io.github.jockerCN.Result;
 import io.github.jockerCN.api.param.*;
 import io.github.jockerCN.common.TransactionProvider;
 import io.github.jockerCN.dao.*;
-import io.github.jockerCN.dao.query.UserAccountQueryParam;
-import io.github.jockerCN.dao.query.UserPermissionsQueryParam;
-import io.github.jockerCN.dao.query.UserProfileQueryParam;
-import io.github.jockerCN.dao.query.UserSettingsQueryParam;
+import io.github.jockerCN.dao.query.*;
 import io.github.jockerCN.event.EventPush;
 import io.github.jockerCN.event.UserLogOutEvent;
 import io.github.jockerCN.event.UserPermissionEvent;
@@ -22,6 +19,7 @@ import io.github.jockerCN.log.AutoLog;
 import io.github.jockerCN.secret.Cryption;
 import io.github.jockerCN.secret.CryptoUtils;
 import io.github.jockerCN.stream.StreamUtils;
+import io.github.jockerCN.token.process.TokenRecordProcess;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -218,12 +216,24 @@ public class UserInfoApi {
                 .idCardExpiration(userAccountAddOrUpdate.getIdCardExpiration())
                 .address(Strings.nullToEmpty(userAccountAddOrUpdate.getAddress()))
                 .build());
+
         JpaRepositoryUtils.save(UserGroups.builder()
                 .userId(userCode)
                 .username(userAccountAddOrUpdate.getUsername())
                 .groupsId(GsonUtils.toJson(Sets.newHashSet()))
                 .build()
         );
+
+
+        JpaRepositoryUtils.save(UserSettings.builder()
+                .userCode(userCode)
+                .username(userAccountAddOrUpdate.getUsername())
+                .ssoEnabled(false)
+                .twoFaEnabled(false)
+                .twoFaMethod("")
+                .build()
+        );
+
 
         return Result.ok();
     }
@@ -375,5 +385,55 @@ public class UserInfoApi {
         userProfile.setAddress(Strings.nullToEmpty(userProfileUpdate.getAddress()));
         JpaRepositoryUtils.save(userProfile);
         return Result.ok(userProfile);
+    }
+
+    @PostMapping("delUserInfo")
+    @Transactional(rollbackFor = Exception.class)
+    public Result<Void> delUserInfo(@RequestBody @Validated UserAccountDelVo userAccountDelVo) {
+        UserAccountQueryParam queryParam = new UserAccountQueryParam();
+        queryParam.setId(userAccountDelVo.getId());
+        UserAccount userAccount = DaoUtils.getUserAccount(queryParam);
+        if (Objects.isNull(userAccount)) {
+            return Result.failWithMsg("未查询到账户信息");
+        }
+
+
+        //用户下线
+        String userCode = userAccount.getUserCode();
+        TokenRecordProcess.getInstance().clearTokenInfo(userCode);
+
+        //清理登录配置 个人信息配置
+
+        UserSettingsQueryParam settingsQueryParam = new UserSettingsQueryParam();
+        settingsQueryParam.setUserCode(userCode);
+        UserSettings settings = DaoUtils.getUserSettings(settingsQueryParam);
+
+        if (Objects.nonNull(settings)) {
+            JpaRepositoryUtils.delete(settings);
+        }
+
+        UserProfileQueryParam profileQueryParam = new UserProfileQueryParam();
+        profileQueryParam.setUserCode(userCode);
+        UserProfile userProfile = DaoUtils.getUserProfile(profileQueryParam);
+        if (Objects.nonNull(userProfile)) {
+            JpaRepositoryUtils.delete(userProfile);
+        }
+
+        //删除独立权限配置
+        userPermissionsRep.deleteUserPermissions(userCode);
+
+        //删除组信息
+        UserGroupsQueryParam userGroupsQueryParam = new UserGroupsQueryParam();
+        userGroupsQueryParam.setUserId(userCode);
+
+        UserGroups userGroups = DaoUtils.getUserGroups(userGroupsQueryParam);
+        if (Objects.nonNull(userGroups)) {
+            JpaRepositoryUtils.delete(userGroups);
+        }
+
+        //删除账户信息
+        JpaRepositoryUtils.delete(userAccount);
+
+        return Result.ok();
     }
 }
