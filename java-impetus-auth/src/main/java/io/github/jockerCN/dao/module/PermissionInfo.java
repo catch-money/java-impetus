@@ -9,7 +9,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -32,6 +35,8 @@ public class PermissionInfo {
 
     private transient String parentId;
 
+    private int sort;
+
 
     @Builder.Default
     private Set<PermissionInfo> child = Sets.newHashSet();
@@ -45,5 +50,10 @@ public class PermissionInfo {
         if (child.stream().noneMatch(info -> info.getPermissionId().equals(permissionInfo.getPermissionId()))) {
             child.add(permissionInfo);
         }
+    }
+
+    public void sortChildRecord() {
+        child = child.stream().sorted(Comparator.comparingInt(PermissionInfo::getSort))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

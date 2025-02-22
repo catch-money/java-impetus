@@ -6,10 +6,10 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus</artifactId>
-        <version>1.0.7-Beta</version>
+        <version>1.0.8-Beta</version>
     </parent>
 
-    <version>1.0.7-Beta</version>
+    <version>1.0.8-Beta</version>
     <artifactId>java-impetus-common</artifactId>
 
     <properties>

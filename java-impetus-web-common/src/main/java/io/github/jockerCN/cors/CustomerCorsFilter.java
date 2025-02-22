@@ -15,7 +15,7 @@ public class CustomerCorsFilter extends CorsFilter {
 
     public CustomerCorsFilter() {
         super(configurationSource());
-        LOGGER.info("CorsFilter.class init...");
+        LOGGER.info("### CustomerCorsFilter#init ###");
     }
 
     private static UrlBasedCorsConfigurationSource configurationSource() {

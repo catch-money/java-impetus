@@ -6,7 +6,10 @@ import io.github.jockerCN.dao.enums.PermissionTypeEnum;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -34,8 +37,15 @@ public class PermissionVO {
 
     private boolean publicAccess;
 
+    private Integer sort;
 
     public void setChild(PermissionVO permissionVO) {
         child.add(permissionVO);
+    }
+
+
+    public void sortChildRecord() {
+        child = child.stream().sorted(Comparator.comparingInt(PermissionVO::getSort))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }

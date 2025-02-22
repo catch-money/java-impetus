@@ -15,7 +15,6 @@ public interface PageMapper {
 
 
 
-
     static PageMapper defaultEmptyPageMapper() {
         return Map::of;
     }

@@ -4,6 +4,8 @@ import io.github.jockerCN.config.AuthModuleImplProperties;
 import io.github.jockerCN.configuration.EnableAutoJpa;
 import io.github.jockerCN.filter.interceptor.DefaultRequestFilterInterceptor;
 import io.github.jockerCN.filter.security.DefaultSecurityRequestFilter;
+import io.github.jockerCN.page.ModuleParamArgumentResolver;
+import io.github.jockerCN.page.PageMapperImpl;
 import io.github.jockerCN.security.DefaultFilter;
 import io.github.jockerCN.security.DefaultSpringSecurityConfigManager;
 import io.github.jockerCN.security.filter.PublicResourceSecurityRequestFilter;
@@ -32,6 +34,13 @@ public class JavaImpetusAuthImplAutoConfiguration {
     public JavaImpetusAuthImplAutoConfiguration() {
         log.info("### JavaImpetusAuthImplAutoConfiguration#init ###");
     }
+
+
+    @Bean
+    public PageMapperImpl pageMapperImpl() {
+        return new PageMapperImpl();
+    }
+
 
     @Bean
     @ConditionalOnProperty(prefix = "jocker-cn.auth.module.config", name = "type", havingValue = "security")
@@ -91,8 +100,8 @@ public class JavaImpetusAuthImplAutoConfiguration {
     @Bean
     @DependsOn("javaImpetusAuthImplHandler")
     @ConditionalOnProperty(prefix = "jocker-cn.auth.module.config", name = "type", havingValue = "filter")
-    public JavaImpetusAuthWebConfigurer javaImpetusAuthWebConfigurer() {
-        return new JavaImpetusAuthWebConfigurer();
+    public JavaImpetusAuthWebConfigurer javaImpetusAuthWebConfigurer(ModuleParamArgumentResolver moduleParamArgumentResolver) {
+        return new JavaImpetusAuthWebConfigurer(moduleParamArgumentResolver);
     }
 
 }

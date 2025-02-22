@@ -6,6 +6,7 @@ import io.github.jockerCN.jpa.pojo.BaseQueryParam;
 import io.github.jockerCN.json.GsonConfig;
 import io.github.jockerCN.time.TimeFormatterTemplate;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
 import org.springframework.lang.NonNull;
@@ -19,13 +20,26 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import java.beans.PropertyEditorSupport;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final Map<String, Class<? extends BaseQueryParam>> MODULE_PARAM_CLASS_MAP = SpringProvider.getBeanOrDefault(PageMapper.class, PageMapper.defaultEmptyPageMapper()).getQueryParamClassMap();
+    private final Map<String, Class<? extends BaseQueryParam>> MODULE_PARAM_CLASS_MAP;
 
+    public ModuleParamArgumentResolver() {
+        Collection<PageMapper> pageMappers = SpringProvider.getBeans(PageMapper.class);
+        if (CollectionUtils.isEmpty(pageMappers)) {
+            MODULE_PARAM_CLASS_MAP = PageMapper.defaultEmptyPageMapper().getQueryParamClassMap();
+        } else {
+            MODULE_PARAM_CLASS_MAP = new HashMap<>(128);
+            for (PageMapper pageMapper : pageMappers) {
+                MODULE_PARAM_CLASS_MAP.putAll(pageMapper.getQueryParamClassMap());
+            }
+        }
+    }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {

@@ -41,6 +41,9 @@ public class Permission extends BaseJapPojo {
     @Column(name = "parent_id", length = 24, nullable = false)
     private String parentId;
 
+    @Column(name = "sort", nullable = false)
+    private int sort;
+
     @Column(name = "public_access", length = 24, nullable = false)
     private boolean publicAccess;
 

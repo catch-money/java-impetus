@@ -6,11 +6,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections4.CollectionUtils;
 
-
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -50,5 +50,41 @@ public class StreamUtils {
         return collection.stream()
                 .map(mapper)
                 .collect(Collectors.toSet());
+    }
+
+    public static <E, K> Stream<K> toStream(Collection<E> collection, Function<E, K> mapper) {
+        if (CollectionUtils.isEmpty(collection)) {
+            return Stream.empty();
+        }
+        return collection.stream()
+                .map(mapper);
+    }
+
+    public static <E, K> Set<K> sortToSet(Collection<E> collection, Function<E, K> mapper,Comparator<? super K> comparator) {
+        if (CollectionUtils.isEmpty(collection)) {
+            return Sets.newHashSet();
+        }
+        return toStream(collection,mapper).sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public static <E> Set<E> sortToSet(Collection<E> collection, Comparator<? super E> comparator) {
+        if (CollectionUtils.isEmpty(collection)) {
+            return Sets.newHashSet();
+        }
+        return collection.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public static <E, K> List<K> sortToList(Collection<E> collection, Function<E, K> mapper,Comparator<? super K> comparator) {
+        if (CollectionUtils.isEmpty(collection)) {
+            return Lists.newArrayList();
+        }
+        return toStream(collection,mapper).sorted(comparator).collect(Collectors.toList());
+    }
+
+    public static <E> List<E> sortToList(Collection<E> collection, Comparator<? super E> comparator) {
+        if (CollectionUtils.isEmpty(collection)) {
+            return Lists.newArrayList();
+        }
+        return collection.stream().sorted(comparator).collect(Collectors.toList());
     }
 }

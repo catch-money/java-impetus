@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -63,6 +64,7 @@ public abstract class DaoUtils {
                         .permissionType(permission.getPermissionType())
                         .httpMethod(permission.getHttpMethod())
                         .parentId(permission.getParentId())
+                        .sort(permission.getSort())
                         .build());
 
         Map<String, Set<PermissionInfo>> groupPermissionMap = new ConcurrentHashMap<>(groupPermissionsList.size());
@@ -78,7 +80,7 @@ public abstract class DaoUtils {
                 PermissionInfo topLevel = findTopLevelParentAndBuildHierarchy(permissionMap, permission, userGroupPermissions);
                 permissionInfoSet.add(topLevel.getPermissionId());
             }
-            groupPermissionMap.put(groupId, StreamUtils.toSet(permissionInfoSet, permissionMap::get));
+            groupPermissionMap.put(groupId,StreamUtils.sortToSet(permissionInfoSet, permissionMap::get,Comparator.comparingInt(PermissionInfo::getSort)));
         }
         return groupPermissionMap;
     }
@@ -95,6 +97,7 @@ public abstract class DaoUtils {
         }
 
         parentPermission.setChildPermission(currentPermission);
+        parentPermission.sortChildRecord();
         return findTopLevelParentAndBuildHierarchy(permissionMap, parentPermission,userGroupPermissions);
     }
 
@@ -166,6 +169,7 @@ public abstract class DaoUtils {
 
         PermissionQueryParam permissionQueryParam = new PermissionQueryParam();
         permissionQueryParam.setPermissionIds(accessLevelEnumMap.keySet());
+        permissionQueryParam.setDescColumns(Sets.newHashSet("sort"));
         List<Permission> permissionList = getPermissionList(permissionQueryParam);
 
         if (CollectionUtils.isEmpty(permissionList)) {
@@ -188,6 +192,7 @@ public abstract class DaoUtils {
                 .permissionType(o.getPermissionType())
                 .httpMethod(o.getHttpMethod())
                 .parentId(o.getParentId())
+                .sort(o.getSort())
                 .build());
 
         Set<PermissionInfo> permissionInfos = new HashSet<>(permissionList.size());
@@ -198,11 +203,13 @@ public abstract class DaoUtils {
             if (StringUtils.isNotBlank(parentId)) {
                 PermissionInfo parent = permissionMap.get(parentId);
                 parent.setChildPermission(permissionInfo);
+                parent.sortChildRecord();
             } else {
                 permissionInfos.add(permissionInfo);
             }
         }
-        return aggregateBuilder.permissionInfos(permissionInfos).build();
+        return aggregateBuilder.permissionInfos(permissionInfos.stream().sorted(Comparator.comparingInt(PermissionInfo::getSort))
+                .collect(Collectors.toCollection(LinkedHashSet::new))).build();
     }
 
     public static UserSettings getUserSettings(BaseQueryParam baseQueryParam) {

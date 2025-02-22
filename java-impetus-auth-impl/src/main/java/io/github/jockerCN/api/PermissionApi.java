@@ -59,7 +59,7 @@ public class PermissionApi {
         Set<PermissionInfo> mergedPermissions = new HashSet<>(userPermission);
         if (CollectionUtils.isNotEmpty(groups)) {
             Map<String, PermissionInfo> userPermissionMap = StreamUtils.toMap(userPermission, PermissionInfo::getPermissionId, o -> o);
-            Set<PermissionInfo> groupPermissions = GroupPermissionsProcess.getInstance().getGroupPermissions(groups,permissionTypeEnums);
+            Set<PermissionInfo> groupPermissions = GroupPermissionsProcess.getInstance().getGroupPermissions(groups, permissionTypeEnums);
             for (PermissionInfo groupPerm : groupPermissions) {
                 boolean found = false;
                 if (userPermissionMap.containsKey(groupPerm.getPermissionId())) {
@@ -73,7 +73,7 @@ public class PermissionApi {
         }
 
         // 返回合并后的结果
-        return Result.ok(mergedPermissions);
+        return Result.ok(StreamUtils.sortToSet(mergedPermissions, Comparator.comparingInt(PermissionInfo::getSort)));
     }
 
     private static void mergeChildren(PermissionInfo userPerm, PermissionInfo groupPerm) {
@@ -91,6 +91,7 @@ public class PermissionApi {
                 }
             }
             userPerm.setChild(mergedChildren);
+            userPerm.sortChildRecord();
         }
     }
 
@@ -114,6 +115,7 @@ public class PermissionApi {
                                 .resource(permission.getResource())
                                 .httpMethod(permission.getHttpMethod())
                                 .publicAccess(permission.isPublicAccess())
+                                .sort(permission.getSort())
                                 .build()
                 ));
 
@@ -125,6 +127,7 @@ public class PermissionApi {
                 PermissionVO parentVO = permissionMap.get(permission.getParentId());
                 if (Objects.nonNull(parentVO)) {
                     parentVO.setChild(permissionVO);
+                    parentVO.sortChildRecord();
                 }
             } else {
                 rootPermissions.add(permissionVO);
@@ -202,6 +205,7 @@ public class PermissionApi {
         permission.setPublicAccess(permissionUpdate.isPublicAccess());
         permission.setDescription(permissionUpdate.getDescription());
         permission.setName(permissionUpdate.getName());
+        permission.setSort(permissionUpdate.getSort());
 
         JpaRepositoryUtils.save(permission);
         return Result.ok();
@@ -259,6 +263,7 @@ public class PermissionApi {
                 .name(permissionSave.getName())
                 .description(permissionSave.getDescription())
                 .parentId(Strings.nullToEmpty(permissionSave.getParentId()))
+                .sort(permissionSave.getSort())
                 .build());
         return Result.ok();
     }

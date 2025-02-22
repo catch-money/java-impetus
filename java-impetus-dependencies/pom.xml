@@ -13,7 +13,7 @@
 
     <groupId>io.github.jocker-cn</groupId>
     <artifactId>java-impetus-dependencies</artifactId>
-    <version>1.0.7-Beta</version>
+    <version>1.0.8-Beta</version>
     <name>java-impetus-dependencies</name>
     <description>Java Impetus framework All dependency</description>
     <packaging>pom</packaging>
@@ -23,7 +23,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-        <java-impetus.version>1.0.7-Beta</java-impetus.version>
+        <java-impetus.version>1.0.8-Beta</java-impetus.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <springdoc.version>2.7.0</springdoc.version>
@@ -44,6 +44,7 @@
         <bcprov-jdk18on.version>1.78.1</bcprov-jdk18on.version>
         <commons-compress.version>1.26.2</commons-compress.version>
         <caffeine.version>3.2.0</caffeine.version>
+        <mysql.version>9.2.0</mysql.version>
     </properties>
 
     <url>https://github.com/catch-money/java-impetus</url>
@@ -118,6 +119,13 @@
                 <artifactId>java-impetus-auth-impl</artifactId>
                 <version>${java-impetus.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
 
             <dependency>
                 <groupId>org.apache.commons</groupId>

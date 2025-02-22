@@ -6,11 +6,11 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus</artifactId>
-        <version>1.0.7-Beta</version>
+        <version>1.0.8-Beta</version>
     </parent>
 
     <artifactId>java-impetus-jpa</artifactId>
-    <version>1.0.7-Beta</version>
+    <version>1.0.8-Beta</version>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

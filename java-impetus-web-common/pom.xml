@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus</artifactId>
-        <version>1.0.7-Beta</version>
+        <version>1.0.8-Beta</version>
     </parent>
 
     <version>1.0.8-Beta</version>
@@ -24,6 +24,11 @@
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
             <artifactId>java-impetus-spring-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.jocker-cn</groupId>
+            <artifactId>java-impetus-json</artifactId>
         </dependency>
 
         <dependency>

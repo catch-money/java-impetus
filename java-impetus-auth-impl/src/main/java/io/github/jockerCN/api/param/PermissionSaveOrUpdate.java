@@ -33,4 +33,6 @@ public class PermissionSaveOrUpdate {
 
     private boolean publicAccess;
 
+    private int sort;
+
 }
