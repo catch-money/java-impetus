@@ -1,7 +1,9 @@
 package io.github.jockerCN.access;
 
+import com.google.common.collect.Sets;
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.common.SpringUtils;
+import io.github.jockerCN.dao.enums.PermissionTypeEnum;
 import io.github.jockerCN.dao.module.PermissionInfo;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.permissions.GroupPermissionsProcess;
@@ -36,13 +38,11 @@ public interface RequestAuthorization<T> {
         @Override
         public boolean access(Collection<String> groupIds) {
             final String requestURI = getRequestURI();
-            for (String groupId : groupIds) {
-                Set<PermissionInfo> permissions = GroupPermissionsProcess.getInstance().getGroupPermissions(groupId);
-                if (CollectionUtils.isNotEmpty(permissions)) {
-                    for (PermissionInfo permission : permissions) {
-                        if (SpringUtils.antPathMatch(permission.getResource(), requestURI)) {
-                            return true;
-                        }
+            Set<PermissionInfo> permissions = GroupPermissionsProcess.getInstance().getGroupPermissions((Set<String>) groupIds, Sets.newHashSet(PermissionTypeEnum.API));
+            if (CollectionUtils.isNotEmpty(permissions)) {
+                for (PermissionInfo permission : permissions) {
+                    if (permission.matchResource((resource) -> SpringUtils.antPathMatch(resource, requestURI))) {
+                        return true;
                     }
                 }
             }

@@ -46,9 +46,7 @@ public interface GroupPermissionsProcess {
         for (String groupId : groupIds) {
             permissionInfos.addAll(getGroupPermissions(groupId));
         }
-        if (CollectionUtils.isNotEmpty(permissionTypes)) {
-            permissionInfos.removeIf(permissionInfo -> !permissionTypes.contains(permissionInfo.getPermissionType()));
-        }
+        PermissionInfo.filterByPermissionType(permissionInfos,permissionTypes);
         return permissionInfos;
     }
 

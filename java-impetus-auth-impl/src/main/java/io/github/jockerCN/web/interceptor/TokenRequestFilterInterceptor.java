@@ -1,9 +1,12 @@
 package io.github.jockerCN.web.interceptor;
 
+import io.github.jockerCN.Result;
 import io.github.jockerCN.access.RequestAuthorization;
 import io.github.jockerCN.filter.interceptor.RequestFilterInterceptor;
+import io.github.jockerCN.http.HttpResponseFilter;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.http.request.RequestInfo;
+import io.github.jockerCN.json.GsonUtils;
 import io.github.jockerCN.token.TokenProcessException;
 import io.github.jockerCN.token.process.TokenRecordProcess;
 import io.github.jockerCN.type.TypeConvert;
@@ -13,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.annotation.Order;
 
+import java.util.Set;
+
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
@@ -20,7 +25,7 @@ import org.springframework.core.annotation.Order;
 @Order
 @Slf4j
 @SuppressWarnings("unused")
-public class TokenRequestFilterInterceptor implements RequestFilterInterceptor {
+public class TokenRequestFilterInterceptor implements RequestFilterInterceptor,  HttpResponseFilter {
 
     final RequestAuthorization<String> requestAuthorization = TypeConvert.cast(RequestAuthorization.getInstance());
 
@@ -48,13 +53,16 @@ public class TokenRequestFilterInterceptor implements RequestFilterInterceptor {
         }
         TokenRecordProcess.getInstance().validate(accessToken);
 
-       /* final Set<String> groups =
+        final Set<String> groups =
                 RequestContext.getRequestContext().userInfo().getGroups();
 
-        if (!requestAuthorization.access(groups)) {
-            throw new TokenProcessException("token is invalid");
-        }*/
+        boolean access = requestAuthorization.access(groups);
 
+        if (!access) {
+            responseJsonConfigSet(response);
+            response.getWriter().write(GsonUtils.toJson(Result.failWithNoPermission()));
+            return false;
+        }
         return true;
     }
 }

@@ -6,6 +6,7 @@ import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.config.AuthUserInfoProperties;
 import io.github.jockerCN.dao.DaoUtils;
 import io.github.jockerCN.dao.enums.PermissionTypeEnum;
+import io.github.jockerCN.dao.module.PermissionInfo;
 import io.github.jockerCN.dao.module.UserPermissionAggregate;
 import io.github.jockerCN.json.GsonUtils;
 import io.github.jockerCN.redis.RedisUtils;
@@ -33,7 +34,7 @@ public interface UserPermissionsProcess {
     default UserPermissionAggregate getUserPermissions(String userCode, Set<PermissionTypeEnum> permissionTypeEnum) {
         UserPermissionAggregate userPermissionAggregate = getUserPermissionAggregate(userCode);
         if (Objects.nonNull(permissionTypeEnum)) {
-            userPermissionAggregate.getPermissionInfos().removeIf(permissionInfo -> !permissionTypeEnum.contains(permissionInfo.getPermissionType()));
+            PermissionInfo.filterByPermissionType(userPermissionAggregate.getPermissionInfos(), permissionTypeEnum);
         }
         return userPermissionAggregate;
     }

@@ -37,7 +37,7 @@ public class Result<T> {
         return new Result<>(data, WARN.code, WARN.message);
     }
 
-    public static <T> Result<T> warn(T data,String message) {
+    public static <T> Result<T> warn(T data, String message) {
         return new Result<>(data, WARN.code, message);
     }
 
@@ -73,6 +73,14 @@ public class Result<T> {
         return new Result<>(null, UN_AUTHORIZE.code, UN_AUTHORIZE.message);
     }
 
+    public static <T> Result<T> failWithNoPermission() {
+        return new Result<>(null, NO_PERMISSION.code, NO_PERMISSION.message);
+    }
+
+    public static <T> Result<T> failWithNoPermission(String message) {
+        return new Result<>(null, NO_PERMISSION.code, message);
+    }
+
 
     public static <T> Result<T> failWithUNAuth(String message) {
         return new Result<>(null, UN_AUTHORIZE.code, message);
@@ -102,12 +110,15 @@ public class Result<T> {
     public static <T> Result<T> failWithDisabled() {
         return new Result<>(null, DISABLED.code, DISABLED.message);
     }
+
     public static <T> Result<T> failWithDisabled(String message) {
         return new Result<>(null, DISABLED.code, message);
     }
+
     public static <T> Result<T> failWithNotFound() {
         return new Result<>(null, NOT_FOUND.code, NOT_FOUND.message);
     }
+
     public static <T> Result<T> failWithUnderReview() {
         return new Result<>(null, UNDER_REVIEW.code, UNDER_REVIEW.message);
     }
@@ -122,6 +133,7 @@ public class Result<T> {
         SUCCESS(200, "success"),
         WARN(600, "warn"),
         UN_AUTHORIZE(401, "unAuthorize"),
+        NO_PERMISSION(402, "permission denied"),
         REQUEST_BAD(400, "request args bad"),
         SERVER_ERROR(501, "Server Error"),
         TOKEN_ERROR(201, "Token Error"),

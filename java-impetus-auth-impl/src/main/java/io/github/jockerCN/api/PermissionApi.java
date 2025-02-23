@@ -11,7 +11,6 @@ import io.github.jockerCN.dao.DaoUtils;
 import io.github.jockerCN.dao.Permission;
 import io.github.jockerCN.dao.enums.PermissionTypeEnum;
 import io.github.jockerCN.dao.module.PermissionInfo;
-import io.github.jockerCN.dao.module.UserPermissionAggregate;
 import io.github.jockerCN.dao.query.PermissionQueryParam;
 import io.github.jockerCN.dao.query.UserGroupPermissionsQueryParam;
 import io.github.jockerCN.dao.query.UserPermissionsQueryParam;
@@ -19,8 +18,7 @@ import io.github.jockerCN.generator.SnowflakeIdGenerator;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
 import io.github.jockerCN.jpa.rep.PermissionRep;
-import io.github.jockerCN.permissions.GroupPermissionsProcess;
-import io.github.jockerCN.permissions.UserPermissionsProcess;
+import io.github.jockerCN.service.PermissionService;
 import io.github.jockerCN.stream.StreamUtils;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +40,11 @@ import java.util.stream.Collectors;
 @RestController
 public class PermissionApi {
 
+    @Autowired
+    private PermissionRep permissionRep;
+
+    @Autowired
+    private PermissionService permissionService;
 
     @GetMapping("getPageUserPermission")
     public Result<Set<PermissionInfo>> getPageUserPermissions() {
@@ -50,50 +53,34 @@ public class PermissionApi {
         if (StringUtils.isEmpty(userCode)) {
             return Result.failWithUNAuth("query user info failed");
         }
-        Set<PermissionTypeEnum> permissionTypeEnums = Sets.newHashSet(PermissionTypeEnum.PAGE, PermissionTypeEnum.BUTTON);
-        UserPermissionAggregate userPermissions = UserPermissionsProcess.getInstance().getUserPermissions(userCode, permissionTypeEnums);
-
-        final Set<String> groups = userPermissions.getGroups();
-        final Set<PermissionInfo> userPermission = userPermissions.getPermissionInfos();
-
-        Set<PermissionInfo> mergedPermissions = new HashSet<>(userPermission);
-        if (CollectionUtils.isNotEmpty(groups)) {
-            Map<String, PermissionInfo> userPermissionMap = StreamUtils.toMap(userPermission, PermissionInfo::getPermissionId, o -> o);
-            Set<PermissionInfo> groupPermissions = GroupPermissionsProcess.getInstance().getGroupPermissions(groups, permissionTypeEnums);
-            for (PermissionInfo groupPerm : groupPermissions) {
-                boolean found = false;
-                if (userPermissionMap.containsKey(groupPerm.getPermissionId())) {
-                    found = true;
-                    mergeChildren(userPermissionMap.get(groupPerm.getPermissionId()), groupPerm);
-                }
-                if (!found) {
-                    mergedPermissions.add(groupPerm);
-                }
-            }
-        }
-
-        // 返回合并后的结果
-        return Result.ok(StreamUtils.sortToSet(mergedPermissions, Comparator.comparingInt(PermissionInfo::getSort)));
+        return Result.ok(permissionService.getPermissionsByType(userCode, Sets.newHashSet(PermissionTypeEnum.PAGE)));
     }
 
-    private static void mergeChildren(PermissionInfo userPerm, PermissionInfo groupPerm) {
-        Set<PermissionInfo> mergedChildren = new HashSet<>(userPerm.getChild());
-        if (CollectionUtils.isNotEmpty(mergedChildren) || CollectionUtils.isNotEmpty(groupPerm.getChild())) {
-            Map<String, PermissionInfo> userPermissionInfoMap = StreamUtils.toMap(mergedChildren, PermissionInfo::getPermissionId, o -> o);
-            for (PermissionInfo child : groupPerm.getChild()) {
-                boolean childFound = false;
-                if (userPermissionInfoMap.containsKey(child.getPermissionId())) {
-                    childFound = true;
-                    mergeChildren(userPermissionInfoMap.get(child.getPermissionId()), child);
-                }
-                if (!childFound) {
-                    mergedChildren.add(child);
-                }
+
+    @GetMapping("getButtonUserPermission")
+    public Result<Set<String>> getButtonUserPermissions() {
+        final String userCode = RequestContext.getRequestContext().userInfo().getUserCode();
+        if (StringUtils.isEmpty(userCode)) {
+            return Result.failWithUNAuth("query user info failed");
+        }
+        Set<PermissionInfo> permissionInfos = permissionService.getPermissionsByType(userCode, Sets.newHashSet(PermissionTypeEnum.BUTTON));
+        Set<String> buttons = new HashSet<>(permissionInfos.size());
+        getButtonResources(permissionInfos, buttons);
+        return Result.ok(buttons);
+    }
+
+    public void getButtonResources(Set<PermissionInfo> permissionInfos,Set<String> resourcesRecord) {
+        if (CollectionUtils.isEmpty(permissionInfos)) {
+            return;
+        }
+        for (PermissionInfo permissionInfo : permissionInfos) {
+            resourcesRecord.add(permissionInfo.getResource());
+            if (CollectionUtils.isNotEmpty(permissionInfo.getChild())) {
+                getButtonResources(permissionInfo.getChild(), resourcesRecord);
             }
-            userPerm.setChild(mergedChildren);
-            userPerm.sortChildRecord();
         }
     }
+
 
     @GetMapping("/getAllPermission")
     public Result<List<PermissionVO>> getPermission() {
@@ -137,8 +124,6 @@ public class PermissionApi {
         return Result.ok(StreamUtils.sortToList(rootPermissions, Comparator.comparingInt(PermissionVO::getSort)));
     }
 
-    @Autowired
-    private PermissionRep permissionRep;
 
     @PostMapping("/updatePermissionLevel")
     @Transactional(rollbackFor = Exception.class)
