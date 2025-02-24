@@ -13,16 +13,18 @@ import java.util.concurrent.ThreadLocalRandom;
 public abstract class SerialNoUtils {
 
     public static String randomSerialNo(int digits) {
-        String randomNumbers = RandomStringUtils.insecure().next(digits);
-        String randomLetters = RandomStringUtils.insecure().nextAlphabetic(digits).toUpperCase();
+        String randomNumbers = RandomStringUtils.secure().nextNumeric(digits);
+        String randomLetters = RandomStringUtils.insecure().nextAlphanumeric(digits).toUpperCase();
         return String.join("", randomNumbers, randomLetters);
+    }
+
+    public static String randomNumber(int digits) {
+        return RandomStringUtils.secure().nextNumeric(digits);
     }
 
 
     public static String randomSerialNo4() {
-        String randomNumbers = RandomStringUtils.secure().next(4);
-        String randomLetters = RandomStringUtils.insecure().nextAlphabetic(4).toUpperCase();
-        return String.join("", randomNumbers, randomLetters);
+        return randomSerialNo(4);
     }
 
     public static String randomNumberSerialNo(int length) {

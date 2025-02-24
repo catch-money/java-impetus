@@ -150,6 +150,7 @@ CREATE TABLE permissions
     http_method     ENUM ('GET', 'POST', 'PUT', 'DELETE','PATCH','OPTIONS','TRACE','NO') DEFAULT 'NO' COMMENT 'HTTP方法，仅对API权限有效，空字符串表示不限制HTTP方法',
     public_access   TINYINT                        NOT NULL                              DEFAULT 0 COMMENT '是否是公开权限 0 需要 1不需要',
     parent_id       VARCHAR(24)                    NOT NULL                              DEFAULT '' COMMENT '父权限ID',
+    sort            INT                            NOT NULL                              DEFAULT 0 COMMENT '排序字段，用于定义权限资源的显示顺序',
     create_time     TIMESTAMP(3)                   NOT NULL                              DEFAULT CURRENT_TIMESTAMP(3) COMMENT '当前记录的创建时间',
     update_time     TIMESTAMP(3)                   NOT NULL                              DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '当前记录的更新时间',
     creator         VARCHAR(15)                    NOT NULL                              DEFAULT '' COMMENT '当前记录的创建人',
