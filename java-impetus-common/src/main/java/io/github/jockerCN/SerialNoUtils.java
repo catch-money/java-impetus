@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@SuppressWarnings("unused")
 public abstract class SerialNoUtils {
 
     public static String randomSerialNo(int digits) {
