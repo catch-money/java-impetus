@@ -4,8 +4,10 @@ package io.github.jockerCN.stream;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import io.github.jockerCN.number.NumberUtils;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -16,6 +18,15 @@ import java.util.stream.Stream;
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 public class StreamUtils {
+
+
+    public static <E> BigDecimal reduceAdd(Collection<E> collection, Function<E, BigDecimal> mapper) {
+        return toStream(collection, mapper).reduce(NumberUtils.ZERO, NumberUtils::add);
+    }
+
+    public static <E, K> K reduceAdd(Collection<E> collection, Function<E, K> mapper, BinaryOperator<K> accumulator, K identity) {
+        return toStream(collection, mapper).reduce(identity, accumulator);
+    }
 
 
     public static <E, K> Map<K, List<E>> groupByKey(Collection<E> collection, Function<E, K> keyFunc) {
@@ -40,7 +51,7 @@ public class StreamUtils {
     }
 
     public static <E, K, V> Map<K, V> toMap(Collection<E> collection, Function<E, K> keyFunc, Function<E, V> valueFunc) {
-        return toMap(collection, keyFunc,valueFunc, (o1, o2) -> o1);
+        return toMap(collection, keyFunc, valueFunc, (o1, o2) -> o1);
     }
 
     public static <E, K> Set<K> toSet(Collection<E> collection, Function<E, K> mapper) {
@@ -56,15 +67,14 @@ public class StreamUtils {
         if (CollectionUtils.isEmpty(collection)) {
             return Stream.empty();
         }
-        return collection.stream()
-                .map(mapper);
+        return collection.stream().map(mapper);
     }
 
-    public static <E, K> Set<K> sortToSet(Collection<E> collection, Function<E, K> mapper,Comparator<? super K> comparator) {
+    public static <E, K> Set<K> sortToSet(Collection<E> collection, Function<E, K> mapper, Comparator<? super K> comparator) {
         if (CollectionUtils.isEmpty(collection)) {
             return Sets.newHashSet();
         }
-        return toStream(collection,mapper).sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new));
+        return toStream(collection, mapper).sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public static <E> Set<E> sortToSet(Collection<E> collection, Comparator<? super E> comparator) {
@@ -74,11 +84,11 @@ public class StreamUtils {
         return collection.stream().sorted(comparator).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    public static <E, K> List<K> sortToList(Collection<E> collection, Function<E, K> mapper,Comparator<? super K> comparator) {
+    public static <E, K> List<K> sortToList(Collection<E> collection, Function<E, K> mapper, Comparator<? super K> comparator) {
         if (CollectionUtils.isEmpty(collection)) {
             return Lists.newArrayList();
         }
-        return toStream(collection,mapper).sorted(comparator).collect(Collectors.toList());
+        return toStream(collection, mapper).sorted(comparator).collect(Collectors.toList());
     }
 
     public static <E> List<E> sortToList(Collection<E> collection, Comparator<? super E> comparator) {
