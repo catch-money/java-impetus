@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,6 +61,16 @@ public class StreamUtils {
         }
         return collection.stream()
                 .map(mapper)
+                .collect(Collectors.toSet());
+    }
+
+    public static <E, K> Set<K> toSet(Collection<E> collection, Function<E, K> mapper, Predicate<? super K> predicate) {
+        if (CollectionUtils.isEmpty(collection)) {
+            return Sets.newHashSet();
+        }
+        return collection.stream()
+                .map(mapper)
+                .filter(predicate)
                 .collect(Collectors.toSet());
     }
 
