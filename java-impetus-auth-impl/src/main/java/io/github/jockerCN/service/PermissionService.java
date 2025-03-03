@@ -20,6 +20,19 @@ import java.util.Set;
 @Service
 public class PermissionService {
 
+
+    public void getButtonResources(Set<PermissionInfo> permissionInfos,Set<String> resourcesRecord) {
+        if (CollectionUtils.isEmpty(permissionInfos)) {
+            return;
+        }
+        for (PermissionInfo permissionInfo : permissionInfos) {
+            resourcesRecord.add(permissionInfo.getResource());
+            if (CollectionUtils.isNotEmpty(permissionInfo.getChild())) {
+                getButtonResources(permissionInfo.getChild(), resourcesRecord);
+            }
+        }
+    }
+
     public Set<PermissionInfo> getPermissionsByType(String userCode, Set<PermissionTypeEnum> permissionTypeEnums) {
         UserPermissionAggregate userPermissions = UserPermissionsProcess.getInstance().getUserPermissions(userCode, permissionTypeEnums);
         final Set<String> groups = userPermissions.getGroups();

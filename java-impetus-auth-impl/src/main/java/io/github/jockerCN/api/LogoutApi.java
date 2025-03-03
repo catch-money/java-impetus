@@ -4,6 +4,7 @@ import io.github.jockerCN.Result;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.http.request.RequestInfo;
 import io.github.jockerCN.log.AutoLog;
+import io.github.jockerCN.permissions.UserPermissionsProcess;
 import io.github.jockerCN.token.process.TokenRecordProcess;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +26,7 @@ public class LogoutApi {
         RequestInfo requestInfo = RequestContext.getRequestContext();
         String userCode = requestInfo.userInfo().getUserCode();
         TokenRecordProcess.getInstance().clearTokenInfo(userCode);
+        UserPermissionsProcess.getInstance().remove(userCode);
         return Result.ok();
     }
 }

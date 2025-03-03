@@ -19,6 +19,8 @@ public class PageController {
 
     @GetMapping("page")
     public Result<PageImpl<?>> page(@ModulePageParam BaseQueryParam queryParam) {
-        return Result.ok(PageUtils.page(queryParam));
+        PageImpl<?> paged = PageUtils.page(queryParam);
+        PageResultProcess.getInstance(queryParam).process(paged);
+        return Result.ok(paged);
     }
 }

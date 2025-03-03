@@ -1,6 +1,7 @@
 package io.github.jockerCN.event;
 
 
+import io.github.jockerCN.permissions.UserPermissionsProcess;
 import io.github.jockerCN.token.process.TokenRecordProcess;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ public class UserLogOutEventProcess implements EventProcess {
         log.info("### UserAccountEventProcess#process user logout event ###");
         UserLogOutEvent userAccountEvent = (UserLogOutEvent) source;
         TokenRecordProcess.getInstance().clearTokenInfo(userAccountEvent.getUserCode());
+        UserPermissionsProcess.getInstance().remove(userAccountEvent.getUserCode());
     }
 
     @Override

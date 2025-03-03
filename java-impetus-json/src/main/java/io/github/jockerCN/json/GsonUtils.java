@@ -48,6 +48,10 @@ public class GsonUtils {
         return GSON.fromJson(json, TypeToken.getParameterized(Set.class,clazz).getType());
     }
 
+    public static <T> List<T> toList(String json,Class<T> clazz) {
+        return GSON.fromJson(json, TypeToken.getParameterized(List.class,clazz).getType());
+    }
+
     public static JsonObject toJsonObject(String json) {
         return GSON.fromJson(json, JsonElement.class).getAsJsonObject();
     }

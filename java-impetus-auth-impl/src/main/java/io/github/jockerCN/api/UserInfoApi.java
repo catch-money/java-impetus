@@ -16,6 +16,7 @@ import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
 import io.github.jockerCN.jpa.rep.UserPermissionsRep;
 import io.github.jockerCN.json.GsonUtils;
 import io.github.jockerCN.log.AutoLog;
+import io.github.jockerCN.permissions.UserPermissionsProcess;
 import io.github.jockerCN.secret.Cryption;
 import io.github.jockerCN.secret.CryptoUtils;
 import io.github.jockerCN.stream.StreamUtils;
@@ -401,7 +402,7 @@ public class UserInfoApi {
         //用户下线
         String userCode = userAccount.getUserCode();
         TokenRecordProcess.getInstance().clearTokenInfo(userCode);
-
+        UserPermissionsProcess.getInstance().remove(userCode);
         //清理登录配置 个人信息配置
 
         UserSettingsQueryParam settingsQueryParam = new UserSettingsQueryParam();

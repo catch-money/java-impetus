@@ -65,20 +65,8 @@ public class PermissionApi {
         }
         Set<PermissionInfo> permissionInfos = permissionService.getPermissionsByType(userCode, Sets.newHashSet(PermissionTypeEnum.BUTTON));
         Set<String> buttons = new HashSet<>(permissionInfos.size());
-        getButtonResources(permissionInfos, buttons);
+        permissionService.getButtonResources(permissionInfos, buttons);
         return Result.ok(buttons);
-    }
-
-    public void getButtonResources(Set<PermissionInfo> permissionInfos,Set<String> resourcesRecord) {
-        if (CollectionUtils.isEmpty(permissionInfos)) {
-            return;
-        }
-        for (PermissionInfo permissionInfo : permissionInfos) {
-            resourcesRecord.add(permissionInfo.getResource());
-            if (CollectionUtils.isNotEmpty(permissionInfo.getChild())) {
-                getButtonResources(permissionInfo.getChild(), resourcesRecord);
-            }
-        }
     }
 
 
