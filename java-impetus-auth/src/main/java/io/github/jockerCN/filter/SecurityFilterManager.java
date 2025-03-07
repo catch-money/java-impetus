@@ -27,7 +27,7 @@ public interface SecurityFilterManager {
             public void doFilter(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
                 for (SecurityRequestFilter securityRequestFilter : securityRequestFilters) {
                     if (securityRequestFilter.supports(request)) {
-                        LOGGER.info("###[RequestFilter] execute filter [{}]", securityRequestFilter.name());
+                        LOGGER.debug("###[RequestFilter] execute filter [{}]", securityRequestFilter.name());
                         securityRequestFilter.doFilterInternal(request, response);
                     }
                 }

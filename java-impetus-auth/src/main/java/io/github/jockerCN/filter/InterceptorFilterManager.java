@@ -38,7 +38,7 @@ public interface InterceptorFilterManager {
                 List<RequestFilterInterceptor> requestFilterInterceptorSupportList = new ArrayList<>(requestFilterInterceptors.size());
                 for (RequestFilterInterceptor requestFilterInterceptor : requestFilterInterceptors) {
                     if (requestFilterInterceptor.supports(request)) {
-                        LOGGER.info("###[RequestFilterInterceptor#preHandle] execute filter [{}]", requestFilterInterceptor.name());
+                        LOGGER.debug("###[RequestFilterInterceptor#preHandle] execute filter [{}]", requestFilterInterceptor.name());
                         if (!requestFilterInterceptor.preHandle(request, response, handler)) {
                             return false;
                         }
@@ -53,7 +53,7 @@ public interface InterceptorFilterManager {
             public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
                 var supportList = requestFilterInterceptorThreadLocal.get();
                 for (RequestFilterInterceptor requestFilterInterceptor : supportList) {
-                    LOGGER.info("###[RequestFilterInterceptor#postHandle] execute filter [{}]", requestFilterInterceptor.name());
+                    LOGGER.debug("###[RequestFilterInterceptor#postHandle] execute filter [{}]", requestFilterInterceptor.name());
                     requestFilterInterceptor.postHandle(request, response, handler, modelAndView);
                 }
             }
@@ -63,7 +63,7 @@ public interface InterceptorFilterManager {
                 var supportList = requestFilterInterceptorThreadLocal.get();
                 requestFilterInterceptorThreadLocal.remove();
                 for (RequestFilterInterceptor requestFilterInterceptor : supportList) {
-                    LOGGER.info("###[RequestFilterInterceptor#afterCompletion] execute filter [{}]", requestFilterInterceptor.name());
+                    LOGGER.debug("###[RequestFilterInterceptor#afterCompletion] execute filter [{}]", requestFilterInterceptor.name());
                     requestFilterInterceptor.afterCompletion(request, response, handler, ex);
                 }
             }
