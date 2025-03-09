@@ -18,6 +18,10 @@ import java.util.function.Supplier;
 public class SpringExecutorHandle {
 
 
+    public static SpringExecutorHandle getInstance() {
+        return SpringProvider.getBean(SpringExecutorHandle.class);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public void executeThrows(Runnable runnable) {
         runnable.run();
