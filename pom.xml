@@ -7,12 +7,12 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus-dependencies</artifactId>
-        <version>1.0.8-Beta</version>
+        <version>1.0.9-Beta</version>
         <relativePath/>
     </parent>
     
     <artifactId>java-impetus</artifactId>
-    <version>1.0.8-Beta</version>
+    <version>1.0.9-Beta</version>
     <packaging>pom</packaging>
 
     <modules>

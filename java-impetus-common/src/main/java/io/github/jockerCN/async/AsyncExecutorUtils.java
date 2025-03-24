@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@SuppressWarnings("unused")
 public class AsyncExecutorUtils {
 
 

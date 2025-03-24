@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@SuppressWarnings("unused")
 public abstract class NumberUtils {
 
     public static final BigDecimal ZERO = BigDecimal.ZERO;
@@ -49,6 +50,14 @@ public abstract class NumberUtils {
         return eq(value, ZERO);
     }
 
+    public static boolean allZero(BigDecimal... value) {
+        for (BigDecimal bigDecimal : value) {
+            if (!isZero(bigDecimal)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public static BigDecimal fromBigDecimal(Object o) {
         return new BigDecimal(String.valueOf(o));
