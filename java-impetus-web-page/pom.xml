@@ -9,7 +9,7 @@
         <version>1.0.9-Beta</version>
     </parent>
 
-    <artifactId>java-impetus-auth-impl</artifactId>
+    <artifactId>java-impetus-web-page</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -21,17 +21,13 @@
     <dependencies>
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
-            <artifactId>java-impetus-auth</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <artifactId>java-impetus-jpa</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
-            <artifactId>java-impetus-web-page</artifactId>
+            <artifactId>java-impetus-web-common</artifactId>
         </dependency>
 
         <dependency>
@@ -40,38 +36,22 @@
             <scope>provided</scope>
         </dependency>
 
-
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>

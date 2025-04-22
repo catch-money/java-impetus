@@ -1,4 +1,4 @@
-package io.github.jockerCN.page;
+package io.github.jockerCN.exception;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">

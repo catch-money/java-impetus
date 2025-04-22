@@ -7,9 +7,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
 @Slf4j
 @AutoConfiguration
 public class JavaImpetusWebAutoConfiguration {

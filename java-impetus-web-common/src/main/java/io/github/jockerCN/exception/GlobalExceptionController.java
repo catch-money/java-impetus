@@ -2,7 +2,7 @@ package io.github.jockerCN.exception;
 
 
 import io.github.jockerCN.Result;
-import io.github.jockerCN.page.CustomerArgumentResolverException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;

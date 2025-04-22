@@ -21,6 +21,7 @@
         <module>java-impetus-spring-common</module>
         <module>java-impetus-json</module>
         <module>java-impetus-web-common</module>
+        <module>java-impetus-web-page</module>
         <module>java-impetus-jpa</module>
         <module>java-impetus-auth</module>
         <module>java-impetus-auth-impl</module>
