@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@SuppressWarnings("unused")
 public abstract class EnumUtils {
 
 
@@ -19,6 +20,15 @@ public abstract class EnumUtils {
 
     public static <T extends BaseEnum<?, V, ?>, V> T getEnumByValue(V value,Class<T> enumClass) {
         return getEnumValue(enumClass,value);
+    }
+
+    public static <T extends BaseEnum<?, V, ?>, V> T getEnumByDesc(V desc,Class<T> enumClass) {
+        for (T enumConstant : enumClass.getEnumConstants()) {
+            if (enumConstant.getDesc().equals(desc)) {
+                return enumConstant;
+            }
+        }
+        return null;
     }
 
     private static <T extends BaseEnum<?, V, ?>, V> T getEnumValue(Class<T> enumClass, V value) {
