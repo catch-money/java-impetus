@@ -51,7 +51,7 @@ public class JpaQueryConfig implements ImportBeanDefinitionRegistrar {
                     JpaQuery jpaQuery = jpaClass.getAnnotation(JpaQuery.class);
                     if (jpaQuery != null) {
                         log.info("@JpaQuery Process {}", jpaClass);
-                        Object o = ClassUtils.newInstance(Class.forName(className));
+                        Object o = ClassUtils.newInstance(jpaClass);
                         JpaQueryEntityProcess.createQueryParam(jpaQuery, o);
                     }
                 } catch (ClassNotFoundException e) {
