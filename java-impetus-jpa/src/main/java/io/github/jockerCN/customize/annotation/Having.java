@@ -1,5 +1,9 @@
 package io.github.jockerCN.customize.annotation;
 
+import io.github.jockerCN.customize.enums.HavingOperatorEnum;
+import io.github.jockerCN.customize.enums.RelatedOperatorEnum;
+import io.github.jockerCN.customize.enums.SqlFunctionEnum;
+
 import java.lang.annotation.*;
 
 /**
@@ -10,4 +14,15 @@ import java.lang.annotation.*;
 @Documented
 public @interface Having {
 
+    String value() default "";
+
+    int group() default 0;
+
+    HavingOperatorEnum operator() default HavingOperatorEnum.no;
+
+    SqlFunctionEnum function() default SqlFunctionEnum.no;
+
+    int round() default 0;
+
+    RelatedOperatorEnum related() default RelatedOperatorEnum.AND;
 }

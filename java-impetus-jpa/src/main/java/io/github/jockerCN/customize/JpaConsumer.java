@@ -5,7 +5,7 @@ package io.github.jockerCN.customize;
  */
 
 @FunctionalInterface
-public interface JpaConsumer<T,D,S> {
+public interface JpaConsumer<T,D,R,S> {
 
-    void accept(T t,D d,S s);
+    void accept(T t,D d,R r,S s);
 }

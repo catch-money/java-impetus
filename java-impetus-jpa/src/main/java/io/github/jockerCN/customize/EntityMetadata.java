@@ -39,7 +39,7 @@ public class EntityMetadata {
      */
     private final Map<String, FieldMetadata> fieldsMetadataMap;
 
-    private final Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> criteriaQueryMap;
+    private final Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> criteriaQueryMap;
 
     private final Map<String, Function<Object, Object>> pageQueryMap;
 
@@ -57,7 +57,7 @@ public class EntityMetadata {
     public EntityMetadata(Class<?> entityType, Map<Field, Annotation> fieldsAnnotationMap) {
         this.entityType = entityType;
         Map<String, FieldMetadata> tempfieldsMetadataMap = new HashMap<>();
-        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> tempCriteriaQueryMap = new HashMap<>();
+        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> tempCriteriaQueryMap = new HashMap<>();
         this.tmpPageQueryMap = new HashMap<>();
         fieldsAnnotationMap.forEach((field, annotation) -> {
             ReflectionUtils.makeAccessible(field);
@@ -77,11 +77,11 @@ public class EntityMetadata {
             }
 
 
-            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation);
+            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation);
 
             if (consumerFunctionOption.isPresent()) {
-                Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
-                JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object> jpaConsumer = jpaConsumerFunction.apply(new FieldAnnotationWrapper(field, annotation, entityType));
+                Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
+                JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object> jpaConsumer = jpaConsumerFunction.apply(new FieldAnnotationWrapper(field, annotation, entityType));
                 tempCriteriaQueryMap.put(field.getName(), jpaConsumer);
             }
 
@@ -97,6 +97,7 @@ public class EntityMetadata {
         this.fieldsMetadataMap = Map.copyOf(tempfieldsMetadataMap);
         this.criteriaQueryMap = Map.copyOf(tempCriteriaQueryMap);
         this.pageQueryMap = Map.copyOf(tmpPageQueryMap);
+        tmpPageQueryMap.clear();
         // 同时使用了@Page和@PageSize
         if (StringUtils.hasLength(pageFieldName) && StringUtils.hasLength(pageSizeFieldName)) {
             enablePage = true;
@@ -151,11 +152,11 @@ public class EntityMetadata {
     }
 
 
-    public void buildCriteriaQuery(CriteriaBuilder criteriaBuilder, CriteriaQuery<?> criteriaQuery, Object queryParams) {
-        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> queryMap = getCriteriaQueryMap();
-        for (Map.Entry<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>> jpaConsumerEntry : queryMap.entrySet()) {
-            JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object> entryValue = jpaConsumerEntry.getValue();
-            entryValue.accept(criteriaBuilder, criteriaQuery, queryParams);
+    public void buildCriteriaQuery(CriteriaBuilder criteriaBuilder, CriteriaQuery<?> criteriaQuery, Root<?> root, Object queryParams) {
+        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> queryMap = getCriteriaQueryMap();
+        for (Map.Entry<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>,Object>> jpaConsumerEntry : queryMap.entrySet()) {
+            JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object> entryValue = jpaConsumerEntry.getValue();
+            entryValue.accept(criteriaBuilder, criteriaQuery,root, queryParams);
         }
     }
 

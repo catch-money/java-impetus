@@ -95,7 +95,7 @@ public abstract class AbstractJpaQueryManager implements JpaQueryManager {
         Set<Predicate> predicates = metadata.buildPersistenceList(criteriaBuilder, root, queryParams);
         criteriaQuery.where(predicates.toArray(new Predicate[]{}));
         //其他条件
-        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, queryParams);
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root,queryParams);
         return criteriaQuery;
     }
 

@@ -1,5 +1,6 @@
 package io.github.jockerCN.customize;
 
+import io.github.jockerCN.customize.annotation.QueryExpression;
 import io.github.jockerCN.customize.annotation.QueryPredicate;
 import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.customize.util.FieldValueLookup;
@@ -45,6 +46,8 @@ public class FieldMetadata {
     private String annotationValue;
 
     private Function<Object, QueryPredicate> predicate;
+
+    private Function<Object, QueryExpression> expression;
 
     private final Function<Object, Object> invoke;
 
@@ -169,6 +172,11 @@ public class FieldMetadata {
 
     private void setPredicate(Function<Object, QueryPredicate> predicate) {
         this.predicate = predicate;
+    }
+
+
+    private void setExpression(Function<Object, QueryExpression> expression) {
+        this.expression = expression;
     }
 
     private void setAnnotationValue(String annotationValue) {

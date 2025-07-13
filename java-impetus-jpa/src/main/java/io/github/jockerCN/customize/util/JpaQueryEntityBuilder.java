@@ -1,12 +1,16 @@
 package io.github.jockerCN.customize.util;
 
+import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.customize.*;
 import io.github.jockerCN.customize.annotation.*;
 import io.github.jockerCN.customize.annotation.where.*;
+import io.github.jockerCN.customize.enums.HavingOperatorEnum;
 import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.type.TypeConvert;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.*;
+import jakarta.persistence.metamodel.Attribute;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -30,7 +34,7 @@ public abstract class JpaQueryEntityBuilder {
 
     private static final Map<Class<? extends Annotation>, BiFunction<Field, Object, Function<Object, Integer>>> limitQueryBuild;
 
-    private static final Map<Class<? extends Annotation>, Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>>> criteriaQueryMap;
+    private static final Map<Class<? extends Annotation>, Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> criteriaQueryMap;
 
     static {
         fieldMetadataBuild = Map.ofEntries(Map.entry(BetweenAnd.class, (field, annotation) -> {
@@ -128,45 +132,16 @@ public abstract class JpaQueryEntityBuilder {
 
         limitQueryBuild = Map.of(Limit.class, (field, obj) -> {
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@Limit");
-            return (ob) -> {
-                try {
-                    return (Integer) methodHandle.invoke(ob);
-                } catch (Throwable e) {
-                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                            field.getName(),
-                            field.getDeclaringClass().getName(),
-                            "@Limit",
-                            e.getMessage());
-                    throw new JpaProcessException(errorMessage, e);
-                }
-
-            };
+            return (ob) -> (Integer) invokeMethodHandle(methodHandle, ob, field, "@Limit");
         });
         criteriaQueryMap = Map.of(Columns.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
             Columns columns = (Columns) fieldWrapper.annotation();
             validateFieldType(field, "@Columns", Set.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
-            return (criteriaBuilder, criteriaQuery, obj) -> {
-                Set<String> o;
-                try {
-                    o = TypeConvert.cast(methodHandle.invoke(obj));
-                } catch (Throwable e) {
-                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                            field.getName(),
-                            field.getDeclaringClass().getName(),
-                            "@Columns",
-                            e.getMessage());
-                    throw new JpaProcessException(errorMessage, e);
-                }
+            return (criteriaBuilder, criteriaQuery, root, obj) -> {
+                Set<String> o = invokeMethodHandle(methodHandle, obj, field, "@Columns");
                 if (!CollectionUtils.isEmpty(o)) {
-                    Set<Root<?>> roots = criteriaQuery.getRoots();
-                    Root<?> root;
-                    if (roots.isEmpty()) {
-                        root = criteriaQuery.from(fieldWrapper.entityType());
-                    } else {
-                        root = roots.iterator().next();
-                    }
                     Selection<?>[] array = o.stream().filter(StringUtils::hasLength).map(name -> root.get(name).alias(name)).toArray(Selection[]::new);
                     Class<?> findType = columns.value();
                     if (findType == Tuple.class) {
@@ -184,18 +159,8 @@ public abstract class JpaQueryEntityBuilder {
             Field field = fieldWrapper.field();
             validateFieldType(field, "@Distinct", Boolean.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
-            return (criteriaBuilder, criteriaQuery, obj) -> {
-                Boolean o;
-                try {
-                    o = TypeConvert.cast(methodHandle.invoke(obj));
-                } catch (Throwable e) {
-                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                            field.getName(),
-                            field.getDeclaringClass().getName(),
-                            "@Distinct",
-                            e.getMessage());
-                    throw new JpaProcessException(errorMessage, e);
-                }
+            return (criteriaBuilder, criteriaQuery, root, obj) -> {
+                Boolean o = invokeMethodHandle(methodHandle, obj, field, "@Distinct");
                 if (Objects.nonNull(o)) {
                     criteriaQuery.distinct(o);
                 }
@@ -204,25 +169,8 @@ public abstract class JpaQueryEntityBuilder {
             Field field = fieldWrapper.field();
             validateFieldType(field, "@GroupBy", Set.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
-            return (criteriaBuilder, criteriaQuery, obj) -> {
-                Set<String> o;
-                try {
-                    o = TypeConvert.cast(methodHandle.invoke(obj));
-                } catch (Throwable e) {
-                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                            field.getName(),
-                            field.getDeclaringClass().getName(),
-                            "@Distinct",
-                            e.getMessage());
-                    throw new JpaProcessException(errorMessage, e);
-                }
-                Set<Root<?>> roots = criteriaQuery.getRoots();
-                Root<?> root;
-                if (roots.isEmpty()) {
-                    root = criteriaQuery.from(fieldWrapper.entityType());
-                } else {
-                    root = roots.iterator().next();
-                }
+            return (criteriaBuilder, criteriaQuery, root, obj) -> {
+                Set<String> o = invokeMethodHandle(methodHandle, obj, field, "@GroupBy");
                 if (!CollectionUtils.isEmpty(o)) {
                     List<Expression<?>> collect = o.stream().filter(StringUtils::hasLength).map(root::get).collect(Collectors.toList());
                     criteriaQuery.groupBy(collect);
@@ -233,26 +181,9 @@ public abstract class JpaQueryEntityBuilder {
             OrderBy orderBy = (OrderBy) fieldWrapper.annotation();
             validateFieldType(field, "@OrderBy", Set.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
-            return (criteriaBuilder, criteriaQuery, obj) -> {
-                Set<String> o;
-                try {
-                    o = TypeConvert.cast(methodHandle.invoke(obj));
-                } catch (Throwable e) {
-                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                            field.getName(),
-                            field.getDeclaringClass().getName(),
-                            "@Distinct",
-                            e.getMessage());
-                    throw new JpaProcessException(errorMessage, e);
-                }
+            return (criteriaBuilder, criteriaQuery, root, obj) -> {
+                Set<String> o = invokeMethodHandle(methodHandle, obj, field, "@OrderBy");
                 if (!CollectionUtils.isEmpty(o)) {
-                    Set<Root<?>> roots = criteriaQuery.getRoots();
-                    Root<?> root;
-                    if (roots.isEmpty()) {
-                        root = criteriaQuery.from(fieldWrapper.entityType());
-                    } else {
-                        root = roots.iterator().next();
-                    }
                     OderByCondition condition = orderBy.value();
                     List<Order> orders = new ArrayList<>();
                     switch (condition) {
@@ -266,12 +197,52 @@ public abstract class JpaQueryEntityBuilder {
                     }
                 }
             };
+        }), Having.class, (fieldWrapper -> {
+            Field field = fieldWrapper.field();
+            Having having = (Having) fieldWrapper.annotation();
+            EntityManager entityManager = SpringProvider.getBean(EntityManager.class);
+
+            Attribute<?, ?> attribute = entityManager.getMetamodel().entity(fieldWrapper.entityType()).getAttribute("");
+            attribute.getJavaType();
+            HavingOperatorEnum operator = having.operator();
+            if (operator == HavingOperatorEnum.no) {
+                return (criteriaBuilder, criteriaQuery, root, obj) -> {
+                };
+            }
+            validateFieldType(field, "@Having", Boolean.class);
+            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
+            return (criteriaBuilder, criteriaQuery, root, obj) -> {
+                root.get("");
+                Boolean o;
+                try {
+                    o = TypeConvert.cast(methodHandle.invoke(obj));
+                } catch (Throwable e) {
+                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                            field.getName(),
+                            field.getDeclaringClass().getName(),
+                            "@Having",
+                            e.getMessage());
+                    throw new JpaProcessException(errorMessage, e);
+                }
+            };
         }));
 
     }
 
+    private static <T> T invokeMethodHandle(MethodHandle methodHandle, Object obj, Field field, String annotation) {
+        try {
+            return TypeConvert.cast(methodHandle.invoke(obj));
+        } catch (Throwable e) {
+            String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
+                    field.getName(),
+                    field.getDeclaringClass().getName(),
+                    annotation,
+                    e.getMessage());
+            throw new JpaProcessException(errorMessage, e);
+        }
+    }
 
-    public static Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Object>>> buildCriteriaQueryMap(Annotation annotation) {
+    public static Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> buildCriteriaQueryMap(Annotation annotation) {
         if (!criteriaQueryMap.containsKey(annotation.annotationType())) {
             return Optional.empty();
         }
