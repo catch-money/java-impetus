@@ -1,4 +1,4 @@
-package io.github.jockerCN.customize.annotation;
+package io.github.jockerCN.customize.definition;
 
 import io.github.jockerCN.customize.annotation.where.*;
 import jakarta.persistence.criteria.CriteriaBuilder;

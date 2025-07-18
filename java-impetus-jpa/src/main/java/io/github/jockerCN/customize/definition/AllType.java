@@ -1,4 +1,4 @@
-package io.github.jockerCN.customize.annotation;
+package io.github.jockerCN.customize.definition;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">

@@ -1,7 +1,10 @@
 package io.github.jockerCN.customize;
 
-import io.github.jockerCN.customize.annotation.QueryExpression;
-import io.github.jockerCN.customize.annotation.QueryPredicate;
+import io.github.jockerCN.customize.annotation.Having;
+import io.github.jockerCN.customize.definition.QueryExpression;
+import io.github.jockerCN.customize.definition.QueryPredicate;
+import io.github.jockerCN.customize.enums.HavingOperatorEnum;
+import io.github.jockerCN.customize.enums.SqlFunctionEnum;
 import io.github.jockerCN.customize.util.FieldValueLookup;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -158,6 +161,16 @@ public class FieldMetadata {
 
     public void notInInit() {
         setPredicate((Ob) -> QueryPredicate.notIn(getAnnotationValue(), TypeConvert.cast(Ob)));
+    }
+
+    public void setExpression(Having having) {
+        SqlFunctionEnum sqlFunctionEnum = having.function();
+        setExpression((ob -> sqlFunctionEnum.createQueryExpression(getAnnotationValue(), having)));
+    }
+
+    public void setPredicate(Having having) {
+        HavingOperatorEnum operator = having.operator();
+        setExpression((ob -> sqlFunctionEnum.createQueryExpression(getAnnotationValue(), having)));
     }
 
     private void setPredicate(Function<Object, QueryPredicate> predicate) {

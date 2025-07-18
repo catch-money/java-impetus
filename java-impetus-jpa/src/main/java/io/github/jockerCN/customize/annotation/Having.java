@@ -18,6 +18,10 @@ public @interface Having {
 
     int group() default 0;
 
+    int[] substring() default {0,0};
+
+    String str() default "";
+
     HavingOperatorEnum operator() default HavingOperatorEnum.no;
 
     SqlFunctionEnum function() default SqlFunctionEnum.no;

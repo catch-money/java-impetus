@@ -1,16 +1,13 @@
 package io.github.jockerCN.customize.util;
 
-import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.customize.*;
 import io.github.jockerCN.customize.annotation.*;
 import io.github.jockerCN.customize.annotation.where.*;
 import io.github.jockerCN.customize.enums.HavingOperatorEnum;
 import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.type.TypeConvert;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.*;
-import jakarta.persistence.metamodel.Attribute;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -128,6 +125,13 @@ public abstract class JpaQueryEntityBuilder {
             metadata.fillAnnotationValue(notLike.value());
             metadata.notLikeInit();
             return metadata;
+        }), Map.entry(Having.class, (field, annotation) -> {
+            Having having = (Having) annotation;
+            validateFieldType(field, "@Having", having.operator().supportType());
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(having.value());
+            metadata.setExpression(having);
+            return metadata;
         }));
 
 
@@ -201,20 +205,20 @@ public abstract class JpaQueryEntityBuilder {
         }), Having.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
             Having having = (Having) fieldWrapper.annotation();
-            EntityManager entityManager = SpringProvider.getBean(EntityManager.class);
-
-            Attribute<?, ?> attribute = entityManager.getMetamodel().entity(fieldWrapper.entityType()).getAttribute("");
-            attribute.getJavaType();
             HavingOperatorEnum operator = having.operator();
             if (operator == HavingOperatorEnum.no) {
                 return (criteriaBuilder, criteriaQuery, root, obj) -> {
+                    Expression<Number> sum = criteriaBuilder.sum(root.get("1"));
+                    Expression<Number> sum2= criteriaBuilder.sum(root.get("1"));
+                    criteriaBuilder.and(criteriaBuilder.gt(sum, 2));
+
                 };
             }
             validateFieldType(field, "@Having", Boolean.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
             return (criteriaBuilder, criteriaQuery, root, obj) -> {
                 root.get("");
-                Boolean o;
+                Boolean o = invokeMethodHandle(methodHandle, obj, field, "@Having");
                 try {
                     o = TypeConvert.cast(methodHandle.invoke(obj));
                 } catch (Throwable e) {
