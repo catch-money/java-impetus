@@ -2,7 +2,6 @@ package io.github.jockerCN.customize;
 
 import io.github.jockerCN.customize.annotation.Page;
 import io.github.jockerCN.customize.annotation.PageSize;
-import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.customize.util.FieldValueLookup;
 import io.github.jockerCN.customize.util.JpaQueryEntityBuilder;
 import jakarta.persistence.TypedQuery;
@@ -21,6 +20,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static io.github.jockerCN.customize.util.FieldValueLookup.invokeMethodHandle;
 import static io.github.jockerCN.customize.util.JpaQueryEntityProcess.validateFieldType;
 
 /**
@@ -39,7 +39,7 @@ public class EntityMetadata {
      */
     private final Map<String, FieldMetadata> fieldsMetadataMap;
 
-    private final Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> criteriaQueryMap;
+    private final Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> criteriaQueryMap;
 
     private final Map<String, Function<Object, Object>> pageQueryMap;
 
@@ -57,7 +57,7 @@ public class EntityMetadata {
     public EntityMetadata(Class<?> entityType, Map<Field, Annotation> fieldsAnnotationMap) {
         this.entityType = entityType;
         Map<String, FieldMetadata> tempfieldsMetadataMap = new HashMap<>();
-        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> tempCriteriaQueryMap = new HashMap<>();
+        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> tempCriteriaQueryMap = new HashMap<>();
         this.tmpPageQueryMap = new HashMap<>();
         fieldsAnnotationMap.forEach((field, annotation) -> {
             ReflectionUtils.makeAccessible(field);
@@ -77,11 +77,11 @@ public class EntityMetadata {
             }
 
 
-            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation);
+            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation);
 
             if (consumerFunctionOption.isPresent()) {
-                Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
-                JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object> jpaConsumer = jpaConsumerFunction.apply(new FieldAnnotationWrapper(field, annotation, entityType));
+                Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
+                JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object> jpaConsumer = jpaConsumerFunction.apply(new FieldAnnotationWrapper(field, annotation, entityType));
                 tempCriteriaQueryMap.put(field.getName(), jpaConsumer);
             }
 
@@ -109,36 +109,14 @@ public class EntityMetadata {
         validateFieldType(field, "@Page", Integer.class);
         pageFieldName = field.getName();
         MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@Page");
-        tmpPageQueryMap.put("page", (obj) -> {
-            try {
-                return methodHandle.invoke(obj);
-            } catch (Throwable e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        "@Page",
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-        });
+        tmpPageQueryMap.put("page", (obj) -> invokeMethodHandle(methodHandle, obj, field, "@Page"));
     }
 
     private void processPageSizeAnnotation(Field field) {
         validateFieldType(field, "@PageSize", Integer.class);
         pageSizeFieldName = field.getName();
         MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@PageSize");
-        tmpPageQueryMap.put("pageSize", (obj) -> {
-            try {
-                return methodHandle.invoke(obj);
-            } catch (Throwable e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        "@PageSize",
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-        });
+        tmpPageQueryMap.put("pageSize", (obj) -> invokeMethodHandle(methodHandle, obj, field, "@PageSize"));
     }
 
     public Set<Predicate> buildPersistenceList(CriteriaBuilder criteriaBuilder, Root<?> root, Object queryParams) {
@@ -153,17 +131,18 @@ public class EntityMetadata {
 
 
     public void buildCriteriaQuery(CriteriaBuilder criteriaBuilder, CriteriaQuery<?> criteriaQuery, Root<?> root, Object queryParams) {
-        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object>> queryMap = getCriteriaQueryMap();
-        for (Map.Entry<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>,Object>> jpaConsumerEntry : queryMap.entrySet()) {
-            JpaConsumer<CriteriaBuilder, CriteriaQuery<?>,Root<?>, Object> entryValue = jpaConsumerEntry.getValue();
-            entryValue.accept(criteriaBuilder, criteriaQuery,root, queryParams);
+        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> queryMap = getCriteriaQueryMap();
+        for (Map.Entry<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> jpaConsumerEntry : queryMap.entrySet()) {
+            JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object> entryValue = jpaConsumerEntry.getValue();
+            entryValue.accept(criteriaBuilder, criteriaQuery, root, queryParams);
         }
     }
 
 
     public void buildLimitAndPage(TypedQuery<?> typedQuery, Object queryParams) {
-        if (Objects.nonNull(getLimit())) {
-            final Integer limit = getLimit().apply(queryParams);
+        final Function<Object, Integer> limitOperation = getLimit();
+        if (Objects.nonNull(limitOperation)) {
+            final Integer limit = limitOperation.apply(queryParams);
             if (Objects.nonNull(limit)) {
                 typedQuery.setMaxResults(limit);
             }

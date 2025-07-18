@@ -2,7 +2,6 @@ package io.github.jockerCN.customize;
 
 import io.github.jockerCN.customize.annotation.QueryExpression;
 import io.github.jockerCN.customize.annotation.QueryPredicate;
-import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.customize.util.FieldValueLookup;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -20,6 +19,8 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+
+import static io.github.jockerCN.customize.util.FieldValueLookup.invokeMethodHandle;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -58,18 +59,7 @@ public class FieldMetadata {
         this.annotationValue = field.getName();
         ReflectionUtils.makeAccessible(field);
         MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, annotationType.annotationType().getName());
-        this.invoke = (object) -> {
-            try {
-                return methodHandle.invoke(object);
-            } catch (Throwable e) {
-                String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                        field.getName(),
-                        field.getDeclaringClass().getName(),
-                        annotationType.annotationType(),
-                        e.getMessage());
-                throw new JpaProcessException(errorMessage, e);
-            }
-        };
+        this.invoke = (object) -> invokeMethodHandle(methodHandle, object, field, annotationType.annotationType().getName());
     }
 
     public Optional<Predicate> buildQueryParam(CriteriaBuilder criteriaBuilder, Root<?> root, Object o) {

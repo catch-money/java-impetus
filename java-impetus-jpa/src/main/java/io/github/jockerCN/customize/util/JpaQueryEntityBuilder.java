@@ -22,6 +22,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static io.github.jockerCN.customize.util.FieldValueLookup.invokeMethodHandle;
 import static io.github.jockerCN.customize.util.JpaQueryEntityProcess.validateFieldType;
 
 /**
@@ -227,19 +228,6 @@ public abstract class JpaQueryEntityBuilder {
             };
         }));
 
-    }
-
-    private static <T> T invokeMethodHandle(MethodHandle methodHandle, Object obj, Field field, String annotation) {
-        try {
-            return TypeConvert.cast(methodHandle.invoke(obj));
-        } catch (Throwable e) {
-            String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                    field.getName(),
-                    field.getDeclaringClass().getName(),
-                    annotation,
-                    e.getMessage());
-            throw new JpaProcessException(errorMessage, e);
-        }
     }
 
     public static Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> buildCriteriaQueryMap(Annotation annotation) {
