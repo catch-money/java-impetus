@@ -16,7 +16,7 @@ public enum SqlFunctionEnum implements JavaTypeSupport {
         }
         @Override
         public QueryExpression createQueryExpression(String property, Having having) {
-            return null;
+            return QueryExpression.no(property);
         }
     },
     length {

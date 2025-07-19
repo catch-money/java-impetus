@@ -1,6 +1,5 @@
 package io.github.jockerCN.query.noEquals;
 
-import io.github.jockerCN.customize.annotation.Having;
 import io.github.jockerCN.customize.annotation.JpaQuery;
 import io.github.jockerCN.customize.annotation.where.NoEquals;
 import io.github.jockerCN.entity.PayEntity;
@@ -38,7 +37,6 @@ public class NoEqualsQueryTest implements QueryAnnotationTest {
     @Data
     public static class NoEqualsQueryTestParam {
 
-        @Having(group = 1)
         @NoEquals("transactionId")
         private String noEqTransactionId;
     }

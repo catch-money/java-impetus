@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -95,6 +96,10 @@ public abstract class AbstractJpaQueryManager implements JpaQueryManager {
         Set<Predicate> predicates = metadata.buildPersistenceList(criteriaBuilder, root, queryParams);
         criteriaQuery.where(predicates.toArray(new Predicate[]{}));
         //其他条件
+        List<Predicate> havingPredicates = metadata.buildHavingPersistence(criteriaBuilder, root, queryParams);
+        if (CollectionUtils.isNotEmpty(havingPredicates)) {
+            criteriaQuery.having(havingPredicates.toArray(new Predicate[]{}));
+        }
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root,queryParams);
         return criteriaQuery;
     }

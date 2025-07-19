@@ -44,7 +44,7 @@ public abstract class JpaAnnotationUtils {
             add(Page.class);
             add(PageSize.class);
             add(GroupBy.class);
-//            add(Having.class);
+            add(Having.class);
         }};
     }
 

@@ -87,4 +87,8 @@ public interface QueryExpression {
     static QueryExpression coalesce(String property, String value) {
         return (cb, root) -> cb.coalesce(root.get(property), value);
     }
+
+    static QueryExpression no(String property) {
+        return (cb, root) -> root.get(property);
+    }
 }

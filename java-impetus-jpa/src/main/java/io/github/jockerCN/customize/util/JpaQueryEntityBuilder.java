@@ -3,6 +3,7 @@ package io.github.jockerCN.customize.util;
 import io.github.jockerCN.customize.*;
 import io.github.jockerCN.customize.annotation.*;
 import io.github.jockerCN.customize.annotation.where.*;
+import io.github.jockerCN.customize.definition.AllType;
 import io.github.jockerCN.customize.enums.HavingOperatorEnum;
 import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.type.TypeConvert;
@@ -29,6 +30,8 @@ public abstract class JpaQueryEntityBuilder {
 
 
     private static final Map<Class<? extends Annotation>, BiFunction<Field, Annotation, FieldMetadata>> fieldMetadataBuild;
+
+    private static final Map<Class<? extends Annotation>, BiFunction<Field, Annotation, FieldMetadata>> queryHavingBuild;
 
     private static final Map<Class<? extends Annotation>, BiFunction<Field, Object, Function<Object, Integer>>> limitQueryBuild;
 
@@ -125,12 +128,17 @@ public abstract class JpaQueryEntityBuilder {
             metadata.fillAnnotationValue(notLike.value());
             metadata.notLikeInit();
             return metadata;
-        }), Map.entry(Having.class, (field, annotation) -> {
+        }));
+
+        queryHavingBuild = Map.ofEntries(Map.entry(Having.class, (field, annotation) -> {
             Having having = (Having) annotation;
-            validateFieldType(field, "@Having", having.operator().supportType());
+            Class<?> supportType = having.operator().supportType();
+            if (supportType != AllType.class) {
+                validateFieldType(field, "@Having", supportType);
+            }
             FieldMetadata metadata = new FieldMetadata(field, annotation);
             metadata.fillAnnotationValue(having.value());
-            metadata.setExpression(having);
+            metadata.parseHaving(having);
             return metadata;
         }));
 
@@ -209,7 +217,7 @@ public abstract class JpaQueryEntityBuilder {
             if (operator == HavingOperatorEnum.no) {
                 return (criteriaBuilder, criteriaQuery, root, obj) -> {
                     Expression<Number> sum = criteriaBuilder.sum(root.get("1"));
-                    Expression<Number> sum2= criteriaBuilder.sum(root.get("1"));
+                    Expression<Number> sum2 = criteriaBuilder.sum(root.get("1"));
                     criteriaBuilder.and(criteriaBuilder.gt(sum, 2));
 
                 };
@@ -255,6 +263,13 @@ public abstract class JpaQueryEntityBuilder {
     public static Optional<FieldMetadata> buildFieldMetadata(Field field, Annotation annotation) {
         if (isFieldMetadata(annotation)) {
             return Optional.ofNullable(fieldMetadataBuild.get(annotation.annotationType()).apply(field, annotation));
+        }
+        return Optional.empty();
+    }
+
+    public static Optional<FieldMetadata> buildHavingMetadata(Field field, Annotation annotation) {
+        if (queryHavingBuild.containsKey(annotation.annotationType())) {
+            return Optional.ofNullable(queryHavingBuild.get(annotation.annotationType()).apply(field, annotation));
         }
         return Optional.empty();
     }

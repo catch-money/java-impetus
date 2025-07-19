@@ -1,8 +1,10 @@
 package io.github.jockerCN.customize.enums;
 
 import io.github.jockerCN.customize.QueryPair;
-
+import io.github.jockerCN.customize.definition.AllType;
 import io.github.jockerCN.customize.definition.JavaTypeSupport;
+
+import java.util.Collection;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -11,16 +13,10 @@ public enum HavingOperatorEnum implements JavaTypeSupport {
     no{
         @Override
         public Class<?> supportType() {
-            return Object.class;
+            return AllType.class;
         }
     },
-    isTrue {
-        @Override
-        public Class<?> supportType() {
-            return Boolean.class;
-        }
-    },
-    isFalse {
+    isTrueOrFalse {
         @Override
         public Class<?> supportType() {
             return Boolean.class;
@@ -41,13 +37,13 @@ public enum HavingOperatorEnum implements JavaTypeSupport {
     equal {
         @Override
         public Class<?> supportType() {
-            return Object.class;
+            return AllType.class;
         }
     },
     notEqual {
         @Override
         public Class<?> supportType() {
-            return Object.class;
+            return AllType.class;
         }
     },
     between {
@@ -90,6 +86,16 @@ public enum HavingOperatorEnum implements JavaTypeSupport {
         @Override
         public Class<?> supportType() {
             return String.class;
+        }
+    }, in {
+        @Override
+        public Class<?> supportType() {
+            return Collection.class;
+        }
+    }, notIn {
+        @Override
+        public Class<?> supportType() {
+            return Collection.class;
         }
     },
     ;
