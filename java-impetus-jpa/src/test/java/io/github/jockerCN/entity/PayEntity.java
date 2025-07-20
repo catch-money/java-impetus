@@ -48,6 +48,9 @@ public class PayEntity extends BaseJpaPojo {
     @Column(name = "pay_price", nullable = false, precision = 12, scale = 4)
     private BigDecimal payPrice;
 
+    @Column(name = "bank_type", nullable = false)
+    private String bankType;
+
     @Column(name = "payment_status", nullable = false)
     private Integer paymentStatus;
 

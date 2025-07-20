@@ -28,7 +28,11 @@ public interface QueryExpression {
     }
 
     static <T> QueryExpression count(String property) {
-        return (cb, root) -> cb.count(root.get(property));
+        return (cb, root) -> switch (property) {
+            case "*" -> cb.count(root);
+            case "1" -> cb.count(cb.literal(1));
+            default -> cb.countDistinct(root.get(property));
+        };
     }
 
     static <T> QueryExpression abs(String property) {

@@ -25,7 +25,7 @@ public class NotArgsQueryTest implements QueryAnnotationTest {
     public void run() {
         NotArgsQueryParam notArgsQueryParam = new NotArgsQueryParam();
         List<PayEntity> queryList = jpaQueryManager.queryList(notArgsQueryParam, PayEntity.class);
-        asserts(queryList.size() == 15, "@IsNull");
+        asserts(queryList.size() == 16, "@NotArgs");
     }
 
 

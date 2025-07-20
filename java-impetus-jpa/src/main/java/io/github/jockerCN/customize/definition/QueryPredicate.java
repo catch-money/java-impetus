@@ -74,7 +74,7 @@ public interface QueryPredicate {
     }
 
     static QueryPredicate notIn(Expression<?> expression, Collection<?> value) {
-        return (cb, root) -> expression.in(value);
+        return (cb, root) -> cb.not(expression.in(value));
     }
 
     /**
