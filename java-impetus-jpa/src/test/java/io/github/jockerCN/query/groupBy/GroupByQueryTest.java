@@ -1,5 +1,7 @@
 package io.github.jockerCN.query.groupBy;
 
+import com.google.common.collect.Sets;
+import io.github.jockerCN.customize.SelectColumn;
 import io.github.jockerCN.customize.annotation.Columns;
 import io.github.jockerCN.customize.annotation.GroupBy;
 import io.github.jockerCN.customize.annotation.JpaQuery;
@@ -41,7 +43,7 @@ public class GroupByQueryTest implements QueryAnnotationTest {
                 "40"
                 ));
 
-        param.setQueryColumns(Set.of("customerName"));
+        param.setQueryColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         List<Tuple> queryList = jpaQueryManager.queryList(param, Tuple.class);
 
 
@@ -61,6 +63,6 @@ public class GroupByQueryTest implements QueryAnnotationTest {
         private Set<String> itemIds;
 
         @Columns
-        private Set<String> queryColumns;
+        private Set<SelectColumn> queryColumns;
     }
 }

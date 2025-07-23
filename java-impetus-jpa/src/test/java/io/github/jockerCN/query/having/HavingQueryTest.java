@@ -2,6 +2,7 @@ package io.github.jockerCN.query.having;
 
 import com.google.common.collect.Sets;
 import io.github.jockerCN.customize.QueryPair;
+import io.github.jockerCN.customize.SelectColumn;
 import io.github.jockerCN.customize.annotation.Columns;
 import io.github.jockerCN.customize.annotation.GroupBy;
 import io.github.jockerCN.customize.annotation.Having;
@@ -53,7 +54,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     private void testStringFunctions() {
         // 1. 测试LENGTH函数
         LengthTestParam lengthParam = new LengthTestParam();
-        lengthParam.setColumns(Sets.newHashSet("customerName"));
+        lengthParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         lengthParam.setGroupByItems(Sets.newHashSet("customerName"));
         lengthParam.setLengthEqual(3); // LENGTH(customer_name) = 3
         lengthParam.setLengthGt(2); // LENGTH(customer_name) > 2
@@ -62,7 +63,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 2. 测试LOWER函数
         LowerTestParam lowerParam = new LowerTestParam();
-        lowerParam.setColumns(Sets.newHashSet("bankType"));
+        lowerParam.setColumns(Sets.newHashSet(SelectColumn.of("bankType")));
         lowerParam.setGroupByItems(Sets.newHashSet("bankType"));
         lowerParam.setLowerEqual(""); // LOWER(bank_type) = ''
         lowerParam.setLowerNotEqual("test"); // LOWER(bank_type) != 'test'
@@ -71,7 +72,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 3. 测试UPPER函数
         UpperTestParam upperParam = new UpperTestParam();
-        upperParam.setColumns(Sets.newHashSet("tradeState"));
+        upperParam.setColumns(Sets.newHashSet(SelectColumn.of("tradeState")));
         upperParam.setGroupByItems(Sets.newHashSet("tradeState"));
         upperParam.setUpperEqual("SUCCESS"); // UPPER(trade_state) = 'SUCCESS'
         upperParam.setUpperLike("SUC%"); // UPPER(trade_state) LIKE 'SUC%'
@@ -80,7 +81,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 4. 测试TRIM函数
         TrimTestParam trimParam = new TrimTestParam();
-        trimParam.setColumns(Sets.newHashSet("customerName"));
+        trimParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         trimParam.setGroupByItems(Sets.newHashSet("customerName"));
         trimParam.setTrimEqual("驱蚊器"); // TRIM(customer_name) = '李威宏'
         trimParam.setTrimNotEqual(""); // TRIM(customer_name) != ''
@@ -89,7 +90,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 5. 测试LOCATE函数
         LocateTestParam locateParam = new LocateTestParam();
-        locateParam.setColumns(Sets.newHashSet("customerName"));
+        locateParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         locateParam.setGroupByItems(Sets.newHashSet("customerName"));
         locateParam.setLocateGt(0); // LOCATE('李', customer_name) > 0
         locateParam.setLocateEqual(1); // LOCATE('李', customer_name) = 1
@@ -98,7 +99,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 6. 测试COALESCE函数
         CoalesceTestParam coalesceParam = new CoalesceTestParam();
-        coalesceParam.setColumns(Sets.newHashSet("bankType"));
+        coalesceParam.setColumns(Sets.newHashSet(SelectColumn.of("bankType")));
         coalesceParam.setGroupByItems(Sets.newHashSet("bankType"));
         coalesceParam.setCoalesceNotEqual(""); // COALESCE(bank_type, 'DEFAULT') != ''
         coalesceParam.setCoalesceEqual("DEFAULT"); // COALESCE(bank_type, 'DEFAULT') = 'DEFAULT'
@@ -107,7 +108,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 7. 测试SUBSTRING函数
         SubstringTestParam substringParam = new SubstringTestParam();
-        substringParam.setColumns(Sets.newHashSet("payId"));
+        substringParam.setColumns(Sets.newHashSet(SelectColumn.of("payId")));
         substringParam.setGroupByItems(Sets.newHashSet("payId"));
         substringParam.setSubstringEqual("PAY"); // SUBSTRING(pay_id, 1, 3) = 'PAY'
         substringParam.setSubstringLike("PAY%"); // SUBSTRING(pay_id, 1, 3) LIKE 'PAY%'
@@ -116,7 +117,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 8. 测试CONCAT函数
         ConcatTestParam concatParam = new ConcatTestParam();
-        concatParam.setColumns(Sets.newHashSet("customerName"));
+        concatParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         concatParam.setGroupByItems(Sets.newHashSet("customerName", "customerPhone"));
         concatParam.setConcatEqual("李威宏17577849574"); // CONCAT(customer_name, customer_phone) = '李威宏17577849574'
         concatParam.setConcatLike("李威宏%"); // CONCAT(customer_name, customer_phone) LIKE '李威宏%'
@@ -127,7 +128,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     private void testNumberFunctions() {
         // 1. 测试ABS函数
         AbsTestParam absParam = new AbsTestParam();
-        absParam.setColumns(Sets.newHashSet("payPrice"));
+        absParam.setColumns(Sets.newHashSet(SelectColumn.of("payPrice")));
         absParam.setGroupByItems(Sets.newHashSet("payPrice"));
         absParam.setAbsGt(0.0); // ABS(pay_price) > 0
         absParam.setAbsLe(1.0); // ABS(pay_price) <= 1
@@ -136,7 +137,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 2. 测试CEILING函数
         CeilingTestParam ceilingParam = new CeilingTestParam();
-        ceilingParam.setColumns(Sets.newHashSet("paymentType"));
+        ceilingParam.setColumns(Sets.newHashSet(SelectColumn.of("paymentType")));
         ceilingParam.setGroupByItems(Sets.newHashSet("paymentType", "orderPrice"));
         ceilingParam.setCeilingGt(0); // CEILING(order_price) > 0
         ceilingParam.setCeilingLt(1000); // CEILING(order_price) < 1000
@@ -145,7 +146,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 3. 测试ROUND函数
         RoundTestParam roundParam = new RoundTestParam();
-        roundParam.setColumns(Sets.newHashSet("payPrice"));
+        roundParam.setColumns(Sets.newHashSet(SelectColumn.of("payPrice")));
         roundParam.setGroupByItems(Sets.newHashSet("payPrice"));
         roundParam.setRoundGt(0.00); // ROUND(pay_price, 2) > 0.00
         roundParam.setRoundEqual(0.01); // ROUND(pay_price, 2) = 0.01
@@ -156,7 +157,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     private void testAggregateFunctions() {
         // 1. 测试AVG函数
         AvgTestParam avgParam = new AvgTestParam();
-        avgParam.setColumns(Sets.newHashSet("customerName"));
+        avgParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         avgParam.setGroupByItems(Sets.newHashSet("customerName"));
         avgParam.setAvgGt(0.0); // AVG(pay_price) > 0
         avgParam.setAvgLe(1.0); // AVG(pay_price) <= 1
@@ -165,7 +166,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 2. 测试SUM函数
         SumTestParam sumParam = new SumTestParam();
-        sumParam.setColumns(Sets.newHashSet("customerName"));
+        sumParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         sumParam.setGroupByItems(Sets.newHashSet("customerName"));
         sumParam.setSumGt(0.0); // SUM(pay_price) > 0
         sumParam.setSumLe(10.0); // SUM(pay_price) <= 10
@@ -174,7 +175,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 3. 测试MAX函数
         MaxTestParam maxParam = new MaxTestParam();
-        maxParam.setColumns(Sets.newHashSet("paymentType"));
+        maxParam.setColumns(Sets.newHashSet(SelectColumn.of("paymentType")));
         maxParam.setGroupByItems(Sets.newHashSet("paymentType"));
         maxParam.setMaxOrderPriceGt(1.0); // MAX(order_price) > 1
         maxParam.setMaxPayPriceLe(2.0); // MAX(pay_price) <= 2
@@ -183,7 +184,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 4. 测试MIN函数
         MinTestParam minParam = new MinTestParam();
-        minParam.setColumns(Sets.newHashSet("paymentStatus"));
+        minParam.setColumns(Sets.newHashSet(SelectColumn.of("paymentStatus")));
         minParam.setGroupByItems(Sets.newHashSet("paymentStatus"));
         minParam.setMinPayPriceGt(0.0); // MIN(pay_price) > 0
         minParam.setMinOrderPriceGt(0.0); // MIN(order_price) > 1000
@@ -192,7 +193,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 5. 测试COUNT函数
         CountTestParam countParam = new CountTestParam();
-        countParam.setColumns(Sets.newHashSet("paymentType"));
+        countParam.setColumns(Sets.newHashSet(SelectColumn.of("paymentType")));
         countParam.setGroupByItems(Sets.newHashSet("paymentType"));
         countParam.setCountGt(1); // COUNT(*) > 1
         countParam.setCountLe(20); // COUNT(*) <= 20
@@ -203,7 +204,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     private void testOperators() {
         // 测试各种操作符
         OperatorTestParam operatorParam = new OperatorTestParam();
-        operatorParam.setColumns(Sets.newHashSet("customerName", "paymentType", "bankType"));
+        operatorParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName", "paymentType", "bankType")));
         operatorParam.setGroupByItems(Sets.newHashSet("customerName", "paymentType", "bankType"));
         operatorParam.setBetweenValue(new QueryPair<>(1, 20)); // COUNT(*) BETWEEN 1 AND 20
         operatorParam.setInValues(Sets.newHashSet(1)); // payment_type IN (1)
@@ -217,7 +218,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     private void testComplexCombinations() {
         // 1. 测试多条件AND组合
         ComplexAndTestParam andParam = new ComplexAndTestParam();
-        andParam.setColumns(Sets.newHashSet("customerName"));
+        andParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         andParam.setGroupByItems(Sets.newHashSet("customerName"));
         andParam.setCountGt(0); // COUNT(*) > 0
         andParam.setMaxPayPriceGt(0.0); // MAX(pay_price) > 0
@@ -226,7 +227,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 2. 测试多条件OR组合
         ComplexOrTestParam orParam = new ComplexOrTestParam();
-        orParam.setColumns(Sets.newHashSet("paymentType"));
+        orParam.setColumns(Sets.newHashSet(SelectColumn.of("paymentType")));
         orParam.setGroupByItems(Sets.newHashSet("paymentType", "orderPrice"));
         orParam.setSumOrderPriceGe(500.0); // SUM(order_price) >= 500
         orParam.setCountEq(1); // COUNT(*) = 1
@@ -235,7 +236,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
 
         // 3. 测试分组条件组合
         GroupCombinationTestParam groupParam = new GroupCombinationTestParam();
-        groupParam.setColumns(Sets.newHashSet("paymentStatus"));
+        groupParam.setColumns(Sets.newHashSet(SelectColumn.of("paymentStatus")));
         groupParam.setGroupByItems(Sets.newHashSet("paymentStatus"));
         // Group 0: COUNT(*) >= 1 AND AVG(pay_price) > 0
         groupParam.setGroup0Count(1);
@@ -252,7 +253,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class LengthTestParam {
-        @Having(value = "customerName", function = SqlFunctionEnum.length, operator = HavingOperatorEnum.equal, sort = 0)
+        @Having(value = "customerName", function = SqlFunctionEnum.length, operator = HavingOperatorEnum.equal)
         private Integer lengthEqual;
 
         @Having(value = "customerName", function = SqlFunctionEnum.length, operator = HavingOperatorEnum.gt, sort = 1, related = RelatedOperatorEnum.AND)
@@ -262,7 +263,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -271,7 +272,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class LowerTestParam {
-        @Having(value = "bankType", function = SqlFunctionEnum.lower, operator = HavingOperatorEnum.equal, sort = 0)
+        @Having(value = "bankType", function = SqlFunctionEnum.lower, operator = HavingOperatorEnum.equal)
         private String lowerEqual;
 
         @Having(value = "bankType", function = SqlFunctionEnum.lower, operator = HavingOperatorEnum.notEqual, sort = 1, related = RelatedOperatorEnum.OR)
@@ -281,7 +282,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -290,7 +291,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class UpperTestParam {
-        @Having(value = "tradeState", function = SqlFunctionEnum.upper, operator = HavingOperatorEnum.equal, sort = 0)
+        @Having(value = "tradeState", function = SqlFunctionEnum.upper, operator = HavingOperatorEnum.equal)
         private String upperEqual;
 
         @Having(value = "tradeState", function = SqlFunctionEnum.upper, operator = HavingOperatorEnum.like, sort = 1, related = RelatedOperatorEnum.OR)
@@ -300,7 +301,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -309,7 +310,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class TrimTestParam {
-        @Having(value = "customerName", function = SqlFunctionEnum.trim, operator = HavingOperatorEnum.equal, sort = 0)
+        @Having(value = "customerName", function = SqlFunctionEnum.trim, operator = HavingOperatorEnum.equal)
         private String trimEqual;
 
         @Having(value = "customerName", function = SqlFunctionEnum.trim, operator = HavingOperatorEnum.notEqual, sort = 1, related = RelatedOperatorEnum.AND)
@@ -319,7 +320,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -328,7 +329,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class LocateTestParam {
-        @Having(value = "customerName", function = SqlFunctionEnum.locate, operator = HavingOperatorEnum.gt, str = "李", sort = 0)
+        @Having(value = "customerName", function = SqlFunctionEnum.locate, operator = HavingOperatorEnum.gt, str = "李")
         private Integer locateGt;
 
         @Having(value = "customerName", function = SqlFunctionEnum.locate, operator = HavingOperatorEnum.equal, str = "李", sort = 1, related = RelatedOperatorEnum.OR)
@@ -338,7 +339,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -347,7 +348,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class CoalesceTestParam {
-        @Having(value = "bankType", function = SqlFunctionEnum.coalesce, operator = HavingOperatorEnum.notEqual, str = "DEFAULT", sort = 0)
+        @Having(value = "bankType", function = SqlFunctionEnum.coalesce, operator = HavingOperatorEnum.notEqual, str = "DEFAULT")
         private String coalesceNotEqual;
 
         @Having(value = "bankType", function = SqlFunctionEnum.coalesce, operator = HavingOperatorEnum.equal, str = "DEFAULT", sort = 1, related = RelatedOperatorEnum.OR)
@@ -357,7 +358,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -366,7 +367,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class SubstringTestParam {
-        @Having(value = "payId", function = SqlFunctionEnum.substring, operator = HavingOperatorEnum.equal, substring = {1, 3}, sort = 0)
+        @Having(value = "payId", function = SqlFunctionEnum.substring, operator = HavingOperatorEnum.equal, substring = {1, 3})
         private String substringEqual;
 
         @Having(value = "payId", function = SqlFunctionEnum.substring, operator = HavingOperatorEnum.like, substring = {1, 3}, sort = 1, related = RelatedOperatorEnum.OR)
@@ -376,7 +377,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -385,7 +386,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class ConcatTestParam {
-        @Having(value = "customerName", function = SqlFunctionEnum.concat, operator = HavingOperatorEnum.equal, str = "17577849574", sort = 0)
+        @Having(value = "customerName", function = SqlFunctionEnum.concat, operator = HavingOperatorEnum.equal, str = "17577849574")
         private String concatEqual;
 
         @Having(value = "customerName", function = SqlFunctionEnum.concat, operator = HavingOperatorEnum.like, str = "17577849574", sort = 1, related = RelatedOperatorEnum.OR)
@@ -395,7 +396,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -404,7 +405,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class AbsTestParam {
-        @Having(value = "payPrice", function = SqlFunctionEnum.abs, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(value = "payPrice", function = SqlFunctionEnum.abs, operator = HavingOperatorEnum.gt)
         private Double absGt;
 
         @Having(value = "payPrice", function = SqlFunctionEnum.abs, operator = HavingOperatorEnum.le, sort = 1, related = RelatedOperatorEnum.AND)
@@ -414,7 +415,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -423,7 +424,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class CeilingTestParam {
-        @Having(value = "orderPrice", function = SqlFunctionEnum.ceiling, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(value = "orderPrice", function = SqlFunctionEnum.ceiling, operator = HavingOperatorEnum.gt)
         private Integer ceilingGt;
 
         @Having(value = "orderPrice", function = SqlFunctionEnum.ceiling, operator = HavingOperatorEnum.lt, sort = 1, related = RelatedOperatorEnum.AND)
@@ -433,7 +434,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -442,7 +443,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class RoundTestParam {
-        @Having(value = "payPrice", function = SqlFunctionEnum.round, operator = HavingOperatorEnum.gt, round = 2, sort = 0)
+        @Having(value = "payPrice", function = SqlFunctionEnum.round, operator = HavingOperatorEnum.gt, round = 2)
         private Double roundGt;
 
         @Having(value = "payPrice", function = SqlFunctionEnum.round, operator = HavingOperatorEnum.equal, round = 2, sort = 1, related = RelatedOperatorEnum.OR)
@@ -452,7 +453,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -461,7 +462,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class AvgTestParam {
-        @Having(value = "payPrice", function = SqlFunctionEnum.avg, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(value = "payPrice", function = SqlFunctionEnum.avg, operator = HavingOperatorEnum.gt)
         private Double avgGt;
 
         @Having(value = "payPrice", function = SqlFunctionEnum.avg, operator = HavingOperatorEnum.le, sort = 1, related = RelatedOperatorEnum.AND)
@@ -471,7 +472,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -480,7 +481,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class SumTestParam {
-        @Having(value = "payPrice", function = SqlFunctionEnum.sum, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(value = "payPrice", function = SqlFunctionEnum.sum, operator = HavingOperatorEnum.gt)
         private Double sumGt;
 
         @Having(value = "payPrice", function = SqlFunctionEnum.sum, operator = HavingOperatorEnum.le, sort = 1, related = RelatedOperatorEnum.AND)
@@ -490,7 +491,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -499,7 +500,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class MaxTestParam {
-        @Having(value = "orderPrice", function = SqlFunctionEnum.max, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(value = "orderPrice", function = SqlFunctionEnum.max, operator = HavingOperatorEnum.gt)
         private Double maxOrderPriceGt;
 
         @Having(value = "payPrice", function = SqlFunctionEnum.max, operator = HavingOperatorEnum.le, sort = 1, related = RelatedOperatorEnum.AND)
@@ -509,7 +510,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -518,7 +519,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class MinTestParam {
-        @Having(value = "payPrice", function = SqlFunctionEnum.min, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(value = "payPrice", function = SqlFunctionEnum.min, operator = HavingOperatorEnum.gt)
         private Double minPayPriceGt;
 
         @Having(value = "orderPrice", function = SqlFunctionEnum.min, operator = HavingOperatorEnum.gt, sort = 1, related = RelatedOperatorEnum.AND)
@@ -528,7 +529,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -537,17 +538,17 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class CountTestParam {
-        @Having(value = "1", function = SqlFunctionEnum.count, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(function = SqlFunctionEnum.count1, operator = HavingOperatorEnum.gt)
         private Integer countGt;
 
-        @Having(value = "1", function = SqlFunctionEnum.count, operator = HavingOperatorEnum.le, sort = 1, related = RelatedOperatorEnum.AND)
+        @Having(function = SqlFunctionEnum.count1, operator = HavingOperatorEnum.le, sort = 1, related = RelatedOperatorEnum.AND)
         private Integer countLe;
 
         @Equals
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -556,7 +557,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class OperatorTestParam {
-        @Having(value = "*", function = SqlFunctionEnum.count, operator = HavingOperatorEnum.between, sort = 0)
+        @Having(function = SqlFunctionEnum.countAll, operator = HavingOperatorEnum.between)
         private QueryPair<Integer> betweenValue;
 
         @Having(value = "paymentType", operator = HavingOperatorEnum.in, sort = 1, related = RelatedOperatorEnum.AND)
@@ -575,7 +576,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -584,7 +585,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class ComplexAndTestParam {
-        @Having(value = "*", function = SqlFunctionEnum.count, operator = HavingOperatorEnum.gt, sort = 0)
+        @Having(function = SqlFunctionEnum.countAll, operator = HavingOperatorEnum.gt)
         private Integer countGt;
 
         @Having(value = "payPrice", function = SqlFunctionEnum.max, operator = HavingOperatorEnum.gt, sort = 1, related = RelatedOperatorEnum.AND)
@@ -594,7 +595,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -603,17 +604,17 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @JpaQuery(PayEntity.class)
     @Data
     public static class ComplexOrTestParam {
-        @Having(value = "orderPrice", function = SqlFunctionEnum.sum, operator = HavingOperatorEnum.ge, sort = 0)
+        @Having(value = "orderPrice", function = SqlFunctionEnum.sum, operator = HavingOperatorEnum.ge)
         private Double sumOrderPriceGe;
 
-        @Having(value = "*", function = SqlFunctionEnum.count, operator = HavingOperatorEnum.equal, sort = 1, related = RelatedOperatorEnum.OR)
+        @Having(function = SqlFunctionEnum.countAll, operator = HavingOperatorEnum.equal, sort = 1, related = RelatedOperatorEnum.OR)
         private Integer countEq;
 
         @Equals
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
@@ -623,14 +624,14 @@ public class HavingQueryTest implements QueryAnnotationTest {
     @Data
     public static class GroupCombinationTestParam {
         // Group 0 条件
-        @Having(value = "*", function = SqlFunctionEnum.count, operator = HavingOperatorEnum.ge, group = 0, sort = 0)
+        @Having(function = SqlFunctionEnum.countAll, operator = HavingOperatorEnum.ge)
         private Integer group0Count;
 
-        @Having(value = "payPrice", function = SqlFunctionEnum.avg, operator = HavingOperatorEnum.gt, group = 0, sort = 1, related = RelatedOperatorEnum.AND)
+        @Having(value = "payPrice", function = SqlFunctionEnum.avg, operator = HavingOperatorEnum.gt, sort = 1, related = RelatedOperatorEnum.AND)
         private Double group0Avg;
 
         // Group 1 条件
-        @Having(value = "orderPrice", function = SqlFunctionEnum.max, operator = HavingOperatorEnum.gt, group = 1, sort = 0)
+        @Having(value = "orderPrice", function = SqlFunctionEnum.max, operator = HavingOperatorEnum.gt, group = 1)
         private Double group1Max;
 
         @Having(value = "payPrice", function = SqlFunctionEnum.min, operator = HavingOperatorEnum.ge, group = 1, sort = 1, related = RelatedOperatorEnum.OR)
@@ -640,41 +641,9 @@ public class HavingQueryTest implements QueryAnnotationTest {
         private int deleted = 1;
 
         @Columns
-        private Set<String> columns;
+        private Set<SelectColumn> columns;
 
         @GroupBy
         private Set<String> groupByItems;
-    }
-
-    @JpaQuery(PayEntity.class)
-    @Data
-    public static class HavingQueryTestParam {
-
-
-        @Having(value = "customerName", function = SqlFunctionEnum.length, operator = HavingOperatorEnum.equal, sort = 0)
-        private Integer lengthCustomerName;
-
-
-        @Having(value = "id", operator = HavingOperatorEnum.equal, sort = 1, related = RelatedOperatorEnum.OR)
-        private Integer havingId2;
-
-
-        @Having(value = "id", group = 1, operator = HavingOperatorEnum.equal, sort = 0)
-        private Integer havingId3;
-
-
-        @Having(value = "id", group = 1, operator = HavingOperatorEnum.equal, sort = 1, related = RelatedOperatorEnum.OR)
-        private Integer havingId4;
-
-
-        @Equals
-        private int deleted = 1;
-
-        @Columns
-        private Set<String> columns;
-
-        @GroupBy
-        private Set<String> groupByItems;
-
     }
 }

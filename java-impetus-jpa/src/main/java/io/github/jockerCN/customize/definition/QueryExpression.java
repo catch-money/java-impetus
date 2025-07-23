@@ -11,39 +11,48 @@ public interface QueryExpression {
 
     Expression<?> createPredicate(CriteriaBuilder cb, Root<?> root);
 
-    static <T> QueryExpression sum(String property) {
+    static QueryExpression sum(String property) {
         return (cb, root) -> cb.sum(root.get(property));
     }
 
-    static <T> QueryExpression avg(String property) {
+    static QueryExpression avg(String property) {
         return (cb, root) -> cb.avg(root.get(property));
     }
 
-    static <T> QueryExpression max(String property) {
+    static QueryExpression max(String property) {
         return (cb, root) -> cb.max(root.get(property));
     }
 
-    static <T> QueryExpression min(String property) {
+    static QueryExpression min(String property) {
         return (cb, root) -> cb.min(root.get(property));
     }
 
-    static <T> QueryExpression count(String property) {
-        return (cb, root) -> switch (property) {
-            case "*" -> cb.count(root);
-            case "1" -> cb.count(cb.literal(1));
-            default -> cb.countDistinct(root.get(property));
-        };
+    static QueryExpression count(String property) {
+        return (cb, root) -> cb.count(root.get(property));
     }
 
-    static <T> QueryExpression abs(String property) {
+    static QueryExpression countDistinct(String property) {
+        return (cb, root) -> cb.countDistinct(root.get(property));
+    }
+
+
+    static QueryExpression countAll() {
+        return CriteriaBuilder::count;
+    }
+
+    static QueryExpression count1() {
+        return (cb, root) -> cb.count(cb.literal(1));
+    }
+
+    static QueryExpression abs(String property) {
         return (cb, root) -> cb.abs(root.get(property));
     }
 
-    static <T> QueryExpression ceiling(String property) {
+    static QueryExpression ceiling(String property) {
         return (cb, root) -> cb.ceiling(root.get(property));
     }
 
-    static <T> QueryExpression sqrt(String property) {
+    static QueryExpression sqrt(String property) {
         return (cb, root) -> cb.sqrt(root.get(property));
     }
 
@@ -52,10 +61,11 @@ public interface QueryExpression {
         return (cb, root) -> cb.power(root.get(property), exponent);
     }
 
-    static <T extends Number> QueryExpression round(String property, Integer scale) {
+    static QueryExpression round(String property, Integer scale) {
         return (cb, root) -> cb.round(root.get(property), scale);
     }
 
+    @SuppressWarnings("unused")
     static <T> QueryExpression literal(T value) {
         return (cb, root) -> cb.literal(value);
     }

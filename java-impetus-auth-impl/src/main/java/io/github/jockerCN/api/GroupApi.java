@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import io.github.jockerCN.Result;
 import io.github.jockerCN.api.param.*;
 import io.github.jockerCN.common.TransactionProvider;
+import io.github.jockerCN.customize.SelectColumn;
 import io.github.jockerCN.dao.DaoUtils;
 import io.github.jockerCN.dao.GroupsInfo;
 import io.github.jockerCN.dao.UserGroupPermissions;
@@ -86,7 +87,7 @@ public class GroupApi {
         }
         UserGroupPermissionsQueryParam queryParam = new UserGroupPermissionsQueryParam();
         queryParam.setGroupId(groupId);
-        queryParam.setQueryColumns(Sets.newHashSet("permissionId"));
+        queryParam.setQueryColumns(Sets.newHashSet(SelectColumn.of("permissionId")));
         List<Tuple> tuples = JpaRepositoryUtils.queryList(queryParam, Tuple.class);
         return Result.ok(StreamUtils.toList(tuples, tuple -> (String) tuple.get("permissionId")));
     }

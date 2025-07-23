@@ -4,8 +4,6 @@ import io.github.jockerCN.customize.*;
 import io.github.jockerCN.customize.annotation.*;
 import io.github.jockerCN.customize.annotation.where.*;
 import io.github.jockerCN.customize.definition.AllType;
-import io.github.jockerCN.customize.enums.HavingOperatorEnum;
-import io.github.jockerCN.customize.exception.JpaProcessException;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.*;
@@ -150,12 +148,12 @@ public abstract class JpaQueryEntityBuilder {
         criteriaQueryMap = Map.of(Columns.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
             Columns columns = (Columns) fieldWrapper.annotation();
-            validateFieldType(field, "@Columns", Set.class);
+            validateFieldType(field, "@Columns", Set.class,SelectColumn.class);
             MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
             return (criteriaBuilder, criteriaQuery, root, obj) -> {
-                Set<String> o = invokeMethodHandle(methodHandle, obj, field, "@Columns");
-                if (!CollectionUtils.isEmpty(o)) {
-                    Selection<?>[] array = o.stream().filter(StringUtils::hasLength).map(name -> root.get(name).alias(name)).toArray(Selection[]::new);
+                Set<SelectColumn> selectColumns = invokeMethodHandle(methodHandle, obj, field, "@Columns");
+                if (!CollectionUtils.isEmpty(selectColumns)) {
+                    Selection<?>[] array = selectColumns.stream().map(selectColumn -> selectColumn.selection(criteriaBuilder,root)).toArray(Selection[]::new);
                     Class<?> findType = columns.value();
                     if (findType == Tuple.class) {
                         criteriaQuery.multiselect(array);
@@ -208,34 +206,6 @@ public abstract class JpaQueryEntityBuilder {
                     if (!CollectionUtils.isEmpty(orders)) {
                         criteriaQuery.orderBy(orders);
                     }
-                }
-            };
-        }), Having.class, (fieldWrapper -> {
-            Field field = fieldWrapper.field();
-            Having having = (Having) fieldWrapper.annotation();
-            HavingOperatorEnum operator = having.operator();
-            if (operator == HavingOperatorEnum.no) {
-                return (criteriaBuilder, criteriaQuery, root, obj) -> {
-                    Expression<Number> sum = criteriaBuilder.sum(root.get("1"));
-                    Expression<Number> sum2 = criteriaBuilder.sum(root.get("1"));
-                    criteriaBuilder.and(criteriaBuilder.gt(sum, 2));
-
-                };
-            }
-            validateFieldType(field, "@Having", Boolean.class);
-            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
-            return (criteriaBuilder, criteriaQuery, root, obj) -> {
-                root.get("");
-                Boolean o = invokeMethodHandle(methodHandle, obj, field, "@Having");
-                try {
-                    o = TypeConvert.cast(methodHandle.invoke(obj));
-                } catch (Throwable e) {
-                    String errorMessage = String.format("Error accessing field [%s] of class [%s] with annotation [%s]: %s",
-                            field.getName(),
-                            field.getDeclaringClass().getName(),
-                            "@Having",
-                            e.getMessage());
-                    throw new JpaProcessException(errorMessage, e);
                 }
             };
         }));

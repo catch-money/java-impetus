@@ -1,6 +1,7 @@
 package io.github.jockerCN.jpa.pojo;
 
 import io.github.jockerCN.customize.OderByCondition;
+import io.github.jockerCN.customize.SelectColumn;
 import io.github.jockerCN.customize.annotation.*;
 import lombok.Data;
 
@@ -30,7 +31,7 @@ public abstract class BaseQueryParam {
     private int deleted = 1;
 
     @Columns
-    private Set<String> queryColumns;
+    private Set<SelectColumn> queryColumns;
 
     @OrderBy(OderByCondition.DESC)
     private Set<String> descColumns;

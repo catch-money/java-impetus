@@ -30,5 +30,7 @@ public @interface Having {
 
     int round() default 0;
 
+    int power() default 0;
+
     RelatedOperatorEnum related() default RelatedOperatorEnum.AND;
 }

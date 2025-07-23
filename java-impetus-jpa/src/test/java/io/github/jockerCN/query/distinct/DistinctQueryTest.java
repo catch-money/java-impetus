@@ -1,5 +1,7 @@
 package io.github.jockerCN.query.distinct;
 
+import com.google.common.collect.Sets;
+import io.github.jockerCN.customize.SelectColumn;
 import io.github.jockerCN.customize.annotation.Columns;
 import io.github.jockerCN.customize.annotation.Distinct;
 import io.github.jockerCN.customize.annotation.JpaQuery;
@@ -29,7 +31,7 @@ public class DistinctQueryTest implements QueryAnnotationTest {
     @Override
     public void run() {
         DistinctQueryTestParam param = new DistinctQueryTestParam();
-        param.setCol(Set.of("orderPrice"));
+        param.setCol(Sets.newHashSet(SelectColumn.of("orderPrice")));
         param.setDistinct(true);
         List<Tuple> queryList = jpaQueryManager.queryList(param, Tuple.class);
 
@@ -50,6 +52,6 @@ public class DistinctQueryTest implements QueryAnnotationTest {
         private boolean distinct;
 
         @Columns
-        private Set<String> col;
+        private Set<SelectColumn> col;
     }
 }
