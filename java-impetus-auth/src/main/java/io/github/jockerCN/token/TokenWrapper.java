@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import io.github.jockerCN.dao.UserLoginInfo;
 import io.github.jockerCN.function.Nothing;
 import io.github.jockerCN.function.TriConsumer;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.redis.RedisUtils;
 import org.apache.commons.lang3.StringUtils;
 

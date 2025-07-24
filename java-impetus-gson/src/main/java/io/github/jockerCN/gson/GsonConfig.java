@@ -1,10 +1,10 @@
-package io.github.jockerCN.json;
+package io.github.jockerCN.gson;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import io.github.jockerCN.time.LocalDateUtils;
 import io.github.jockerCN.time.TimeFormatterTemplate;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -47,56 +47,14 @@ public class GsonConfig {
 
             @Override
             public LocalDate read(JsonReader jsonReader) throws IOException {
-                String string = jsonReader.nextString();
-                if (StringUtils.isEmpty(string)) {
-                    return null;
-                }
-                try {
-                    return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_YMD);
-                } catch (Exception e) {
-                    try {
-                        return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_YMD_COMPACT);
-                    } catch (Exception ex) {
-                        try {
-                            return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_YM);
-                        } catch (Exception exc) {
-                            try {
-                                return LocalDate.parse(string,TimeFormatterTemplate.FORMATTER_MD);
-                            } catch (Exception exception) {
-                                throw new RuntimeException(exception);
-                            }
-                        }
-                    }
-                }
+                String time = jsonReader.nextString();
+                return LocalDateUtils.stringToLocalDate(time);
             }
         };
     }
 
-    public static LocalDateTime stringToLocalDateTime(String string) {
-        if (StringUtils.isEmpty(string)) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(string, TimeFormatterTemplate.FORMATTER_YMD_HMS);
-        } catch (Exception e) {
-            try {
-                return LocalDateTime.parse(string, TimeFormatterTemplate.FORMATTER_YMD_THMS);
-            } catch (Exception ex) {
-                try {
-                    return LocalDateTime.parse(string, TimeFormatterTemplate.FORMATTER_YMD_HMS_MILLIS);
-                } catch (Exception exc) {
-                    try {
-                        return LocalDateTime.parse(string, TimeFormatterTemplate.FORMATTER_YMD_THMS_MILLIS);
-                    } catch (Exception exce) {
-                        try {
-                            return LocalDateTime.parse(string, TimeFormatterTemplate.FORMATTER_YMD_THMS_MILLIS_Z);
-                        } catch (Exception excep) {
-                            return LocalDate.parse(string, TimeFormatterTemplate.FORMATTER_YMD).atStartOfDay();
-                        }
-                    }
-                }
-            }
-        }
+    public static LocalDateTime stringToLocalDateTime(String time) {
+        return LocalDateUtils.stringToLocalDateTime(time);
     }
 
     public static TypeAdapter<LocalDateTime> localDateTimeAdapter() {

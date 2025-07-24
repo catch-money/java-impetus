@@ -27,7 +27,7 @@
 
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
-            <artifactId>java-impetus-json</artifactId>
+            <artifactId>java-impetus-gson</artifactId>
         </dependency>
 
         <dependency>
@@ -39,6 +39,7 @@
                     <artifactId>spring-boot-starter-logging</artifactId>
                 </exclusion>
             </exclusions>
+            <version>3.5.3</version>
             <scope>provided</scope>
         </dependency>
 

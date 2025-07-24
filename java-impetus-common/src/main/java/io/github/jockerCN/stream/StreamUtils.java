@@ -10,14 +10,17 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@SuppressWarnings("unused")
 public class StreamUtils {
 
 
@@ -108,4 +111,12 @@ public class StreamUtils {
         }
         return collection.stream().sorted(comparator).collect(Collectors.toList());
     }
+
+
+    public static <E, A, R> R peekToCollection(Collection<E> collection, Predicate<E> predicate, Consumer<E> consumer, Collector<E, A, R> collector) {
+        return collection.stream().filter(predicate)
+                .peek(consumer)
+                .collect(collector);
+    }
+
 }

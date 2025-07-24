@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Data
 public abstract class JpaPojoDTO {
 
-
     private long id;
 
     private LocalDateTime createTime;

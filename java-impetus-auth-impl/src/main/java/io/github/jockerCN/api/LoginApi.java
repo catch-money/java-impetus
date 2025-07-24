@@ -37,7 +37,7 @@ import java.util.Objects;
 public class LoginApi {
 
 
-    @AutoLog(description = "user login model [password]")
+    @AutoLog("user login model [password]")
     @PostMapping("/up")
     public Result<String> login(@RequestBody @Validated LoginRequest loginRequest) {
 

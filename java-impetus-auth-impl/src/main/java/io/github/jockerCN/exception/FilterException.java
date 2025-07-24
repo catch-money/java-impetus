@@ -3,7 +3,7 @@ package io.github.jockerCN.exception;
 import io.github.jockerCN.Result;
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.http.HttpResponseFilter;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.token.TokenProcessException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

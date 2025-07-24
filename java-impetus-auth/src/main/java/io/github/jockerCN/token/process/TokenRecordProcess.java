@@ -13,7 +13,7 @@ import io.github.jockerCN.dao.module.UserPermissionAggregate;
 import io.github.jockerCN.function.Nothing;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.permissions.UserPermissionsProcess;
 import io.github.jockerCN.redis.RedisUtils;
 import io.github.jockerCN.token.RefreshTokenRecord;

@@ -1,7 +1,7 @@
 package io.github.jockerCN.token;
 
 
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.secret.Cryption;
 
 /**

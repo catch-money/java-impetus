@@ -10,5 +10,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AutoLog {
 
-    String description() default "";
+    String value() default "";
 }

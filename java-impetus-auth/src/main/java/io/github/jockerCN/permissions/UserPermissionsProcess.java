@@ -8,7 +8,7 @@ import io.github.jockerCN.dao.DaoUtils;
 import io.github.jockerCN.dao.enums.PermissionTypeEnum;
 import io.github.jockerCN.dao.module.PermissionInfo;
 import io.github.jockerCN.dao.module.UserPermissionAggregate;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.redis.RedisUtils;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;

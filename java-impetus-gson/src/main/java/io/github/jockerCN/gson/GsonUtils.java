@@ -1,4 +1,4 @@
-package io.github.jockerCN.json;
+package io.github.jockerCN.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

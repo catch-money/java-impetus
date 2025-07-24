@@ -35,6 +35,6 @@ public class LogAspectController {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         AutoLog autoLogAnnotation = method.getAnnotation(AutoLog.class);
-        logger.info("[{}] ARGS: {}", autoLogAnnotation.description(),  joinPoint.getArgs());
+        logger.info("[{}] ARGS: {}", autoLogAnnotation.value(),  joinPoint.getArgs());
     }
 }

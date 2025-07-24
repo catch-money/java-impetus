@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class LogoutApi {
 
 
-    @AutoLog(description = "user logout")
+    @AutoLog("user logout")
     @PostMapping("/out")
     public Result<Void> login() {
         RequestInfo requestInfo = RequestContext.getRequestContext();

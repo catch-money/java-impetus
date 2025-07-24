@@ -4,14 +4,15 @@ import io.github.jockerCN.customize.OderByCondition;
 import io.github.jockerCN.customize.SelectColumn;
 import io.github.jockerCN.customize.annotation.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 @Data
+@NoArgsConstructor
 public abstract class BaseQueryParam {
 
     @PageSize
@@ -22,13 +23,6 @@ public abstract class BaseQueryParam {
 
     @Limit
     private Integer limitCount;
-
-
-    private LocalDateTime startTime;
-
-    private LocalDateTime endTime;
-
-    private int deleted = 1;
 
     @Columns
     private Set<SelectColumn> queryColumns;

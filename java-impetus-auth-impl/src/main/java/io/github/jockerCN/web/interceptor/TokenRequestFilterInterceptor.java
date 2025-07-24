@@ -6,7 +6,7 @@ import io.github.jockerCN.filter.interceptor.RequestFilterInterceptor;
 import io.github.jockerCN.http.HttpResponseFilter;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.http.request.RequestInfo;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.token.TokenProcessException;
 import io.github.jockerCN.token.process.TokenRecordProcess;
 import io.github.jockerCN.type.TypeConvert;

@@ -6,7 +6,6 @@ import io.github.jockerCN.customize.annotation.where.IN;
 import io.github.jockerCN.customize.annotation.where.Like;
 import io.github.jockerCN.customize.annotation.where.NotLike;
 import io.github.jockerCN.dao.UserGroups;
-import io.github.jockerCN.page.query.PageQueryParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -18,7 +17,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @JpaQuery(UserGroups.class)
-public class UserGroupsQueryParam extends PageQueryParam {
+public class UserGroupsQueryParam extends AuthBaseQueryParam {
 
     @Like("username")
     private String usernameLike;

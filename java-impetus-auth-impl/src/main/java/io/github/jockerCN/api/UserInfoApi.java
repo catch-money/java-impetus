@@ -14,7 +14,7 @@ import io.github.jockerCN.generator.SnowflakeIdGenerator;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
 import io.github.jockerCN.jpa.rep.UserPermissionsRep;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.log.AutoLog;
 import io.github.jockerCN.permissions.UserPermissionsProcess;
 import io.github.jockerCN.secret.Cryption;
@@ -282,7 +282,7 @@ public class UserInfoApi {
         return Result.ok();
     }
 
-    @AutoLog(description = "change password")
+    @AutoLog("change password")
     @PostMapping("upPwd")
     @Transactional(rollbackFor = Exception.class)
     public Result<Void> changePwd(@RequestBody PasswordUpdate passwordUpdate) {

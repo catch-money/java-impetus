@@ -17,7 +17,4 @@ public abstract class PageQueryParam extends BaseQueryParam {
 
     @Equals
     private Long id;
-
-    @Equals
-    private int deleted = 1;
 }

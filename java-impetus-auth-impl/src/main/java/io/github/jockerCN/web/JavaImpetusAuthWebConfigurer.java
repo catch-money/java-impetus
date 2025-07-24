@@ -2,7 +2,7 @@ package io.github.jockerCN.web;
 
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.config.url.AuthUrlConfig;
-import io.github.jockerCN.json.GsonConfig;
+import io.github.jockerCN.gson.GsonConfig;
 import io.github.jockerCN.page.ModuleParamArgumentResolver;
 import io.github.jockerCN.web.handle.JavaImpetusAuthImplHandler;
 import lombok.extern.slf4j.Slf4j;

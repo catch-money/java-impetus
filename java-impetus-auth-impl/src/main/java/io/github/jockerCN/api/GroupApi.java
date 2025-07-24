@@ -19,7 +19,7 @@ import io.github.jockerCN.event.UserPermissionEvent;
 import io.github.jockerCN.generator.SnowflakeIdGenerator;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
 import io.github.jockerCN.jpa.rep.UserGroupPermissionsRep;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.stream.StreamUtils;
 import jakarta.persistence.Tuple;
 import jakarta.validation.constraints.NotBlank;

@@ -6,7 +6,6 @@ import io.github.jockerCN.customize.annotation.where.IN;
 import io.github.jockerCN.dao.Permission;
 import io.github.jockerCN.dao.enums.HttpMethodEnum;
 import io.github.jockerCN.dao.enums.PermissionTypeEnum;
-import io.github.jockerCN.page.query.PageQueryParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -18,7 +17,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @JpaQuery(Permission.class)
-public class PermissionQueryParam extends PageQueryParam {
+public class PermissionQueryParam extends AuthBaseQueryParam {
 
 
     @IN("permissionId")

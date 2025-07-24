@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public abstract class JpaRepositoryUtils {
 
 
@@ -23,6 +24,7 @@ public abstract class JpaRepositoryUtils {
         return SpringProvider.getBean(beanName);
     }
 
+    @SuppressWarnings("all")
     public static <T> T save(T clazz) {
         JpaRepository<T, Long> repository = TypeConvert.cast(getJpaRepository(clazz.getClass()));
         return repository.save(clazz);
@@ -39,7 +41,7 @@ public abstract class JpaRepositoryUtils {
         repository.delete(clazz);
     }
 
-
+    @SuppressWarnings("all")
     public static <T> Collection<T> saveAll(Collection<T> clazz, Class<T> tClass) {
         JpaRepository<T, Long> repository = TypeConvert.cast(getJpaRepository(tClass));
         return repository.saveAll(clazz);

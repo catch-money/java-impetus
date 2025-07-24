@@ -26,17 +26,17 @@ public abstract class NumberUtils {
 
     public static final BigDecimal ONE_MILLION = new BigDecimal("1000000.00");
 
-    public static final BigDecimal YARD_TO_METERS = new BigDecimal("1.0936");
+    public static final BigDecimal YARD_TO_METERS = new BigDecimal("0.9144");
 
-    public static final BigDecimal METERS_TO_YARD = new BigDecimal("0.9144");
+    public static final BigDecimal METERS_TO_YARD = new BigDecimal("1.0936");
 
 
     public static BigDecimal yardToMeters(BigDecimal meters) {
-        return meters.multiply(YARD_TO_METERS);
+        return mul(meters, YARD_TO_METERS);
     }
 
     public static BigDecimal metersToYard(BigDecimal yard) {
-        return yard.multiply(METERS_TO_YARD);
+        return mul(yard, METERS_TO_YARD);
     }
 
     public static BigDecimal nullToZero(BigDecimal value) {

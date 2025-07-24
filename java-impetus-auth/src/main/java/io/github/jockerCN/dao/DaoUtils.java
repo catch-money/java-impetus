@@ -9,7 +9,7 @@ import io.github.jockerCN.dao.module.UserPermissionAggregate;
 import io.github.jockerCN.dao.query.*;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.stream.StreamUtils;
 import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.CollectionUtils;

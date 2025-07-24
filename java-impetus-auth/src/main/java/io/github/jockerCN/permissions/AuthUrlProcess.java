@@ -9,7 +9,7 @@ import io.github.jockerCN.common.SpringUtils;
 import io.github.jockerCN.config.url.AuthUrlConfig;
 import io.github.jockerCN.dao.DaoUtils;
 import io.github.jockerCN.dao.Permission;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.redis.RedisUtils;
 import io.github.jockerCN.stream.StreamUtils;
 import org.apache.commons.collections4.CollectionUtils;

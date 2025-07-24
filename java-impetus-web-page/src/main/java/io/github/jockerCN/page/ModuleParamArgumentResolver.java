@@ -2,14 +2,19 @@ package io.github.jockerCN.page;
 
 import com.google.gson.JsonSyntaxException;
 import io.github.jockerCN.common.SpringProvider;
+import io.github.jockerCN.customize.QueryPair;
 import io.github.jockerCN.exception.CustomerArgumentResolverException;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
-import io.github.jockerCN.json.GsonConfig;
+import io.github.jockerCN.gson.GsonConfig;
 import io.github.jockerCN.time.TimeFormatterTemplate;
+import io.github.jockerCN.type.TypeConvert;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.ServletRequestParameterPropertyValues;
 import org.springframework.web.bind.WebDataBinder;
@@ -21,14 +26,15 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import java.beans.PropertyEditorSupport;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolver {
 
     private final Map<String, Class<? extends BaseQueryParam>> MODULE_PARAM_CLASS_MAP;
+
+    private final static DefaultFormattingConversionService conversionService = new DefaultFormattingConversionService(){{
+        addConverter(new StringToQueryPairConverter(conversionService));
+    }};
 
     public ModuleParamArgumentResolver() {
         Collection<PageMapper> pageMappers = SpringProvider.getBeans(PageMapper.class);
@@ -72,7 +78,8 @@ public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolve
         ServletRequestParameterPropertyValues propertyValues = new ServletRequestParameterPropertyValues(request);
         WebDataBinder binder = new WebDataBinder(param);
         binder.registerCustomEditor(LocalDateTime.class, new LocalDateTimeEditor());
-        binder.registerCustomEditor(LocalDate.class, new LocalDateEditor());
+        binder.registerCustomEditor(LocalDateTime.class, new LocalDateTimeEditor());
+        binder.setConversionService(conversionService);
         binder.bind(propertyValues);
         return param;
     }
@@ -101,6 +108,39 @@ public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolve
                 }
 
             }
+        }
+    }
+
+
+    public static class StringToQueryPairConverter implements GenericConverter {
+
+        private final DefaultFormattingConversionService conversionService;
+
+        public StringToQueryPairConverter(DefaultFormattingConversionService conversionService) {
+            this.conversionService = conversionService;
+        }
+
+        @Override
+        public Set<ConvertiblePair> getConvertibleTypes() {
+            return Collections.singleton(new ConvertiblePair(String[].class, QueryPair.class));
+        }
+
+        @Override
+        public Object convert(Object source, @NonNull TypeDescriptor sourceType, @NonNull TypeDescriptor targetType) {
+            Objects.requireNonNull(source, "StringToQueryPairConverter#convert source is null");
+            Class<?> rawClass = targetType.getResolvableType().getGeneric(0).getRawClass();
+            Objects.requireNonNull(rawClass, "StringToQueryPairConverter#convert targetType generic class is null");
+
+            Object[] sourceArray = (Object[]) source;
+            Object first = sourceArray[0];
+            Object second = sourceArray[1];
+            try {
+                first = conversionService.convert(first, rawClass);
+                second = conversionService.convert(second, rawClass);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("StringToQueryPairConverter#convert source convert failed", e);
+            }
+            return new QueryPair<>(TypeConvert.cast(first), TypeConvert.cast(second));
         }
     }
 

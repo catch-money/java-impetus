@@ -4,7 +4,6 @@ import io.github.jockerCN.customize.annotation.JpaQuery;
 import io.github.jockerCN.customize.annotation.where.Equals;
 import io.github.jockerCN.customize.annotation.where.IN;
 import io.github.jockerCN.dao.UserGroupPermissions;
-import io.github.jockerCN.page.query.PageQueryParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,7 +15,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @JpaQuery(UserGroupPermissions.class)
-public class UserGroupPermissionsQueryParam  extends PageQueryParam {
+public class UserGroupPermissionsQueryParam  extends AuthBaseQueryParam {
 
 
     @Equals

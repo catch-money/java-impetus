@@ -1,10 +1,14 @@
 package io.github.jockerCN.type;
 
+import io.github.jockerCN.number.NumberUtils;
+
+import java.math.BigDecimal;
 import java.util.Objects;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@SuppressWarnings("unused")
 public interface TypeConvert {
 
 
@@ -58,7 +62,7 @@ public interface TypeConvert {
         return cast(obj, Void.class);
     }
 
-    <T> T convert(Object original, Class<T> target);
+    Object convert(Object original, Class<?> target);
 
 
     static Double toDouble(Object obj) {
@@ -79,6 +83,9 @@ public interface TypeConvert {
 
     static Boolean toBoolean(Object obj) {
         return Objects.isNull(obj) ? null : Boolean.parseBoolean(toString(obj));
+    }
+    static BigDecimal toBigDecimal(Object obj) {
+        return Objects.isNull(obj) ? null : NumberUtils.fromBigDecimal(obj);
     }
 
     static Integer toInteger(Object obj) {

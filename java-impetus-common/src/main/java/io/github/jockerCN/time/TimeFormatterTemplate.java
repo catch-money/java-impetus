@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@SuppressWarnings("unused")
 public abstract class TimeFormatterTemplate {
 
     // 常见时间格式字符串
@@ -12,6 +13,7 @@ public abstract class TimeFormatterTemplate {
     public static final String FORMAT_YM_CHINESE = "yyyy年MM月";
     public static final String FORMAT_YMD = "yyyy-MM-dd";
     public static final String FORMAT_MD = "MM-dd";
+    public static final String FORMAT_HMS = "HH:mm:ss";
     public static final String FORMAT_MD_CHINESE = "MM月dd日";
     public static final String FORMAT_YMD_COMPACT = "yyyyMMdd";
     public static final String FORMAT_YMDHMS_COMPACT = "yyyyMMddHHmmss";
@@ -26,6 +28,7 @@ public abstract class TimeFormatterTemplate {
     public static final DateTimeFormatter FORMATTER_MD_CHINESE = DateTimeFormatter.ofPattern(FORMAT_MD_CHINESE);
     public static final DateTimeFormatter FORMATTER_MD = DateTimeFormatter.ofPattern(FORMAT_MD);
     public static final DateTimeFormatter FORMATTER_YM = DateTimeFormatter.ofPattern(FORMAT_YM);
+    public static final DateTimeFormatter FORMATTER_HMS = DateTimeFormatter.ofPattern(FORMAT_HMS);
     public static final DateTimeFormatter FORMATTER_YM_CHINESE = DateTimeFormatter.ofPattern(FORMAT_YM_CHINESE);
     public static final DateTimeFormatter FORMATTER_YMD = DateTimeFormatter.ofPattern(FORMAT_YMD);
     public static final DateTimeFormatter FORMATTER_YMD_COMPACT = DateTimeFormatter.ofPattern(FORMAT_YMD_COMPACT);

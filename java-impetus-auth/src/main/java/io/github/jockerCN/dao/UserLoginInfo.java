@@ -5,7 +5,7 @@ import io.github.jockerCN.dao.enums.TokenExpiryStrategy;
 import io.github.jockerCN.function.TriConsumer;
 import io.github.jockerCN.jpa.BaseJapPojo;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.secret.Cryption;
 import io.github.jockerCN.secret.SecureRandomCharacter;

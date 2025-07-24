@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.1</version>
+        <version>3.5.3</version>
         <relativePath/>
     </parent>
 
@@ -32,11 +32,14 @@
         <redisson.version>3.30.0</redisson.version>
         <gson.version>2.11.0</gson.version>
         <apache-commons-collections4>4.5.0-M2</apache-commons-collections4>
-        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <commons-lang3.version>3.18.0</commons-lang3.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <commons-codec.version>1.17.1</commons-codec.version>
         <google.zxing.version>3.5.3</google.zxing.version>
+        <ezylang.version>3.5.0</ezylang.version>
         <jakarta.jakartaee-api.version>11.0.0-M4</jakarta.jakartaee-api.version>
+        <jakarta.el-api.version>6.0.1</jakarta.el-api.version>
+        <jackson.version>2.19.2</jackson.version>
         <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
@@ -103,7 +106,7 @@
 
             <dependency>
                 <groupId>io.github.jocker-cn</groupId>
-                <artifactId>java-impetus-json</artifactId>
+                <artifactId>java-impetus-gson</artifactId>
                 <version>${java-impetus.version}</version>
             </dependency>
 
@@ -217,6 +220,42 @@
                 <groupId>com.github.ben-manes.caffeine</groupId>
                 <artifactId>caffeine</artifactId>
                 <version>${caffeine.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.el</groupId>
+                <artifactId>jakarta.el-api</artifactId>
+                <version>${jakarta.el-api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.ezylang</groupId>
+                <artifactId>EvalEx</artifactId>
+                <version>${ezylang.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
 
         </dependencies>

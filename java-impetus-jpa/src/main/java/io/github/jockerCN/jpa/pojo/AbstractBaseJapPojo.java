@@ -22,7 +22,7 @@ public abstract class AbstractBaseJapPojo extends JpaPojo {
     @Column(name = "updater")
     private String updater;
 
-    @Column(name = "deleted ")
+    @Column(name = "deleted")
     private int deleted;
 
     public static final String _creator = "creator";

@@ -2,7 +2,7 @@ package io.github.jockerCN.token;
 
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.dao.UserAccount;
-import io.github.jockerCN.json.GsonUtils;
+import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.secret.Cryption;
 import io.github.jockerCN.secret.SecureRandomCharacter;
 import jakarta.annotation.Nullable;
