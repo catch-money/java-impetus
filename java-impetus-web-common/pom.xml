@@ -27,7 +27,7 @@
 
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
-            <artifactId>java-impetus-gson</artifactId>
+            <artifactId>java-impetus-jackson</artifactId>
         </dependency>
 
         <dependency>

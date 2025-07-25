@@ -112,6 +112,12 @@
 
             <dependency>
                 <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-jackson</artifactId>
+                <version>${java-impetus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
                 <artifactId>java-impetus-jpa</artifactId>
                 <version>${java-impetus.version}</version>
             </dependency>
