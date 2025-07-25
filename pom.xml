@@ -26,6 +26,7 @@
         <module>java-impetus-jpa</module>
         <module>java-impetus-auth</module>
         <module>java-impetus-auth-impl</module>
+        <module>java-impetus-redis</module>
 
     </modules>
 

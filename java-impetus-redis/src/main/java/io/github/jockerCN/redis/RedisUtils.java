@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 
-
+@SuppressWarnings("unused")
 public class RedisUtils {
 
     private static StringRedisTemplate stringRedisTemplate;
@@ -171,7 +171,7 @@ public class RedisUtils {
     }
 
     public static boolean del(String key) {
-        return Boolean.TRUE.equals(stringRedisTemplate.delete(key));
+        return stringRedisTemplate.delete(key);
     }
 
     public static boolean delKeys(Set<String> keys) {
@@ -205,7 +205,7 @@ public class RedisUtils {
     }
 
     public static boolean exist(String key) {
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
+        return stringRedisTemplate.hasKey(key);
     }
 
     public static boolean existSet(String key, Object value) {
