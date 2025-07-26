@@ -1,12 +1,10 @@
 package io.github.jockerCN.page;
 
-import com.google.gson.JsonSyntaxException;
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.customize.QueryPair;
 import io.github.jockerCN.exception.CustomerArgumentResolverException;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
-import io.github.jockerCN.gson.GsonConfig;
-import io.github.jockerCN.time.TimeFormatterTemplate;
+import io.github.jockerCN.time.LocalDateUtils;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
@@ -24,7 +22,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.beans.PropertyEditorSupport;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -90,7 +87,7 @@ public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolve
         @Override
         public void setAsText(String text) throws IllegalArgumentException {
             if (text != null && !text.isEmpty()) {
-                setValue(GsonConfig.stringToLocalDateTime(text));
+                setValue(LocalDateUtils.stringToLocalDateTime(text));
             }
         }
     }
@@ -101,12 +98,7 @@ public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolve
         @Override
         public void setAsText(String text) throws IllegalArgumentException {
             if (text != null && !text.isEmpty()) {
-                try {
-                    setValue(LocalDate.parse(text, TimeFormatterTemplate.FORMATTER_YMD));
-                } catch (Exception e) {
-                    throw new JsonSyntaxException(e);
-                }
-
+                setValue(LocalDateUtils.stringToLocalDate(text));
             }
         }
     }

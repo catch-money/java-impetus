@@ -2,7 +2,6 @@ package jockerCN.web.page;
 
 import io.github.jockerCN.configuration.EnableAutoJpa;
 import io.github.jockerCN.page.ModuleParamArgumentResolver;
-import io.github.jockerCN.redis.RedisUtils;
 import io.github.jockerCN.time.TimeFormatterTemplate;
 import jockerCN.web.page.queryParam.TestQueryParam;
 import org.junit.jupiter.api.Assertions;
@@ -74,7 +73,7 @@ public class WebPageBaseTest {
     @Configuration
     @EnableAutoConfiguration
     @ComponentScan(basePackages = "io.github.jockerCN",
-            excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = RedisUtils.class)
+            excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE)
     )
     static class WebPageTestConfig {
 
