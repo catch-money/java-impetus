@@ -13,7 +13,6 @@ import io.github.jockerCN.query.ltAndLeAndGtAndGe.LtAndLeAndGtAndGeQueryTest;
 import io.github.jockerCN.query.noEquals.NoEqualsQueryTest;
 import io.github.jockerCN.query.nullAndNotNull.NullAndNotNullQueryTest;
 import io.github.jockerCN.query.orderBy.OrderByQueryTest;
-import io.github.jockerCN.redis.RedisUtils;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
@@ -86,7 +85,7 @@ public class JpaTestBase {
     @Configuration
     @EnableAutoConfiguration
     @ComponentScan(basePackages = "io.github.jockerCN",
-            excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = RedisUtils.class)
+            excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE)
     )
     static class JpaTestConfig{
 
