@@ -10,32 +10,35 @@ Java Impetus 是一个专注于提供**语法糖式工具类**和**框架扩展�
 
 java-impetus-jpa 是一个基于 JPA 的增强工具库，通过注解驱动的方式简化复杂查询的编写。它提供了丰富的查询注解、自动化的 Repository 管理、以及声明式的查询参数处理
 
-使用方式和内容可[查阅文档](java-impetus-jpa/README.md)
+使用方式和内容可查询文档[README.md](java-impetus-jpa/README.md)
 
 
 ## [java-impetus-jackson](java-impetus-jackson)
 
 java-impetus-jackson 提供了jackson常规的配置和json操作的工具类
 
-使用方式和内容可[查阅文档](java-impetus-jackson/README.md)
+使用方式和内容可查阅文档[README.md](java-impetus-jackson/README.md)
 
 ## [java-impetus-spring-common](java-impetus-spring-common)
 java-impetus-spring-common 封装了[Spring Boot](https://github.com/spring-projects/spring-boot) 开发过程中的一些常用操作
 
-使用方式和内容可[查阅文档](java-impetus-spring-common)
+使用方式和内容可查阅文档[README.md](java-impetus-spring-common/README.md)
 
 ## [java-impetus-web-common](java-impetus-web-common)
 java-impetus-web-common 封装了web开发过程中的跨域处理、异常统一处理、日志处理、消息处理等操作
-使用方式和内容可[查阅文档](java-impetus-web-common/README.md)
+
+使用方式和内容可查阅文档[README.md](java-impetus-web-common/README.md)
 
 ## [java-impetus-web-page](java-impetus-web-page)
 
 java-impetus-web-page 基于[java-impetus-jpa](java-impetus-jpa)实现分页查询的统一处理,只需单个接口即可实现所有单表的分页查询
-使用方式和内容可[查阅文档](java-impetus-web-page/README.md)
+
+使用方式和内容可查阅文档[README.md](java-impetus-web-page/README.md)
 
 ## [java-impetus-common](java-impetus-common)
 java-impetus-common 提供了开发过程中的一些常用的工具类
-使用方式和内容可[查阅文档](java-impetus-common/README.md)
+
+使用方式和内容可查阅文档[README.md](java-impetus-common/README.md)
 
 ## 🚀 快速开始
 
