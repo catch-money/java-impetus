@@ -1,13 +1,13 @@
 # java-impetus-jpa ![Static Badge](https://img.shields.io/badge/spring_data_jpa-3.5.3-brightgreen?style=flat&logo=spring-boot&logoColor=white)
 java-impetus-jpa 是对[spring-boot-starter-data-jpa](https://spring.io/projects/spring-data-jpa)的扩展.
 
-该模块提供了注解驱动的单表查询方式和对Repository接口的自动化管理.
-您可以以极为简单的方式完成单表的查询逻辑,不再需要针对不同的实体类(Entity)去实现不同的扩展接口,对于查询参数的添加和删除成本也非常低,让更多的精力放在业务功能开发上.
+该模块提供了注解驱动的单表查询和对JpaRepository接口的自动化管理.
+您可以以极为简单的方式完成单表的查询逻辑,不再需要针对不同的数据库实体类(Entity)去实现不同的扩展接口,对于查询参数的添加和删除成本也非常低,让更多的重心放在业务功能开发上.
 
-java-impetus-jpa 自动管理Entity实体对应的Repository接口,你可以通过该工具[JpaRepositoryUtils.java](src/main/java/io/github/jockerCN/jpa/autoRepository/JpaRepositoryUtils.java)直接获取实体对应的Repository接口,而不需要自己去实现.但是该接口只提供了原生的操作方法,如果你需要再接口中编写复杂的查询逻辑或是多表操作,也可以按照自己的习惯创建对应的Repository接口,这不与框架中所做的处理冲突.
-但是Repository接口不能以`EntityClass.getSimpleName() + "AutoRepository"`的形式命名,他已被占用
+java-impetus-jpa 自动管理Entity实体对应的Jpa Repository接口,你可以通过[JpaRepositoryUtils.java](src/main/java/io/github/jockerCN/jpa/autoRepository/JpaRepositoryUtils.java)直接获取实体对应的JpaRepository接口,而不需要自己去实现.但是该接口只提供了原生的操作方法,如果你需要再接口中编写复杂的查询逻辑或是多表操作,则要按照自己的习惯创建对应的JpaRepository接口,这不与框架中所做的处理冲突.
+但是JpaRepository接口不能以`EntityClass.getSimpleName() + "AutoRepository"`的形式命名,他已被占用
 
-如[PayEntity.java](src/test/java/io/github/jockerCN/entity/PayEntity.java), 再创建`PayEntityAutoRepository`名称的Repository接口是不被允许的.
+如[PayEntity.java](src/test/java/io/github/jockerCN/entity/PayEntity.java), 创建`PayEntityAutoRepository`名称的JpaRepository接口是不被允许的.
 
 ## 快速开始
 
@@ -97,7 +97,7 @@ public class QueryTestParam {
 }
 ```
 
-### 查询逻辑
+### 查询操作
 
 ```java
 QueryTestParam param = new QueryTestParam();  //创建查询参数类
