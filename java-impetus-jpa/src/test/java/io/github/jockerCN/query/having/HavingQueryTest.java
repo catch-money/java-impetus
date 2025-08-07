@@ -204,7 +204,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
     private void testOperators() {
         // 测试各种操作符
         OperatorTestParam operatorParam = new OperatorTestParam();
-        operatorParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName", "paymentType", "bankType")));
+        operatorParam.setColumns(Sets.newHashSet(SelectColumn.ofNames("customerName", "paymentType", "bankType")));
         operatorParam.setGroupByItems(Sets.newHashSet("customerName", "paymentType", "bankType"));
         operatorParam.setBetweenValue(new QueryPair<>(1, 20)); // COUNT(*) BETWEEN 1 AND 20
         operatorParam.setInValues(Sets.newHashSet(1)); // payment_type IN (1)

@@ -6,7 +6,7 @@ import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -20,9 +20,9 @@ public class PageUtils {
     public static <T> PageImpl<T> page(BaseQueryParam queryParam) {
         List<T> queryList = jpaQueryManager.queryList(queryParam);
         if (CollectionUtils.isEmpty(queryList)) {
-            return new PageImpl<>(queryList, Pageable.unpaged(), 0);
+            return new SimplePageImpl<>(queryList, PageRequest.ofSize(queryParam.getPageSize()), 0);
         }
         Long count = jpaQueryManager.count(queryParam);
-        return new PageImpl<>(queryList, Pageable.unpaged(), count);
+        return new SimplePageImpl<>(queryList, PageRequest.ofSize(queryParam.getPageSize()), count);
     }
 }

@@ -71,7 +71,7 @@ public class SelectColumn {
     }
 
 
-    public static Set<SelectColumn> of(String... names) {
+    public static Set<SelectColumn> ofNames(String... names) {
         return Arrays.stream(names).map(SelectColumn::of).collect(Collectors.toSet());
     }
 

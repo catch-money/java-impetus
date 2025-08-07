@@ -7,6 +7,7 @@ import io.github.jockerCN.common.SpringProvider;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -32,6 +33,11 @@ public class JacksonUtils {
 
     public static <T> Set<T> toSet(String json) throws Exception {
         return objectMapper.readValue(json, new TypeReference<Set<T>>() {
+        });
+    }
+
+    public static <k,V> Map<k,V> toMap(String json) throws Exception {
+        return objectMapper.readValue(json, new TypeReference<Map<k,V>>() {
         });
     }
 

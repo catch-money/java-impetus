@@ -94,7 +94,7 @@ public class JacksonConfig {
 
         // LocalTime
         timeModule.addSerializer(LocalTime.class,
-                new LocalTimeSerializer(TimeFormatterTemplate.FORMATTER_YMD));
+                new LocalTimeSerializer(TimeFormatterTemplate.FORMATTER_HMS));
         timeModule.addDeserializer(LocalTime.class,
                 new LocalTimeDeserializer(TimeFormatterTemplate.FORMATTER_HMS));
 
