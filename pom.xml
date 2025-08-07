@@ -15,6 +15,7 @@
     <version>1.1.0</version>
     <packaging>pom</packaging>
     <description>java-impetus parent pom</description>
+    <name>java-impetus</name>
     <modules>
         <module>java-impetus-native-image</module>
         <module>java-impetus-common</module>

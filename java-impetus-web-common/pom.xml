@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>java-impetus-web-common</artifactId>
-
+    <name>java impetus web common</name>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
