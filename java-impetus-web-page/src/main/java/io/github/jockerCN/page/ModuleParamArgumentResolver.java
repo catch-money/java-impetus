@@ -22,6 +22,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.beans.PropertyEditorSupport;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -75,7 +76,7 @@ public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolve
         ServletRequestParameterPropertyValues propertyValues = new ServletRequestParameterPropertyValues(request);
         WebDataBinder binder = new WebDataBinder(param);
         binder.registerCustomEditor(LocalDateTime.class, new LocalDateTimeEditor());
-        binder.registerCustomEditor(LocalDateTime.class, new LocalDateTimeEditor());
+        binder.registerCustomEditor(LocalDate.class, new LocalDateEditor());
         binder.setConversionService(conversionService);
         binder.bind(propertyValues);
         return param;
