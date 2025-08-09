@@ -12,13 +12,6 @@ java-impetus-jpa 是一个基于 JPA 的增强工具库，通过注解驱动的�
 
 使用方式和内容可查询文档[README.md](java-impetus-jpa/README.md)
 
-
-## [java-impetus-jackson](java-impetus-jackson)
-
-java-impetus-jackson 提供了jackson常规的配置和json操作的工具类
-
-使用方式和内容可查阅文档[README.md](java-impetus-jackson/README.md)
-
 ## [java-impetus-spring-common](java-impetus-spring-common)
 java-impetus-spring-common 封装了[Spring Boot](https://github.com/spring-projects/spring-boot) 开发过程中的一些常用操作
 
