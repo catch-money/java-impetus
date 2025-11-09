@@ -3,7 +3,7 @@ package io.github.jockerCN.token;
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.dao.UserAccount;
 import io.github.jockerCN.gson.GsonUtils;
-import io.github.jockerCN.secret.Cryption;
+import io.github.jockerCN.secret.Cryptic;
 import io.github.jockerCN.secret.SecureRandomCharacter;
 import jakarta.annotation.Nullable;
 
@@ -45,18 +45,18 @@ public interface TokenGenerate {
             TokenProperties tokenProperties = TokenProperties.getInstance();
 
             TokenRecord tokenRecord = new TokenRecord(tokenInfo.getUserCode(), tokenInfo.getUsername(), tokenInfo.getCreateTime());
-            tokenInfo.setToken(Cryption.getInstance(data.getClass()).encryptAsString(GsonUtils.toJson(tokenRecord)));
+            tokenInfo.setToken(Cryptic.getInstance(data.getClass()).encryptAsString(GsonUtils.toJson(tokenRecord)));
             long lifetimeSeconds = tokenProperties.getLifetimeSeconds();
             tokenInfo.setExpireTime(tokenInfo.getCreateDateTime().plusSeconds(lifetimeSeconds).toInstant().toEpochMilli());
 
             if (tokenProperties.needRefreshToken()) {
-                tokenInfo.setRefreshToken(Cryption.getInstance(data.getClass()).encryptAsString(tokenInfo.getRefreshToken()));
+                tokenInfo.setRefreshToken(Cryptic.getInstance(data.getClass()).encryptAsString(tokenInfo.getRefreshToken()));
             }
 
             if (tokenProperties.needRefreshToken()) {
                 RefreshTokenRecord refreshTokenRecord = new RefreshTokenRecord(tokenInfo.getUserCode(), tokenInfo.getToken(), SecureRandomCharacter.getDefaultRandomCharactersAsString(2, 24));
                 long tokenLifetimeSeconds = tokenProperties.getRefreshTokenLifetimeSeconds();
-                tokenInfo.setRefreshToken(Cryption.getInstance(data.getClass()).encryptAsString(GsonUtils.toJson(refreshTokenRecord)));
+                tokenInfo.setRefreshToken(Cryptic.getInstance(data.getClass()).encryptAsString(GsonUtils.toJson(refreshTokenRecord)));
                 tokenInfo.setRefreshExpiresIn(tokenInfo.getCreateDateTime().plusSeconds(tokenLifetimeSeconds).toInstant().toEpochMilli());
             }
             tokenInfo.setExpiryStrategy(tokenProperties.getExpiryStrategy());

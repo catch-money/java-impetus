@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.3</version>
+        <version>3.5.7</version>
         <relativePath/>
     </parent>
 
     <groupId>io.github.jocker-cn</groupId>
     <artifactId>java-impetus-dependencies</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <name>java-impetus-dependencies</name>
     <description>Java Impetus framework All dependency</description>
     <packaging>pom</packaging>
@@ -23,7 +23,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
-        <java-impetus.version>1.1.0</java-impetus.version>
+        <java-impetus.version>1.1.1</java-impetus.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <springdoc.version>2.7.0</springdoc.version>
@@ -47,7 +47,7 @@
         <bcprov-jdk18on.version>1.78.1</bcprov-jdk18on.version>
         <commons-compress.version>1.26.2</commons-compress.version>
         <caffeine.version>3.2.0</caffeine.version>
-        <mysql.version>9.2.0</mysql.version>
+        <mysql.version>9.4.0</mysql.version>
     </properties>
 
     <url>https://github.com/catch-money/java-impetus</url>

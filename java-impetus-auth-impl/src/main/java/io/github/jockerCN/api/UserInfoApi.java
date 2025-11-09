@@ -17,7 +17,7 @@ import io.github.jockerCN.jpa.rep.UserPermissionsRep;
 import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.log.AutoLog;
 import io.github.jockerCN.permissions.UserPermissionsProcess;
-import io.github.jockerCN.secret.Cryption;
+import io.github.jockerCN.secret.Cryptic;
 import io.github.jockerCN.secret.CryptoUtils;
 import io.github.jockerCN.stream.StreamUtils;
 import io.github.jockerCN.token.process.TokenRecordProcess;
@@ -303,8 +303,8 @@ public class UserInfoApi {
         final String newPassword = passwordUpdate.getNewPassword();
 
         try {
-            String originalDePwd = Cryption.getInstance(PasswordUpdate.class).decryptAsString(originalPassword);
-            String newDePwd = Cryption.getInstance(PasswordUpdate.class).decryptAsString(newPassword);
+            String originalDePwd = Cryptic.getInstance(PasswordUpdate.class).decryptAsString(originalPassword);
+            String newDePwd = Cryptic.getInstance(PasswordUpdate.class).decryptAsString(newPassword);
             if (!userAccount.getPassword().equals(originalDePwd)) {
                 return Result.failWithMsg("原密码错误");
             }

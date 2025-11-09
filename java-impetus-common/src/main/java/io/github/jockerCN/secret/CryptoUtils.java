@@ -62,6 +62,10 @@ public class CryptoUtils {
         return keys;
     }
 
+    public boolean containsKey(byte[] keys) {
+        return MessageDigest.isEqual(this.keys, keys);
+    }
+
     public String decryptAsString(String decryptData) throws Exception {
         return new String(decrypt(decryptData));
     }

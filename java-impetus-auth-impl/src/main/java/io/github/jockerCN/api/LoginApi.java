@@ -14,7 +14,7 @@ import io.github.jockerCN.event.UserPermissionEvent;
 import io.github.jockerCN.http.request.RequestContext;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
 import io.github.jockerCN.log.AutoLog;
-import io.github.jockerCN.secret.Cryption;
+import io.github.jockerCN.secret.Cryptic;
 import io.github.jockerCN.token.TokenGenerate;
 import io.github.jockerCN.token.TokenProcessException;
 import io.github.jockerCN.token.TokenWrapper;
@@ -41,7 +41,7 @@ public class LoginApi {
     @PostMapping("/up")
     public Result<String> login(@RequestBody @Validated LoginRequest loginRequest) {
 
-        Cryption instance = Cryption.getInstance(loginRequest.getClass());
+        Cryptic instance = Cryptic.getInstance(loginRequest.getClass());
 
         final String username;
         final String password;

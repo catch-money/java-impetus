@@ -7,12 +7,12 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus-dependencies</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
         <relativePath/>
     </parent>
     
     <artifactId>java-impetus</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>pom</packaging>
     <description>java-impetus parent pom</description>
     <name>java-impetus</name>
@@ -28,6 +28,7 @@
         <module>java-impetus-web-page</module>
         <module>java-impetus-auth</module>
         <module>java-impetus-auth-impl</module>
+        <module>java-impetus-simple-security</module>
     </modules>
 
     <properties>

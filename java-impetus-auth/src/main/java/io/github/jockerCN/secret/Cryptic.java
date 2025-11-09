@@ -7,7 +7,7 @@ import java.util.Collection;
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-public interface Cryption {
+public interface Cryptic {
 
     byte[] decrypt(Object data) throws Exception;
 
@@ -24,17 +24,17 @@ public interface Cryption {
     }
 
 
-    static Cryption getInstance(Class<?> obj) {
-        Collection<Cryption> cryptos = SpringProvider.getBeans(Cryption.class);
-        for (Cryption crypto : cryptos) {
+    static Cryptic getInstance(Class<?> obj) {
+        Collection<Cryptic> cryptos = SpringProvider.getBeans(Cryptic.class);
+        for (Cryptic crypto : cryptos) {
             if (crypto.support(obj)) {
                 return crypto;
             }
         }
-        return defaultCryption;
+        return DEFAULT_CRYPTIC;
     }
 
-    Cryption defaultCryption = new Cryption() {
+    Cryptic DEFAULT_CRYPTIC = new Cryptic() {
 
         @Override
         public byte[] decrypt(Object data) throws Exception {

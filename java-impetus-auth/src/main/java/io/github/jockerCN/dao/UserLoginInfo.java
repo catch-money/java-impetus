@@ -7,7 +7,7 @@ import io.github.jockerCN.jpa.BaseJapPojo;
 import io.github.jockerCN.jpa.autoRepository.JpaRepositoryUtils;
 import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.http.request.RequestContext;
-import io.github.jockerCN.secret.Cryption;
+import io.github.jockerCN.secret.Cryptic;
 import io.github.jockerCN.secret.SecureRandomCharacter;
 import io.github.jockerCN.token.RefreshTokenRecord;
 import io.github.jockerCN.token.TokenProperties;
@@ -108,7 +108,7 @@ public class UserLoginInfo extends BaseJapPojo {
         ZonedDateTime zonedNowTime = nowTime.atZone(ZoneId.systemDefault());
         long nowEpochMilli = zonedNowTime.toInstant().toEpochMilli();
         final TokenRecord tokenRecord = new TokenRecord(getUsername(), getUserCode(), nowEpochMilli);
-        final String newToken = Cryption.getInstance(TokenRecord.class).encryptAsString(GsonUtils.toJson(tokenRecord));
+        final String newToken = Cryptic.getInstance(TokenRecord.class).encryptAsString(GsonUtils.toJson(tokenRecord));
         long lifetimeSeconds = tokenProperties.getLifetimeSeconds();
         long tokenExpiredTime = zonedNowTime.plusSeconds(lifetimeSeconds).toInstant().toEpochMilli();
 
@@ -116,7 +116,7 @@ public class UserLoginInfo extends BaseJapPojo {
         long tokenLifetimeSeconds = tokenProperties.getRefreshTokenLifetimeSeconds();
         long refreshExpirationTime = zonedNowTime.plusSeconds(tokenLifetimeSeconds).toInstant().toEpochMilli();
 
-        setRefreshToken(Cryption.getInstance(RefreshTokenRecord.class).encryptAsString(GsonUtils.toJson(newRefreshToken)));
+        setRefreshToken(Cryptic.getInstance(RefreshTokenRecord.class).encryptAsString(GsonUtils.toJson(newRefreshToken)));
         setRefreshExpirationTime(refreshExpirationTime);
         setIpAddress(RequestContext.getRequestContext().ipAddress());
         setUserAgent(RequestContext.getRequestContext().userAgent());
