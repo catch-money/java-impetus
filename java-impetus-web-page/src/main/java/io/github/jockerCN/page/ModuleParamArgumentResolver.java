@@ -28,10 +28,13 @@ import java.util.*;
 
 public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolver {
 
+
+    private final Collection<ArgumentResolverAround> argumentResolverAround = SpringProvider.getBeans(ArgumentResolverAround.class);
+
     private final Map<String, Class<? extends BaseQueryParam>> MODULE_PARAM_CLASS_MAP;
 
     private final static DefaultFormattingConversionService conversionService = new DefaultFormattingConversionService(){{
-        addConverter(new StringToQueryPairConverter(conversionService));
+        addConverter(new StringToQueryPairConverter(this));
     }};
 
     public ModuleParamArgumentResolver() {
@@ -72,13 +75,16 @@ public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolve
         }
 
         BaseQueryParam param = paramClass.getDeclaredConstructor().newInstance();
+        ArgumentResolverAround argumentResolver = getSupportArgumentResolver(param);
 
+        argumentResolver.resolveBefore(module, param);
         ServletRequestParameterPropertyValues propertyValues = new ServletRequestParameterPropertyValues(request);
         WebDataBinder binder = new WebDataBinder(param);
         binder.registerCustomEditor(LocalDateTime.class, new LocalDateTimeEditor());
         binder.registerCustomEditor(LocalDate.class, new LocalDateEditor());
         binder.setConversionService(conversionService);
         binder.bind(propertyValues);
+        argumentResolver.resolveAfter(module, param);
         return param;
     }
 
@@ -137,4 +143,27 @@ public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolve
         }
     }
 
+    public ArgumentResolverAround getSupportArgumentResolver(BaseQueryParam queryParam) {
+        for (ArgumentResolverAround resolverAround : argumentResolverAround) {
+            if (resolverAround.support(queryParam)) {
+                return resolverAround;
+            }
+        }
+        return new ArgumentResolverAround() {
+            @Override
+            public void resolveBefore(String model, BaseQueryParam queryParam) {
+
+            }
+
+            @Override
+            public void resolveAfter(String model, BaseQueryParam queryParam) {
+
+            }
+
+            @Override
+            public boolean support(BaseQueryParam queryParam) {
+                return false;
+            }
+        };
+    }
 }

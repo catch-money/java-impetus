@@ -5,7 +5,7 @@ import org.redisson.api.RAtomicLong;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
-import java.time.Instant;
+import java.time.Duration;
 import java.util.Objects;
 
 /**
@@ -17,7 +17,7 @@ public abstract class RedissonUtils {
     public static final RedissonClient redissonClient = SpringProvider.getBean(RedissonClient.class);
 
 
-    public static long increment(final String key, Instant instant) {
+    public static long increment(final String key, Duration duration) {
         Objects.requireNonNull(key, "RedissonUtils#increment Key must not be null");
         RAtomicLong atomicLong = redissonClient.getAtomicLong(key);
         if (atomicLong.isExists()) {
@@ -25,8 +25,8 @@ public abstract class RedissonUtils {
         }
 
         long value = atomicLong.getAndIncrement();
-        if (Objects.nonNull(instant)) {
-            atomicLong.expire(instant);
+        if (Objects.nonNull(duration)) {
+            atomicLong.expire(duration);
         }
         return value;
     }
