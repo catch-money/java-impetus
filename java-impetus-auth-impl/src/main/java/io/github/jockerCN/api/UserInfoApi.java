@@ -18,7 +18,7 @@ import io.github.jockerCN.gson.GsonUtils;
 import io.github.jockerCN.log.AutoLog;
 import io.github.jockerCN.permissions.UserPermissionsProcess;
 import io.github.jockerCN.secret.Cryptic;
-import io.github.jockerCN.secret.CryptoUtils;
+import io.github.jockerCN.secret.CryptoProvider;
 import io.github.jockerCN.stream.StreamUtils;
 import io.github.jockerCN.token.process.TokenRecordProcess;
 import jakarta.validation.constraints.NotBlank;
@@ -112,7 +112,7 @@ public class UserInfoApi {
             return Result.failWithMsg("未查询到用户信息");
         }
 
-        userAccount.setPassword(CryptoUtils.md5(userAccount.getUsername()));
+        userAccount.setPassword(CryptoProvider.md5(userAccount.getUsername()));
 
         JpaRepositoryUtils.save(userAccount);
 
@@ -195,7 +195,7 @@ public class UserInfoApi {
                 .phone(userAccountAddOrUpdate.getPhone())
                 .idCardNumber(Strings.nullToEmpty(userAccountAddOrUpdate.getIdCardNumber()))
                 .algorithmCode("")
-                .password(CryptoUtils.md5(userAccountAddOrUpdate.getUsername()))
+                .password(CryptoProvider.md5(userAccountAddOrUpdate.getUsername()))
                 .status(userAccountAddOrUpdate.getStatus())
                 .lastLogin(0L)
                 .failedLoginAttempts(0)

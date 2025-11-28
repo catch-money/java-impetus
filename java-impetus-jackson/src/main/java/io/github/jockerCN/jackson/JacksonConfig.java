@@ -7,16 +7,16 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import io.github.jockerCN.number.NumberUtils;
+import io.github.jockerCN.time.LocalDateUtils;
 import io.github.jockerCN.time.TimeFormatterTemplate;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -81,22 +81,16 @@ public class JacksonConfig {
         JavaTimeModule timeModule = new JavaTimeModule();
 
         // LocalDateTime
-        timeModule.addSerializer(LocalDateTime.class,
-                new LocalDateTimeSerializer(TimeFormatterTemplate.FORMATTER_YMD_HMS));
-        timeModule.addDeserializer(LocalDateTime.class,
-                new LocalDateTimeDeserializer(TimeFormatterTemplate.FORMATTER_YMD_HMS));
+        timeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(TimeFormatterTemplate.FORMATTER_YMD_HMS));
+        timeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer());
 
         // LocalDate
-        timeModule.addSerializer(LocalDate.class,
-                new LocalDateSerializer(TimeFormatterTemplate.FORMATTER_YMD));
-        timeModule.addDeserializer(LocalDate.class,
-                new LocalDateDeserializer(TimeFormatterTemplate.FORMATTER_YMD));
+        timeModule.addSerializer(LocalDate.class, new LocalDateSerializer(TimeFormatterTemplate.FORMATTER_YMD));
+        timeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer());
 
         // LocalTime
-        timeModule.addSerializer(LocalTime.class,
-                new LocalTimeSerializer(TimeFormatterTemplate.FORMATTER_HMS));
-        timeModule.addDeserializer(LocalTime.class,
-                new LocalTimeDeserializer(TimeFormatterTemplate.FORMATTER_HMS));
+        timeModule.addSerializer(LocalTime.class, new LocalTimeSerializer(TimeFormatterTemplate.FORMATTER_HMS));
+        timeModule.addDeserializer(LocalTime.class, new LocalTimeDeserializer(TimeFormatterTemplate.FORMATTER_HMS));
 
         objectMapper.registerModule(timeModule);
     }
@@ -114,6 +108,27 @@ public class JacksonConfig {
         objectMapper.registerModule(numberModule);
     }
 
+    public static class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+        @Override
+        public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+            String value = jsonParser.getValueAsString();
+            if (StringUtils.isBlank(value)) {
+                return null;
+            }
+            return LocalDateUtils.stringToLocalDateTime(value);
+        }
+    }
+
+    public static class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
+        @Override
+        public LocalDate deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+            String value = jsonParser.getValueAsString();
+            if (StringUtils.isBlank(value)) {
+                return null;
+            }
+            return LocalDateUtils.stringToLocalDate(value);
+        }
+    }
     /**
      * 自定义BigDecimal序列化器
      */

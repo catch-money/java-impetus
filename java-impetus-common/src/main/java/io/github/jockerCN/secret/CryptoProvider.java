@@ -1,39 +1,36 @@
 package io.github.jockerCN.secret;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
 import java.util.Base64;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-
-public class CryptoUtils {
+public class CryptoProvider {
 
     private final byte[] keys;
 
-    private static final CryptoUtils DEFAULT_CRYPTO;
+    private static final CryptoProvider DEFAULT_CRYPTO;
 
     static {
-        Security.addProvider(new BouncyCastleProvider());
-        DEFAULT_CRYPTO = new CryptoUtils(new byte[]{101, 94, 57, 37, 84, 45, 77, 41, 112, 94, 107, 45, 111, 118, 66, 100, 37, 45, 37, 48, 89, 103, 105, 45, 48, 98, 84, 41, 115, 45, 78, 50});
+        BouncyCastleBootstrap.init();
+        DEFAULT_CRYPTO = new CryptoProvider(new byte[]{101, 94, 57, 37, 84, 45, 77, 41, 112, 94, 107, 45, 111, 118, 66, 100, 37, 45, 37, 48, 89, 103, 105, 45, 48, 98, 84, 41, 115, 45, 78, 50});
     }
 
-    public CryptoUtils() {
+    public CryptoProvider() {
         this.keys = SecureRandomCharacter.getDefaultRandomCharactersAsByte(4, 32);
     }
 
-    public CryptoUtils(byte[] keys) {
+    public CryptoProvider(byte[] keys) {
         this.keys = keys;
     }
 
-    public CryptoUtils(int segmentLength, int totalLength) {
+    public CryptoProvider(int segmentLength, int totalLength) {
         this.keys = SecureRandomCharacter.getDefaultRandomCharactersAsByte(segmentLength, totalLength);
     }
 

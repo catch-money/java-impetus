@@ -38,12 +38,12 @@ public interface Cryptic {
 
         @Override
         public byte[] decrypt(Object data) throws Exception {
-            return CryptoUtils.simpleDecrypt(data.toString());
+            return CryptoProvider.simpleDecrypt(data.toString());
         }
 
         @Override
         public byte[] encrypt(Object data) throws Exception {
-            return CryptoUtils.simpleEncrypt(data.toString());
+            return CryptoProvider.simpleEncrypt(data.toString());
         }
 
         @Override
@@ -53,12 +53,12 @@ public interface Cryptic {
 
         @Override
         public String encryptAsString(Object data) throws Exception {
-            return CryptoUtils.simpleEncryptAsString(data.toString());
+            return CryptoProvider.simpleEncryptAsString(data.toString());
         }
 
         @Override
         public String decryptAsString(Object data) throws Exception {
-            return CryptoUtils.simpleDecryptAsString(data.toString());
+            return CryptoProvider.simpleDecryptAsString(data.toString());
         }
     };
 
