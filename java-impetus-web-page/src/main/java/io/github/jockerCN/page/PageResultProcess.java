@@ -15,7 +15,7 @@ public interface PageResultProcess {
     boolean support(BaseQueryParam queryParam);
 
 
-    void process(PageImpl<?> page);
+    void process(PageImpl<?> page,BaseQueryParam queryParam);
 
     DefaultPageResultProcess DEFAULT_PAGE_RESULT_PROCESS = new DefaultPageResultProcess();
 
@@ -38,7 +38,7 @@ public interface PageResultProcess {
         }
 
         @Override
-        public void process(PageImpl<?> page) {
+        public void process(PageImpl<?> page,BaseQueryParam queryParam) {
 
         }
     }

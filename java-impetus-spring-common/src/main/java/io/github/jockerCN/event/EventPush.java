@@ -18,4 +18,8 @@ public class EventPush {
     public static void push(Object o) {
         EVENT_PUBLISHER.publishEvent(new GenericEvent(new Object(), o));
     }
+
+    public static void pushDefault(Object o) {
+        EVENT_PUBLISHER.publishEvent(o);
+    }
 }
