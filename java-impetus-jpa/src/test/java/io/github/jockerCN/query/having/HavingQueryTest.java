@@ -1,16 +1,16 @@
 package io.github.jockerCN.query.having;
 
 import com.google.common.collect.Sets;
-import io.github.jockerCN.customize.QueryPair;
-import io.github.jockerCN.customize.SelectColumn;
-import io.github.jockerCN.customize.annotation.Columns;
-import io.github.jockerCN.customize.annotation.GroupBy;
-import io.github.jockerCN.customize.annotation.Having;
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.where.Equals;
-import io.github.jockerCN.customize.enums.HavingOperatorEnum;
-import io.github.jockerCN.customize.enums.RelatedOperatorEnum;
-import io.github.jockerCN.customize.enums.SqlFunctionEnum;
+import io.github.jockerCN.jpa.query.model.QueryPair;
+import io.github.jockerCN.jpa.query.model.SelectColumn;
+import io.github.jockerCN.jpa.annotation.Columns;
+import io.github.jockerCN.jpa.annotation.GroupBy;
+import io.github.jockerCN.jpa.annotation.Having;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.Equals;
+import io.github.jockerCN.jpa.query.operator.HavingOperatorEnum;
+import io.github.jockerCN.jpa.query.operator.RelatedOperatorEnum;
+import io.github.jockerCN.jpa.query.operator.SqlFunctionEnum;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.query.QueryAnnotationTest;

@@ -45,11 +45,11 @@ public class JpaTestBase {
     @DynamicPropertySource
     static void dynamicProperties(DynamicPropertyRegistry registry) {
         // 数据源配置
-        registry.add("spring.datasource.url", () -> "jdbc:mysql://192.168.112.129:3306/jpa?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&verifyServerCertificate=false&useSSL=false&allowPublicKeyRetrieval=true");
+        registry.add("spring.datasource.url", () -> "jdbc:mysql://182.254.228.202:43306/jpa?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&verifyServerCertificate=false&useSSL=false&allowPublicKeyRetrieval=true");
         registry.add("spring.datasource.type", () -> "com.zaxxer.hikari.HikariDataSource");
         registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
         registry.add("spring.datasource.username", () -> "root");
-        registry.add("spring.datasource.password", () -> "123456");
+        registry.add("spring.datasource.password", () -> "txy@sql@1.COM");
 
         // HikariCP 连接池配置
         registry.add("spring.datasource.hikari.connection-timeout", () -> "30000"); // 30s

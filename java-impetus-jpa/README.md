@@ -4,7 +4,7 @@ java-impetus-jpa 是对[spring-data-jpa](https://spring.io/projects/spring-data-
 该模块提供了注解驱动的单表查询和对JpaRepository接口的自动化管理.
 您可以以极为简单的方式完成单表的查询逻辑,不再需要针对不同的数据库实体类(Entity)去实现不同的扩展接口,对于查询参数的添加和删除成本也非常低,让更多的重心放在业务功能开发上.
 
-java-impetus-jpa 自动管理Entity实体对应的Jpa Repository接口,你可以通过[JpaRepositoryUtils.java](src/main/java/io/github/jockerCN/jpa/autoRepository/JpaRepositoryUtils.java)直接获取实体对应的JpaRepository接口,而不需要自己去实现.但是该接口只提供了原生的操作方法,如果你需要再接口中编写复杂的查询逻辑或是多表操作,则要按照自己的习惯创建对应的JpaRepository接口,这不与框架中所做的处理冲突.
+java-impetus-jpa 自动管理Entity实体对应的Jpa Repository接口,你可以通过[JpaRepositoryUtils.java](src/main/java/io/github/jockerCN/jpa/utils/JpaRepositoryUtils.java)直接获取实体对应的JpaRepository接口,而不需要自己去实现.但是该接口只提供了原生的操作方法,如果你需要再接口中编写复杂的查询逻辑或是多表操作,则要按照自己的习惯创建对应的JpaRepository接口,这不与框架中所做的处理冲突.
 但是JpaRepository接口不能以`EntityClass.getSimpleName() + "AutoRepository"`的形式命名,他已被占用
 
 如[PayEntity.java](src/test/java/io/github/jockerCN/entity/PayEntity.java), 创建`PayEntityAutoRepository`名称的JpaRepository接口是不被允许的.
@@ -399,9 +399,9 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 
 
 ## 类型安全
-- 运行时类型验证：java-impetus-jpa会在启动时对条件注解标注的字段进行类型校验,当不满足类型约束时,则会抛出[JpaProcessException.java](src/main/java/io/github/jockerCN/customize/exception/JpaProcessException.java)异常.这会终止程序启动.
-  - 对于函数操作的类型,并不做强制类型校验,但是可以通过[HavingOperatorEnum.java](src/main/java/io/github/jockerCN/customize/enums/HavingOperatorEnum.java)的supportType方法获取支持的类型
-  - [AllType.java](src/main/java/io/github/jockerCN/customize/definition/AllType.java)表示支持任意类型.
+- 运行时类型验证：java-impetus-jpa会在启动时对条件注解标注的字段进行类型校验,当不满足类型约束时,则会抛出[JpaProcessException.java](src/main/java/io/github/jockerCN/jpa/exception/JpaProcessException.java)异常.这会终止程序启动.
+  - 对于函数操作的类型,并不做强制类型校验,但是可以通过[HavingOperatorEnum.java](src/main/java/io/github/jockerCN/jpa/query/operator/HavingOperatorEnum.java)的supportType方法获取支持的类型
+  - [AllType.java](src/main/java/io/github/jockerCN/jpa/query/operator/AllType.java)表示支持任意类型.
   - 当使用函数操作时,开发人员应主动确认SQL 函数操作类型的正确性,否则java-impetus-jpa只会在操作SQL执行时依赖数据库检测执行的正确性.
 
 

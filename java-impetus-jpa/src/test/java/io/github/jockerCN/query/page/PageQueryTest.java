@@ -1,6 +1,6 @@
 package io.github.jockerCN.query.page;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;

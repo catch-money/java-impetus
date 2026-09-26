@@ -1,6 +1,6 @@
 package io.github.jockerCN.configuration;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
 import jakarta.annotation.Nonnull;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;

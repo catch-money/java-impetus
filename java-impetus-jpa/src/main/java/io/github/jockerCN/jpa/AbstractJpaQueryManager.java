@@ -1,7 +1,7 @@
 package io.github.jockerCN.jpa;
 
-import io.github.jockerCN.customize.EntityMetadata;
-import io.github.jockerCN.customize.util.JpaQueryEntityProcess;
+import io.github.jockerCN.jpa.metadata.EntityMetadata;
+import io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

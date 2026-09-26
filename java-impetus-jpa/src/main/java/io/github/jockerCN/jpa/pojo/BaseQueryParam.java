@@ -1,8 +1,8 @@
 package io.github.jockerCN.jpa.pojo;
 
-import io.github.jockerCN.customize.OderByCondition;
-import io.github.jockerCN.customize.SelectColumn;
-import io.github.jockerCN.customize.annotation.*;
+import io.github.jockerCN.jpa.query.model.OderByCondition;
+import io.github.jockerCN.jpa.query.model.SelectColumn;
+import io.github.jockerCN.jpa.annotation.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

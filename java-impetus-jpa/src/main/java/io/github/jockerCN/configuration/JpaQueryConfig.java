@@ -1,7 +1,7 @@
 package io.github.jockerCN.configuration;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.util.JpaQueryEntityProcess;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;

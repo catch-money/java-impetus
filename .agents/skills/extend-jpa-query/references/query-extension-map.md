@@ -8,8 +8,8 @@ Use only the lane relevant to the requested behavior.
 | --- | --- | --- |
 | Opt-in and scan | `configuration/EnableAutoJpa.java`, `JpaQueryConfig.java`, `JpaQueryAnnotationFilter.java` | Find `@JpaQuery` parameter classes at startup |
 | Discovery and validation | `customize/util/JpaAnnotationUtils.java`, `JpaQueryEntityProcess.java` | Enforce one registered query annotation per field and cache entity metadata |
-| Metadata assembly | `customize/EntityMetadata.java`, `JpaQueryEntityBuilder.java` | Route each annotation to its metadata or Criteria operation |
-| Query execution | `jpa/AbstractJpaQueryManager.java`, `DefaultJpaQuery.java` | Build and execute Criteria queries |
+| Metadata assembly | `customize/EntityMetadata.java`, `CompiledQueryPlan.java`, `JpaQueryEntityBuilder.java` | Route each annotation once and compile immutable Lambda/MethodHandle operation arrays |
+| Query execution | `jpa/AbstractJpaQueryManager.java`, `DefaultJpaQuery.java` | Build Criteria trees by directly executing the cached plan |
 | Public facade | `jpa/autoRepository/JpaRepositoryUtils.java`, `page/PageUtils.java` | Expose query, count, generated repository, and page operations |
 
 ## Extension lanes
@@ -38,6 +38,8 @@ Preserve `group`, `sort`, and `RelatedOperatorEnum` composition. Add coverage fo
 ### SELECT, DISTINCT, GROUP BY, or ORDER BY
 
 These operations use `JpaQueryEntityBuilder.criteriaQueryMap` and are applied by `EntityMetadata.buildCriteriaQuery`.
+
+The selected projection and ordering strategies must be captured while `EntityMetadata` is created. Do not add runtime annotation inspection, result-type branching, or operator switches to the cached Criteria operation.
 
 - Selection expressions are modeled by `SelectColumn`, `SqlFunctionEnum`, and `QueryExpression`.
 - `@Columns` accepts `Set<SelectColumn>` and supports `Tuple`, `Object[]`, or constructor projection.

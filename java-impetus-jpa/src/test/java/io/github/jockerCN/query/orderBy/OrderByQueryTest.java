@@ -1,8 +1,8 @@
 package io.github.jockerCN.query.orderBy;
 
-import io.github.jockerCN.customize.OderByCondition;
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.OrderBy;
+import io.github.jockerCN.jpa.query.model.OderByCondition;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.OrderBy;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.query.QueryAnnotationTest;

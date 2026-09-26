@@ -1,8 +1,8 @@
 package io.github.jockerCN.query.betweenAnd;
 
-import io.github.jockerCN.customize.QueryPair;
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.where.BetweenAnd;
+import io.github.jockerCN.jpa.query.model.QueryPair;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.BetweenAnd;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.query.QueryAnnotationTest;

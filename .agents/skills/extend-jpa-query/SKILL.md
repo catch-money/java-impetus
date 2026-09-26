@@ -12,6 +12,9 @@ Before editing, read [the query extension map](references/query-extension-map.md
 ## Requirements
 
 - Preserve the startup metadata path and the one-JPA-annotation-per-field rule.
+- Compile annotation routing, operator selection, and query-shape strategy into immutable executable operations while metadata is created. Runtime execution must not inspect annotations or interpret operation enums.
+- Treat `EntityMetadata` as frozen after construction; extensions must add operations during plan compilation rather than mutating cached metadata later.
+- Cache functions that create Criteria objects, not `Root`, `Path`, `Predicate`, `Selection`, or other objects owned by one Criteria query tree.
 - Register a new field annotation in both its annotation package and `JpaAnnotationUtils.jpaAnnotations`.
 - Validate constrained field types while metadata is built so invalid query classes fail early.
 - Preserve the convention that an empty annotation `value` targets the Java field name.

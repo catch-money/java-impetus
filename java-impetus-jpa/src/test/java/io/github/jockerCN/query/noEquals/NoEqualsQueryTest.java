@@ -1,7 +1,7 @@
 package io.github.jockerCN.query.noEquals;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.where.NoEquals;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.NoEquals;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.query.QueryAnnotationTest;

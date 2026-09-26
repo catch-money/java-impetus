@@ -1,8 +1,8 @@
 package io.github.jockerCN.query.likeAndNotLike;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.where.Like;
-import io.github.jockerCN.customize.annotation.where.NotLike;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.Like;
+import io.github.jockerCN.jpa.annotation.where.NotLike;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.query.QueryAnnotationTest;
