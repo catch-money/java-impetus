@@ -2,12 +2,10 @@ package io.github.jockerCN.jpa.metadata;
 
 import io.github.jockerCN.jpa.annotation.*;
 import io.github.jockerCN.jpa.annotation.where.*;
-import io.github.jockerCN.jpa.query.operator.AllType;
 import io.github.jockerCN.jpa.query.model.OderByCondition;
 import io.github.jockerCN.jpa.query.model.QueryPair;
-import io.github.jockerCN.jpa.query.model.SelectColumn;
+import io.github.jockerCN.jpa.query.operator.AllType;
 import io.github.jockerCN.type.TypeConvert;
-import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.*;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -27,12 +25,6 @@ import static io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess.validateFiel
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 public abstract class JpaQueryEntityBuilder {
-
-    @FunctionalInterface
-    private interface ProjectionOperation {
-
-        void apply(CriteriaBuilder criteriaBuilder, CriteriaQuery<?> criteriaQuery, Selection<?>[] selections);
-    }
 
     private static final Map<Class<? extends Annotation>, BiFunction<Field, Annotation, FieldMetadata>> fieldMetadataBuild;
 
@@ -149,38 +141,26 @@ public abstract class JpaQueryEntityBuilder {
 
 
         limitQueryBuild = Map.of(Limit.class, (field, obj) -> {
-            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@Limit");
-            return (ob) -> (Integer) invokeMethodHandle(methodHandle, ob, field, "@Limit");
+            MethodHandle getter = FieldValueLookup.getMethodHandle(field, "@Limit");
+            return (ob) -> (Integer) invokeMethodHandle(getter, ob, field, "@Limit");
         });
         criteriaQueryMap = Map.of(Columns.class, (fieldWrapper -> {
-            Field field = fieldWrapper.field();
-            Columns columns = (Columns) fieldWrapper.annotation();
-            validateFieldType(field, "@Columns", Set.class,SelectColumn.class);
-            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
-            ProjectionOperation projectionOperation = buildProjectionOperation(columns, fieldWrapper.entityType());
-            return (criteriaBuilder, criteriaQuery, root, obj) -> {
-                Set<SelectColumn> selectColumns = invokeMethodHandle(methodHandle, obj, field, "@Columns");
-                if (!CollectionUtils.isEmpty(selectColumns)) {
-                    Selection<?>[] array = selectColumns.stream().map(selectColumn -> selectColumn.selection(criteriaBuilder,root)).toArray(Selection[]::new);
-                    projectionOperation.apply(criteriaBuilder, criteriaQuery, array);
-                }
-            };
+            ProjectionPlan projection = ProjectionPlan.compile(fieldWrapper.field(), (Columns) fieldWrapper.annotation(), fieldWrapper.entityType(), fieldWrapper.valueReader());
+            return projection::apply;
         }), Distinct.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
             validateFieldType(field, "@Distinct", Boolean.class);
-            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
             return (criteriaBuilder, criteriaQuery, root, obj) -> {
-                Boolean o = invokeMethodHandle(methodHandle, obj, field, "@Distinct");
+                Boolean o = (Boolean) fieldWrapper.valueReader().apply(obj);
                 if (Objects.nonNull(o)) {
                     criteriaQuery.distinct(o);
                 }
             };
         }), GroupBy.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
-            validateFieldType(field, "@GroupBy", Set.class);
-            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
+            validateFieldType(field, "@GroupBy", Collection.class, String.class);
             return (criteriaBuilder, criteriaQuery, root, obj) -> {
-                Set<String> o = invokeMethodHandle(methodHandle, obj, field, "@GroupBy");
+                Collection<String> o = TypeConvert.cast(fieldWrapper.valueReader().apply(obj));
                 if (!CollectionUtils.isEmpty(o)) {
                     List<Expression<?>> collect = o.stream().filter(StringUtils::hasLength).map(root::get).collect(Collectors.toList());
                     criteriaQuery.groupBy(collect);
@@ -189,11 +169,10 @@ public abstract class JpaQueryEntityBuilder {
         }), OrderBy.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();
             OrderBy orderBy = (OrderBy) fieldWrapper.annotation();
-            validateFieldType(field, "@OrderBy", Set.class);
-            MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, fieldWrapper.annotation().annotationType().getName());
+            validateFieldType(field, "@OrderBy", Collection.class, String.class);
             BiFunction<CriteriaBuilder, Expression<?>, Order> orderOperation = buildOrderOperation(orderBy.value());
             return (criteriaBuilder, criteriaQuery, root, obj) -> {
-                Set<String> o = invokeMethodHandle(methodHandle, obj, field, "@OrderBy");
+                Collection<String> o = TypeConvert.cast(fieldWrapper.valueReader().apply(obj));
                 if (!CollectionUtils.isEmpty(o)) {
                     List<Order> orders = o.stream()
                             .filter(StringUtils::hasLength)
@@ -208,23 +187,6 @@ public abstract class JpaQueryEntityBuilder {
 
     }
 
-    private static ProjectionOperation buildProjectionOperation(Columns columns, Class<?> entityType) {
-        Class<?> findType = columns.value();
-        if (findType == Tuple.class) {
-            return (criteriaBuilder, criteriaQuery, selections) -> criteriaQuery.multiselect(selections);
-        }
-        if (findType == Object[].class) {
-            return (criteriaBuilder, criteriaQuery, selections) -> {
-                CompoundSelection<Object[]> array = criteriaBuilder.array(selections);
-                criteriaQuery.select(TypeConvert.cast(array));
-            };
-        }
-        return (criteriaBuilder, criteriaQuery, selections) -> {
-            CompoundSelection<?> construct = criteriaBuilder.construct(entityType, selections);
-            criteriaQuery.select(TypeConvert.cast(construct));
-        };
-    }
-
     private static BiFunction<CriteriaBuilder, Expression<?>, Order> buildOrderOperation(OderByCondition condition) {
         return switch (condition) {
             case ASC -> CriteriaBuilder::asc;
@@ -236,12 +198,12 @@ public abstract class JpaQueryEntityBuilder {
         return Optional.ofNullable(criteriaQueryMap.get(annotation.annotationType()));
     }
 
-    public static Optional<BiFunction<Field, Object, Function<Object, Integer>>> buildLimitQuery(Annotation annotation) {
-        return Optional.ofNullable(limitQueryBuild.get(annotation.annotationType()));
+    static Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> buildCompiledCriteriaQueryMap(Annotation annotation) {
+        return Optional.ofNullable(criteriaQueryMap.get(annotation.annotationType()));
     }
 
-    public static boolean isFieldMetadata(Annotation annotation) {
-        return fieldMetadataBuild.containsKey(annotation.annotationType());
+    public static Optional<BiFunction<Field, Object, Function<Object, Integer>>> buildLimitQuery(Annotation annotation) {
+        return Optional.ofNullable(limitQueryBuild.get(annotation.annotationType()));
     }
 
     public static Optional<FieldMetadata> buildFieldMetadata(Field field, Annotation annotation) {

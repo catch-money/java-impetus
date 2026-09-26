@@ -6,8 +6,8 @@ import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,7 +49,7 @@ public abstract class JpaAnnotationUtils {
     }
 
     public static Map<Field, Annotation> validateAnnotationsOnFields(Class<?> clazz) throws IllegalArgumentException {
-        Map<Field, Annotation> annotationMap = new HashMap<>();
+        Map<Field, Annotation> annotationMap = new LinkedHashMap<>();
         ReflectionUtils.doWithFields(clazz, (filed)->{
             final Annotation[] annotations = filed.getAnnotations();
             Set<Class<? extends Annotation>> foundAnnotations = new HashSet<>();

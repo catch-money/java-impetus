@@ -10,7 +10,8 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -72,7 +73,7 @@ public class SelectColumn {
 
 
     public static Set<SelectColumn> ofNames(String... names) {
-        return Arrays.stream(names).map(SelectColumn::of).collect(Collectors.toSet());
+        return Arrays.stream(names).map(SelectColumn::of).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     // 便捷方法：创建带别名的列
@@ -164,7 +165,7 @@ public class SelectColumn {
      * 集合构建器，用于构建多个SelectColumn
      */
     public static class SetBuilder {
-        private final Set<SelectColumn> columns = new HashSet<>();
+        private final Set<SelectColumn> columns = new LinkedHashSet<>();
         private Builder currentBuilder;
 
         private SetBuilder() {
@@ -244,7 +245,7 @@ public class SelectColumn {
          * @return 不可变的SelectColumn集合
          */
         public Set<SelectColumn> build() {
-            return Set.copyOf(columns);
+            return Collections.unmodifiableSet(new LinkedHashSet<>(columns));
         }
 
         /**

@@ -16,6 +16,7 @@ import org.mockito.InOrder;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -147,6 +148,59 @@ class CompiledQueryPlanTest {
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
+    void appliesQueryShapeStagesAndOrderedFieldsPredictably() {
+        EntityMetadata metadata = metadata(OrderedShapeQueryParam.class);
+        OrderedShapeQueryParam queryParam = new OrderedShapeQueryParam();
+        queryParam.orderBy = List.of("second", "id");
+        queryParam.groupBy = List.of("id", "second");
+        queryParam.distinct = true;
+        queryParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("second"));
+
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+        Path idPath = mock(Path.class);
+        Path secondPath = mock(Path.class);
+        Order secondOrder = mock(Order.class);
+        Order idOrder = mock(Order.class);
+        when(root.get("id")).thenReturn(idPath);
+        when(root.get("second")).thenReturn(secondPath);
+        when(idPath.alias("id")).thenReturn(idPath);
+        when(secondPath.alias("second")).thenReturn(secondPath);
+        when(criteriaBuilder.asc(secondPath)).thenReturn(secondOrder);
+        when(criteriaBuilder.asc(idPath)).thenReturn(idOrder);
+
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+
+        InOrder stageOrder = inOrder(criteriaQuery);
+        stageOrder.verify(criteriaQuery).multiselect(any(Selection[].class));
+        stageOrder.verify(criteriaQuery).distinct(true);
+        stageOrder.verify(criteriaQuery).groupBy(any(List.class));
+        stageOrder.verify(criteriaQuery).orderBy(any(List.class));
+
+        ArgumentCaptor<List<Expression<?>>> groups = ArgumentCaptor.forClass(List.class);
+        verify(criteriaQuery).groupBy(groups.capture());
+        assertThat(groups.getValue()).containsExactly(idPath, secondPath);
+        ArgumentCaptor<List<Order>> orders = ArgumentCaptor.forClass(List.class);
+        verify(criteriaQuery).orderBy(orders.capture());
+        assertThat(orders.getValue()).containsExactly(secondOrder, idOrder);
+    }
+
+    @Test
+    void keepsSelectColumnBuilderInsertionOrder() {
+        Set<SelectColumn> columns = SelectColumn.SetBuilder.create()
+                .column("second").add()
+                .column("id").add()
+                .build();
+
+        assertThat(columns.stream().map(SelectColumn::getName)).containsExactly("second", "id");
+        assertThat(SelectColumn.ofNames("second", "id"))
+                .extracting(SelectColumn::getName)
+                .containsExactly("second", "id");
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
     void doesNotReadQueryShapeAnnotationsAfterThePlanIsCompiled() throws NoSuchFieldException {
         AtomicBoolean executionStarted = new AtomicBoolean();
         Columns columns = guardedAnnotation(
@@ -189,7 +243,7 @@ class CompiledQueryPlanTest {
     }
 
     @Test
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     void keepsRuntimeDataGuardsAsNoOpOperations() {
         EntityMetadata metadata = metadata(ExecutableQueryParam.class);
         ExecutableQueryParam queryParam = new ExecutableQueryParam();
@@ -206,7 +260,7 @@ class CompiledQueryPlanTest {
     }
 
     @Test
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     void doesNotReadWhereAnnotationAfterThePlanIsCompiled() throws NoSuchFieldException {
         AtomicBoolean executionStarted = new AtomicBoolean();
         Equals annotation = guardedAnnotation(
@@ -266,7 +320,7 @@ class CompiledQueryPlanTest {
     }
 
     @Test
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     void compilesHavingOrderAndMergeOperationBeforeExecution() {
         EntityMetadata metadata = metadata(HavingGroupQueryParam.class);
         HavingGroupQueryParam queryParam = new HavingGroupQueryParam();
@@ -299,11 +353,11 @@ class CompiledQueryPlanTest {
         JpaQuery jpaQuery = mock(JpaQuery.class);
         doReturn(TestEntity.class).when(jpaQuery).value();
 
-        JpaQueryEntityProcess.createQueryParam(jpaQuery, firstQueryParam);
+        JpaQueryEntityProcess.createQueryParam(jpaQuery, CachedQueryParam.class);
         EntityMetadata firstMetadata = JpaQueryEntityProcess.getEntityMetadata(firstQueryParam);
 
         CachedQueryParam secondQueryParam = new CachedQueryParam();
-        assertThatCode(() -> JpaQueryEntityProcess.createQueryParam(jpaQuery, secondQueryParam))
+        assertThatCode(() -> JpaQueryEntityProcess.createQueryParam(jpaQuery, CachedQueryParam.class))
                 .doesNotThrowAnyException();
         assertThat(JpaQueryEntityProcess.getEntityMetadata(secondQueryParam))
                 .isSameAs(firstMetadata);
@@ -385,6 +439,21 @@ class CompiledQueryPlanTest {
 
         @Columns(TestEntity.class)
         public Set<SelectColumn> columns;
+    }
+
+    public static final class OrderedShapeQueryParam {
+
+        @OrderBy
+        public List<String> orderBy;
+
+        @GroupBy
+        public List<String> groupBy;
+
+        @Distinct
+        public Boolean distinct;
+
+        @Columns
+        public List<SelectColumn> columns;
     }
 
     public static final class GuardedQueryParam {

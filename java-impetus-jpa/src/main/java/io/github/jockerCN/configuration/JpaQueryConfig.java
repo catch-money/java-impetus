@@ -12,7 +12,6 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.lang.NonNull;
-import org.springframework.objenesis.instantiator.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -51,8 +50,7 @@ public class JpaQueryConfig implements ImportBeanDefinitionRegistrar {
                     JpaQuery jpaQuery = jpaClass.getAnnotation(JpaQuery.class);
                     if (jpaQuery != null) {
                         log.info("@JpaQuery Process {}", jpaClass);
-                        Object o = ClassUtils.newInstance(jpaClass);
-                        JpaQueryEntityProcess.createQueryParam(jpaQuery, o);
+                        JpaQueryEntityProcess.createQueryParam(jpaQuery, jpaClass);
                     }
                 } catch (ClassNotFoundException e) {
                     log.warn("@JpaQuery Class Found Error {}",className,e);

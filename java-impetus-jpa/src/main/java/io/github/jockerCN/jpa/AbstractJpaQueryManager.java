@@ -63,6 +63,7 @@ public abstract class AbstractJpaQueryManager implements JpaQueryManager {
 
     protected TypedQuery<?> getTypeQuery(Object queryParams, Class<?> findType) {
         EntityMetadata metadata = JpaQueryEntityProcess.getEntityMetadata(queryParams);
+        metadata.processQueryParam(queryParams);
 
         if (Objects.isNull(findType)) {
             findType = metadata.getEntityType();
@@ -80,6 +81,7 @@ public abstract class AbstractJpaQueryManager implements JpaQueryManager {
 
     private TypedQuery<?> getQueryCount(Object queryParams) {
         EntityMetadata metadata = JpaQueryEntityProcess.getEntityMetadata(queryParams);
+        metadata.processQueryParam(queryParams);
         final CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
         CriteriaQuery<?> criteriaQuery = buildCriteriaQuery(criteriaBuilder, metadata, queryParams, Long.class);
         Root<?> root = criteriaQuery.getRoots().iterator().next();
@@ -88,19 +90,19 @@ public abstract class AbstractJpaQueryManager implements JpaQueryManager {
     }
 
 
-    private CriteriaQuery<?> buildCriteriaQuery(CriteriaBuilder criteriaBuilder, EntityMetadata metadata, Object queryParams, Class<?> findType) {
+    private CriteriaQuery<?> buildCriteriaQuery(CriteriaBuilder criteriaBuilder, EntityMetadata metadata, Object queryParam, Class<?> findType) {
         CriteriaQuery<?> criteriaQuery = criteriaBuilder.createQuery(findType);
 
         Root<?> root = criteriaQuery.from(metadata.getEntityType());
         // 字段where条件
-        Set<Predicate> predicates = metadata.buildPersistenceList(criteriaBuilder, root, queryParams);
+        Set<Predicate> predicates = metadata.buildPersistenceList(criteriaBuilder, root, queryParam);
         criteriaQuery.where(predicates.toArray(new Predicate[]{}));
         //其他条件
-        List<Predicate> havingPredicates = metadata.buildHavingPersistence(criteriaBuilder, root, queryParams);
+        List<Predicate> havingPredicates = metadata.buildHavingPersistence(criteriaBuilder, root, queryParam);
         if (CollectionUtils.isNotEmpty(havingPredicates)) {
             criteriaQuery.having(havingPredicates.toArray(new Predicate[]{}));
         }
-        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root,queryParams);
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
         return criteriaQuery;
     }
 

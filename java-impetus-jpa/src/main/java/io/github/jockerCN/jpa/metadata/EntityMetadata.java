@@ -1,8 +1,14 @@
 package io.github.jockerCN.jpa.metadata;
 
 import com.google.common.collect.Sets;
+import io.github.jockerCN.common.SpringProvider;
+import io.github.jockerCN.jpa.annotation.Columns;
+import io.github.jockerCN.jpa.annotation.Distinct;
+import io.github.jockerCN.jpa.annotation.GroupBy;
+import io.github.jockerCN.jpa.annotation.OrderBy;
 import io.github.jockerCN.jpa.annotation.Page;
 import io.github.jockerCN.jpa.annotation.PageSize;
+import io.github.jockerCN.jpa.query.value.QueryParamProcessor;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -14,13 +20,11 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.github.jockerCN.jpa.metadata.FieldValueLookup.invokeMethodHandle;
 import static io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess.validateFieldType;
 
 /**
@@ -60,17 +64,40 @@ public class EntityMetadata {
     @Getter(AccessLevel.NONE)
     private final CompiledQueryPlan compiledQueryPlan;
 
+    @Getter(AccessLevel.NONE)
+    private final CompiledFieldValuePlan compiledFieldValuePlan;
+
 
     public EntityMetadata(Class<?> entityType, Map<Field, Annotation> fieldsAnnotationMap) {
+        this(entityType, fieldsAnnotationMap, SpringProvider::getBean, QueryParamProcessor.None.class);
+    }
+
+    public EntityMetadata(Class<?> entityType, Map<Field, Annotation> fieldsAnnotationMap,
+                          Function<Class<?>, Object> beanResolver,
+                          Class<? extends QueryParamProcessor> processorType) {
         this.entityType = entityType;
+        this.compiledFieldValuePlan = CompiledFieldValuePlan.compile(beanResolver, processorType);
         Map<String, FieldMetadata> tempfieldsMetadataMap = new HashMap<>();
         Map<Integer, Set<FieldMetadata>> tempHavingMetadataMap = new HashMap<>();
         Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> tempCriteriaQueryMap = new HashMap<>();
+        List<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> distinctOperations = new ArrayList<>();
+        List<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> groupByOperations = new ArrayList<>();
+        List<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> orderByOperations = new ArrayList<>();
+        ProjectionPlan[] projection = new ProjectionPlan[1];
         this.tmpPageQueryMap = new HashMap<>();
         fieldsAnnotationMap.forEach((field, annotation) -> {
             ReflectionUtils.makeAccessible(field);
+            Function<Object, Object> valueReader = CompiledFieldValuePlan.compileReader(field, annotation, beanResolver);
+            if (annotation.annotationType() == Columns.class) {
+                projection[0] = ProjectionPlan.compile(field, (Columns) annotation, entityType, valueReader);
+                FieldAnnotationWrapper wrapper = new FieldAnnotationWrapper(field, annotation, entityType, valueReader);
+                tempCriteriaQueryMap.put(field.getName(),
+                        JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation).orElseThrow().apply(wrapper));
+                return;
+            }
             Optional<FieldMetadata> fieldMetadata = JpaQueryEntityBuilder.buildFieldMetadata(field, annotation);
             if (fieldMetadata.isPresent()) {
+                fieldMetadata.get().setValueReader(valueReader);
                 tempfieldsMetadataMap.put(field.getName(), fieldMetadata.get());
                 return;
             }
@@ -79,33 +106,41 @@ public class EntityMetadata {
             Optional<BiFunction<Field, Object, Function<Object, Integer>>> biFunction = JpaQueryEntityBuilder.buildLimitQuery(annotation);
 
             if (biFunction.isPresent()) {
-                BiFunction<Field, Object, Function<Object, Integer>> function = biFunction.get();
-                limit = function.apply(field, null);
+                limit = obj -> (Integer) valueReader.apply(obj);
                 return;
             }
 
             Optional<FieldMetadata> havingMetadata = JpaQueryEntityBuilder.buildHavingMetadata(field, annotation);
             if (havingMetadata.isPresent()) {
                 FieldMetadata havingFieldMetadata = havingMetadata.get();
+                havingFieldMetadata.setValueReader(valueReader);
                 tempHavingMetadataMap.computeIfAbsent(havingFieldMetadata.getHavingIndex(), k -> Sets.newHashSet()).add(havingFieldMetadata);
                 return;
             }
 
 
-            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation);
+            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCompiledCriteriaQueryMap(annotation);
 
             if (consumerFunctionOption.isPresent()) {
                 Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
-                JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object> jpaConsumer = jpaConsumerFunction.apply(new FieldAnnotationWrapper(field, annotation, entityType));
+                FieldAnnotationWrapper wrapper = new FieldAnnotationWrapper(field, annotation, entityType, valueReader);
+                JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object> jpaConsumer = jpaConsumerFunction.apply(wrapper);
                 tempCriteriaQueryMap.put(field.getName(), jpaConsumer);
+                if (annotation.annotationType() == Distinct.class) {
+                    distinctOperations.add(jpaConsumer);
+                } else if (annotation.annotationType() == GroupBy.class) {
+                    groupByOperations.add(jpaConsumer);
+                } else if (annotation.annotationType() == OrderBy.class) {
+                    orderByOperations.add(jpaConsumer);
+                }
             }
 
             if (annotation.annotationType().equals(Page.class)) {
-                processPageAnnotation(field);
+                processPageAnnotation(field, valueReader);
             }
 
             if (annotation.annotationType().equals(PageSize.class)) {
-                processPageSizeAnnotation(field);
+                processPageSizeAnnotation(field, valueReader);
             }
         });
 
@@ -122,7 +157,10 @@ public class EntityMetadata {
         this.compiledQueryPlan = CompiledQueryPlan.compile(
                 fieldsMetadataMap.values(),
                 havingMetadataMap,
-                criteriaQueryMap.values(),
+                projection[0],
+                distinctOperations,
+                groupByOperations,
+                orderByOperations,
                 limit,
                 enablePage ? pageQueryMap.get("page") : null,
                 enablePage ? pageQueryMap.get("pageSize") : null
@@ -130,18 +168,20 @@ public class EntityMetadata {
     }
 
 
-    private void processPageAnnotation(Field field) {
+    private void processPageAnnotation(Field field, Function<Object, Object> valueReader) {
         validateFieldType(field, "@Page", Integer.class);
         pageFieldName = field.getName();
-        MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@Page");
-        tmpPageQueryMap.put("page", (obj) -> invokeMethodHandle(methodHandle, obj, field, "@Page"));
+        tmpPageQueryMap.put("page", valueReader);
     }
 
-    private void processPageSizeAnnotation(Field field) {
+    private void processPageSizeAnnotation(Field field, Function<Object, Object> valueReader) {
         validateFieldType(field, "@PageSize", Integer.class);
         pageSizeFieldName = field.getName();
-        MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, "@PageSize");
-        tmpPageQueryMap.put("pageSize", (obj) -> invokeMethodHandle(methodHandle, obj, field, "@PageSize"));
+        tmpPageQueryMap.put("pageSize", valueReader);
+    }
+
+    public void processQueryParam(Object queryParam) {
+        compiledFieldValuePlan.process(queryParam);
     }
 
     public Set<Predicate> buildPersistenceList(CriteriaBuilder criteriaBuilder, Root<?> root, Object queryParams) {

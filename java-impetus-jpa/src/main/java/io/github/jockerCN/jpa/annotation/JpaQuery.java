@@ -1,5 +1,6 @@
 package io.github.jockerCN.jpa.annotation;
 
+import io.github.jockerCN.jpa.query.value.QueryParamProcessor;
 import org.springframework.stereotype.Indexed;
 
 import java.lang.annotation.*;
@@ -14,4 +15,6 @@ import java.lang.annotation.*;
 public @interface JpaQuery {
 
     Class<?> value();
+
+    Class<? extends QueryParamProcessor> processor() default QueryParamProcessor.None.class;
 }

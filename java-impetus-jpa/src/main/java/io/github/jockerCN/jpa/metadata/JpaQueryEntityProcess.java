@@ -2,6 +2,7 @@ package io.github.jockerCN.jpa.metadata;
 
 import io.github.jockerCN.jpa.annotation.JpaQuery;
 import io.github.jockerCN.jpa.exception.JpaProcessException;
+import io.github.jockerCN.common.SpringProvider;
 import org.springframework.util.ClassUtils;
 
 import java.lang.annotation.Annotation;
@@ -20,17 +21,16 @@ public abstract class JpaQueryEntityProcess {
 
     private static final Map<Class<?>, EntityMetadata> entityMetadata = new HashMap<>();
 
-    public static void createQueryParam(JpaQuery jpaQuery, Object queryParam) {
-        Objects.requireNonNull(queryParam);
-        Class<?> jpaQueryClass = queryParam.getClass();
+    public static void createQueryParam(JpaQuery jpaQuery, Class<?> jpaQueryClass) {
+        Objects.requireNonNull(jpaQueryClass);
 
         if (entityMetadata.containsKey(jpaQueryClass)) {
             return;
         }
 
         Map<Field, Annotation> annotationsOnFields = JpaAnnotationUtils.validateAnnotationsOnFields(jpaQueryClass);
-
-        entityMetadata.put(jpaQueryClass, new EntityMetadata(jpaQuery.value(),annotationsOnFields));
+        entityMetadata.put(jpaQueryClass, new EntityMetadata(jpaQuery.value(), annotationsOnFields,
+                SpringProvider::getBean, jpaQuery.processor()));
     }
 
     public static EntityMetadata getEntityMetadata(Object queryParam) {

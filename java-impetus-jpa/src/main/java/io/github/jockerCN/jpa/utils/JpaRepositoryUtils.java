@@ -19,47 +19,47 @@ public abstract class JpaRepositoryUtils {
 
     private static final JpaQueryManager JPA_QUERY_MANAGER = SpringProvider.getBean(JpaQueryManager.class);
 
-    public static <T> JpaRepository<T, Long> getJpaRepository(Class<T> clazz) {
+    public static <T, ID> JpaRepository<T, ID> getJpaRepository(Class<T> clazz) {
         final String beanName = clazz.getSimpleName() + "AutoRepository";
         return SpringProvider.getBean(beanName);
     }
 
     @SuppressWarnings("all")
     public static <T> T save(T clazz) {
-        JpaRepository<T, Long> repository = TypeConvert.cast(getJpaRepository(clazz.getClass()));
+        JpaRepository<T, ?> repository = TypeConvert.cast(getJpaRepository(clazz.getClass()));
         return repository.save(clazz);
     }
 
     public static <T> List<T> saveAll(Iterable<T> clazz, Class<T> tClass) {
-        JpaRepository<T, Long> repository = TypeConvert.cast(getJpaRepository(tClass));
+        JpaRepository<T, ?> repository = TypeConvert.cast(getJpaRepository(tClass));
         return repository.saveAll(clazz);
     }
 
 
     public static <T> void delete(T clazz) {
-        JpaRepository<T, Long> repository = TypeConvert.cast(getJpaRepository(clazz.getClass()));
+        JpaRepository<T, ?> repository = TypeConvert.cast(getJpaRepository(clazz.getClass()));
         repository.delete(clazz);
     }
 
     @SuppressWarnings("all")
     public static <T> Collection<T> saveAll(Collection<T> clazz, Class<T> tClass) {
-        JpaRepository<T, Long> repository = TypeConvert.cast(getJpaRepository(tClass));
+        JpaRepository<T, ?> repository = TypeConvert.cast(getJpaRepository(tClass));
         return repository.saveAll(clazz);
     }
 
-    public static <T> T query(BaseQueryParam queryParam, Class<T> tClass) {
+    public static <T> T query(Object queryParam, Class<T> tClass) {
         return JPA_QUERY_MANAGER.query(queryParam, tClass);
     }
 
-    public static Long count(BaseQueryParam queryParam) {
+    public static Long count(Object queryParam) {
         return JPA_QUERY_MANAGER.count(queryParam);
     }
 
-    public static <T> List<T> queryList(BaseQueryParam queryParam, Class<T> tClass) {
+    public static <T> List<T> queryList(Object queryParam, Class<T> tClass) {
         return JPA_QUERY_MANAGER.queryList(queryParam, tClass);
     }
 
-    public static <T> List<T> queryList(BaseQueryParam queryParam) {
+    public static <T> List<T> queryList(Object queryParam) {
         return JPA_QUERY_MANAGER.queryList(queryParam);
     }
 
@@ -73,7 +73,7 @@ public abstract class JpaRepositoryUtils {
         for (int page = 0; page < totalPages; page++) {
             queryParam.setPage(page);
             queryParam.setPageSize(pageSize);
-            List<T> list = queryList(queryParam,tClass);
+            List<T> list = queryList(queryParam, tClass);
             if (CollectionUtils.isNotEmpty(list)) {
                 arrayList.addAll(list);
             }

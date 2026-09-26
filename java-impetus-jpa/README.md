@@ -105,6 +105,33 @@ param.setPayId("PAY202405852383867"); //设置查询参数
 List<PayEntity> queryList = JpaRepositoryUtils.queryList(param, PayEntity.class); //使用JpaRepositoryUtils查询api
 ```
 
+查询参数不需要继承 `BaseQueryParam`，也不需要提供无参构造方法；启动时根据 `@JpaQuery` 标注的类直接编译查询元数据。`BaseQueryParam` 仅提供常用的分页、限制和选列字段。实体也不需要继承 `JpaPojo`、`AbstractBaseJapPojo` 或 `JpaPojoDTO`，但仍需符合 JPA 自身的实体映射要求。
+
+### 查询前的有效值处理
+
+`@JpaQuery(processor = ...)` 指定查询级的 Spring `QueryParamProcessor` Bean。它先接收并直接调整调用方传入的同一个查询参数对象，然后各注解按正常流程读取字段。`@QueryDefault` 可与任意一个查询字段注解并用；该字段读取结果为 `null` 时才调用指定的 Spring `QueryValueProvider` Bean。provider 可根据同一个 `queryParam` 计算值，也可忽略参数直接提供默认值；`false`、`0` 和空集合不会触发默认值。默认值直接供当前注解操作使用，不回写字段。
+
+```java
+@JpaQuery(value = Customer.class, processor = CustomerQueryProcessor.class)
+class CustomerQueryParam {
+    @Equals("ownerId")
+    @QueryDefault(CurrentOwnerProvider.class)
+    Long ownerId;
+
+    @Columns
+    Collection<SelectColumn> columns;
+}
+
+class CustomerQueryProcessor implements QueryParamProcessor {
+    public void process(Object queryParam) {
+        CustomerQueryParam param = (CustomerQueryParam) queryParam;
+        param.columns = permittedColumns(param);
+    }
+}
+```
+
+查询计划在启动期编译字段读取、provider 类型和 processor 类型；Spring Bean 在实际需要时通过 `SpringProvider` 获取，不额外注册初始化 Bean。执行期间只逐层传递调用方的 `queryParam`，不复制参数或缓存其字段值，也不重新解析注解。query 级 processor 会修改原对象；如果调用方跨请求复用同一对象，其状态和并发访问由调用方控制。`ResultAssembler`、`ResultEnhancer` 不属于本阶段的查询前取值链路。
+
 ### 确定你的查询参数被扫描到
 
 - 启动时java-impetus-jpa会打印扫描到的查询参数类
@@ -132,7 +159,7 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 3. **字段映射**：大部分注解的 `value` 属性可以指定具体的数据库实体字段名，不指定则默认使用查询字段名作为sql操作的字段名
 4. **分页机制**：`@Page` 和 `@PageSize` 必须同时使用才能生效，页码从 0 开始计算
 5. **Having 复杂性**：`@Having` 注解较为复杂，支持分组、排序、多条件逻辑组合等高级功能
-6. **BaseQueryParam 继承**：所有查询参数类都应该继承 `BaseQueryParam` 并使用 `@JpaQuery` 注解
+6. **查询参数类型**：查询参数类需要使用 `@JpaQuery` 注解；可以继承任意自定义基类，也可以不继承基类。`BaseQueryParam` 是可选的便捷实现
 7. **注解限制**：所有查询字段只能使用单个注解,不管是条件注解还是聚合函数,当多个查询注解标注在同一个字段时则会抛出异常 `has multiple JPA-related annotations that should not coexist`
 
 
@@ -163,7 +190,7 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 
 | 注解 | 等同SQL条件 | 参数类型 | 说明 |
 |------|-------------|----------|------|
-| `@Columns` | `SELECT col1,col2,... FROM` | `Set<SelectColumn>` | **自定义查询字段**。⚠️ **必须**使用 `Set<SelectColumn>` 类型。`value` 属性指定返回类型：<br/>• `Tuple.class`（默认）- 返回 JPA Tuple<br/>• `Object[].class` - 返回对象数组<br/>• 实体类.class - 返回构造函数映射的实体对象 |
+| `@Columns` | `SELECT col1,col2,... FROM` | `Collection<SelectColumn>` | **自定义查询字段**，支持 `List` 或 `Set`。`value` 属性指定返回类型：<br/>• `Tuple.class`（默认）- 返回 JPA Tuple<br/>• `Object[].class` - 返回对象数组<br/>• 实体类.class - 返回构造函数映射的实体对象 |
 | `@Distinct` | `SELECT DISTINCT` | Boolean | **去重查询**。当值为 `true` 时对查询结果去重 |
 
 #### SelectColumn
@@ -180,6 +207,7 @@ SelectColumn.SetBuilder
      .build()
 ```
 - 支持查询函数使用,请参考 [SqlFunctionEnum 聚合函数说明] 部分
+- 投影字段的顺序决定 `Object[]` 和构造函数参数顺序。需要固定顺序时使用 `List<SelectColumn>`；`SelectColumn.SetBuilder` 也会保留添加顺序。普通 `HashSet` 不保证顺序。
 
 ### 特殊条件注解
 
@@ -187,12 +215,14 @@ SelectColumn.SetBuilder
 
 | 注解 | 等同SQL条件 | 参数类型 | 说明                                                                                            |
 |------|-------------|----------|-----------------------------------------------------------------------------------------------|
-| `@OrderBy` | `ORDER BY field ASC/DESC` | `Set<String>` | **排序查询**。`value` 属性指定排序方向：<br/>• `OderByCondition.ASC` - 升序<br/>• `OderByCondition.DESC` - 降序 |
-| `@GroupBy` | `GROUP BY field1,field2,...` | `Set<String>` | **分组查询**。Set 中的每个字符串对应一个分组字段名                                                                 |
+| `@OrderBy` | `ORDER BY field ASC/DESC` | `Collection<String>` | **排序查询**，支持 `List` 或 `Set`。`value` 属性指定排序方向：<br/>• `OderByCondition.ASC` - 升序<br/>• `OderByCondition.DESC` - 降序 |
+| `@GroupBy` | `GROUP BY field1,field2,...` | `Collection<String>` | **分组查询**，支持 `List` 或 `Set`。每个字符串对应一个分组字段名 |
 | `@Having` | `HAVING function(field) operator ?` | 根据 operator 决定 | **聚合条件查询**。较为复杂，用于对分组后的结果进行过滤，见详细配置                                                           |
 | `@Limit` | `LIMIT ?` | Integer | **限制结果数量**。设置查询返回的最大记录数                                                                       |
 | `@Page` | `OFFSET ? LIMIT ?` | Integer | **分页查询-页码**。⚠️ **必须**与 `@PageSize` 配合使用，页码从0开始                                                |
 | `@PageSize` | `OFFSET ? LIMIT ?` | Integer | **分页查询-页大小**。⚠️ **必须**与 `@Page` 配合使用                                                          |
+
+`@Columns`、`@GroupBy`、`@OrderBy` 同时使用时，执行顺序固定为投影、去重、分组、排序，与查询参数字段的声明顺序无关。多个字段的先后顺序由集合迭代顺序决定；需要多字段排序或固定构造函数参数顺序时，建议使用 `List`。
 
 ### @Having 注解详细说明
 
@@ -354,7 +384,7 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 
 | 方法                               | 返回类型                 | 说明                                                         |
 | ---------------------------------- | ------------------------ | ------------------------------------------------------------ |
-| `getJpaRepository(Class<T> clazz)` | `JpaRepository<T, Long>` | **获取实体对应的Repository**。自动获取实体类对应的 Spring Data JPA Repository 接口 |
+| `getJpaRepository(Class<T> clazz)` | `JpaRepository<T, ID>` | **获取实体对应的Repository**。主键类型由调用方的实体定义，不固定为 `Long` |
 
 #### 数据操作 (CRUD)
 
@@ -370,17 +400,19 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 
 | 方法                                               | 返回类型  | 说明                                                         |
 | -------------------------------------------------- | --------- | ------------------------------------------------------------ |
-| `query(BaseQueryParam param, Class<T> tClass)`     | `T`       | **单条查询**。根据查询参数返回单个实体对象，无结果时返回 null |
-| `queryList(BaseQueryParam param)`                  | `List<T>` | **列表查询**。返回查询参数对应实体类型的结果列表             |
-| `queryList(BaseQueryParam param, Class<T> tClass)` | `List<T>` | **列表查询（指定类型）**。返回指定类型的结果列表，支持投影查询 |
-| `count(BaseQueryParam param)`                      | `Long`    | **统计查询**。返回符合条件的记录总数                         |
+| `query(Object param, Class<T> tClass)`             | `T`       | **单条查询**。根据查询参数返回单个实体对象，无结果时返回 null |
+| `queryList(Object param)`                          | `List<T>` | **列表查询**。返回查询参数对应实体类型的结果列表             |
+| `queryList(Object param, Class<T> tClass)`         | `List<T>` | **列表查询（指定类型）**。返回指定类型的结果列表，支持投影查询 |
+| `count(Object param)`                              | `Long`    | **统计查询**。返回符合条件的记录总数                         |
 
 #### 分页查询
 
 | 方法                                                         | 返回类型  | 说明                                                         |
 | ------------------------------------------------------------ | --------- | ------------------------------------------------------------ |
-| `queryListPage(BaseQueryParam param, Class<T> tClass, int pageSize)` | `List<T>` | **分页查询所有数据**。自动分页查询并合并所有结果，适用于数据导出等场景。⚠️ 大数据量时需谨慎使用 |
-| `queryListPage(BaseQueryParam param, int pageSize)`          | `List<T>` | **分页查询所有数据（实体类型）**。功能同上，返回查询参数对应的实体类型 |
+| `queryListPage(BaseQueryParam param, Class<T> tClass, int pageSize)` | `List<T>` | **分页查询所有数据**。逐页设置参数中的 `@Page`、`@PageSize` 字段并合并结果。⚠️ 大数据量时需谨慎使用 |
+| `queryListPage(BaseQueryParam param, int pageSize)`                  | `List<T>` | **分页查询所有数据（实体类型）**。功能同上，返回查询参数对应的实体类型 |
+
+普通查询参数可以自行定义 `@Page`、`@PageSize` 字段，`JpaQueryManager` 始终根据这些注解执行分页。`PageUtils.page(param, pageable)` 接受任意查询参数对象；`Pageable` 只描述返回结果的分页元数据，调用方需要保证它与参数中的分页值一致，排序仍通过查询注解控制。原有 `PageUtils.page(BaseQueryParam)` 保留为便捷入口。批量查询所有页的 `queryListPage` 是会修改参数的专用便捷方法，仍要求 `BaseQueryParam`。
 
 
 ### JpaQueryManager 查询管理器

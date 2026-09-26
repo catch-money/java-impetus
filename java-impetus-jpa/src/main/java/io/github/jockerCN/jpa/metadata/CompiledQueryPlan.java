@@ -68,7 +68,10 @@ final class CompiledQueryPlan {
 
     static CompiledQueryPlan compile(Collection<FieldMetadata> whereMetadata,
                                      Map<Integer, Set<FieldMetadata>> havingMetadata,
-                                     Collection<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> criteriaConsumers,
+                                     ProjectionPlan projection,
+                                     Collection<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> distinctConsumers,
+                                     Collection<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> groupByConsumers,
+                                     Collection<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> orderByConsumers,
                                      Function<Object, Integer> limitReader,
                                      Function<Object, Object> pageReader,
                                      Function<Object, Object> pageSizeReader) {
@@ -80,9 +83,13 @@ final class CompiledQueryPlan {
                 .map(CompiledQueryPlan::compileHavingGroup)
                 .toArray(HavingOperation[]::new);
 
-        CriteriaOperation[] criteriaOperations = criteriaConsumers.stream()
-                .map(consumer -> (CriteriaOperation) consumer::accept)
-                .toArray(CriteriaOperation[]::new);
+        List<CriteriaOperation> criteriaOperations = new ArrayList<>();
+        if (projection != null) {
+            criteriaOperations.add(projection::apply);
+        }
+        distinctConsumers.forEach(consumer -> criteriaOperations.add(consumer::accept));
+        groupByConsumers.forEach(consumer -> criteriaOperations.add(consumer::accept));
+        orderByConsumers.forEach(consumer -> criteriaOperations.add(consumer::accept));
 
         List<TypedQueryOperation> typedQueryOperations = new ArrayList<>(2);
         if (Objects.nonNull(limitReader)) {
@@ -107,7 +114,7 @@ final class CompiledQueryPlan {
         return new CompiledQueryPlan(
                 whereOperations,
                 havingOperations,
-                criteriaOperations,
+                criteriaOperations.toArray(CriteriaOperation[]::new),
                 typedQueryOperations.toArray(TypedQueryOperation[]::new)
         );
     }
@@ -120,11 +127,7 @@ final class CompiledQueryPlan {
             Predicate currentPredicate = null;
             for (FieldMetadata fieldMetadata : orderedMetadata) {
                 currentPredicate = fieldMetadata.mergeHavingPredicate(
-                        criteriaBuilder,
-                        root,
-                        queryParams,
-                        currentPredicate
-                );
+                        criteriaBuilder, root, queryParams, currentPredicate);
             }
             return currentPredicate;
         };

@@ -17,7 +17,7 @@ public class JpaRepositoryFactoryBean<T,ID> implements FactoryBean<JpaRepository
     }
 
     @Override
-    public JpaRepository<T, ID> getObject() throws Exception {
+    public JpaRepository<T, ID> getObject() {
         return new SimpleJpaRepository<>(domainClass, entityManager);
     }
 
@@ -25,10 +25,4 @@ public class JpaRepositoryFactoryBean<T,ID> implements FactoryBean<JpaRepository
     public Class<?> getObjectType() {
         return JpaRepository.class;
     }
-
-    @Override
-    public boolean isSingleton() {
-        return true;
-    }
-
 }

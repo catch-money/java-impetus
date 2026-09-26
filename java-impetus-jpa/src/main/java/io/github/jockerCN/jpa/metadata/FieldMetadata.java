@@ -3,10 +3,10 @@ package io.github.jockerCN.jpa.metadata;
 import io.github.jockerCN.jpa.annotation.Having;
 import io.github.jockerCN.jpa.query.criteria.QueryExpression;
 import io.github.jockerCN.jpa.query.criteria.QueryPredicate;
+import io.github.jockerCN.jpa.query.model.QueryPair;
 import io.github.jockerCN.jpa.query.operator.HavingOperatorEnum;
 import io.github.jockerCN.jpa.query.operator.RelatedOperatorEnum;
 import io.github.jockerCN.jpa.query.operator.SqlFunctionEnum;
-import io.github.jockerCN.jpa.query.model.QueryPair;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -21,7 +21,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -60,6 +59,7 @@ public class FieldMetadata {
 
     private final Function<Object, Object> invoke;
 
+    private Function<Object, Object> valueReader;
 
     private JpaFunction<CriteriaBuilder, Predicate, Predicate, Predicate> mergePredicate;
 
@@ -75,14 +75,18 @@ public class FieldMetadata {
         String annotationName = annotationType.annotationType().getName();
         MethodHandle methodHandle = FieldValueLookup.getMethodHandle(field, annotationName);
         this.invoke = (object) -> invokeMethodHandle(methodHandle, object, field, annotationName);
+        this.valueReader = invoke;
     }
 
-    public Optional<Predicate> buildQueryParam(CriteriaBuilder criteriaBuilder, Root<?> root, Object o) {
-        return Optional.ofNullable(buildPredicate(criteriaBuilder, root, o));
+    void setValueReader(Function<Object, Object> valueReader) {
+        this.valueReader = Objects.requireNonNull(valueReader);
     }
 
     Predicate buildPredicate(CriteriaBuilder criteriaBuilder, Root<?> root, Object o) {
-        Object object = invoke.apply(o);
+        return buildPredicateValue(criteriaBuilder, root, valueReader.apply(o));
+    }
+
+    Predicate buildPredicateValue(CriteriaBuilder criteriaBuilder, Root<?> root, Object object) {
         if (Objects.isNull(object)) {
             return null;
         }
@@ -100,12 +104,7 @@ public class FieldMetadata {
 
     }
 
-    public Optional<Predicate> buildHavingQueryParam(CriteriaBuilder criteriaBuilder, Root<?> root, Object o) {
-        return Optional.ofNullable(buildHavingPredicate(criteriaBuilder, root, o));
-    }
-
-    Predicate buildHavingPredicate(CriteriaBuilder criteriaBuilder, Root<?> root, Object o) {
-        Object object = invoke.apply(o);
+    Predicate buildHavingPredicateValue(CriteriaBuilder criteriaBuilder, Root<?> root, Object object) {
         if (Objects.isNull(object)) {
             return null;
         }
@@ -356,12 +355,8 @@ public class FieldMetadata {
         this.annotationValue = annotationValue;
     }
 
-    public Optional<Predicate> mergePredicate(CriteriaBuilder criteriaBuilder, Root<?> root, Object o, Predicate currentPredicate) {
-        return Optional.ofNullable(mergeHavingPredicate(criteriaBuilder, root, o, currentPredicate));
-    }
-
     Predicate mergeHavingPredicate(CriteriaBuilder criteriaBuilder, Root<?> root, Object o, Predicate currentPredicate) {
-        Predicate predicate = buildHavingPredicate(criteriaBuilder, root, o);
+        Predicate predicate = buildHavingPredicateValue(criteriaBuilder, root, valueReader.apply(o));
         if (Objects.isNull(predicate)) {
             return currentPredicate;
         }
