@@ -45,8 +45,12 @@ final class ProjectionPlan {
             return;
         }
         Selection<?>[] selections = columns.stream()
-                .map(column -> column.selection(criteriaBuilder, root))
+                .filter(column -> column.includes(queryParams))
+                .map(column -> column.selection(criteriaBuilder, root, queryParams))
                 .toArray(Selection[]::new);
+        if (selections.length == 0) {
+            throw new IllegalArgumentException("@Columns has no selected fields after conditions");
+        }
         operation.apply(criteriaBuilder, criteriaQuery, selections);
     }
 

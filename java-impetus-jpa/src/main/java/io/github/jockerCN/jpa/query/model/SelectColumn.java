@@ -1,12 +1,15 @@
 package io.github.jockerCN.jpa.query.model;
 
 import io.github.jockerCN.jpa.query.criteria.QueryExpression;
+import io.github.jockerCN.jpa.query.criteria.SelectExpression;
 import io.github.jockerCN.jpa.query.operator.SqlFunctionEnum;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.AccessLevel;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -15,10 +18,14 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.function.Predicate;
+import java.util.function.Function;
 
 @Data
 @EqualsAndHashCode
 public class SelectColumn {
+
+    private static final Predicate<Object> ALWAYS = ignored -> true;
 
     private final String name;
     private final String alias;
@@ -26,39 +33,110 @@ public class SelectColumn {
 
     private QueryExpression queryExpression;
 
-    // 私有构造函数，只能通过Builder创建
-    private SelectColumn(String name, String alias, SqlFunctionEnum function) {
+    @Setter(AccessLevel.NONE)
+    private SelectExpression selectExpression;
+
+    private final Predicate<Object> includeWhen;
+
+    private SelectColumn(String name, String alias, SqlFunctionEnum function,
+                         QueryExpression queryExpression, Predicate<Object> includeWhen) {
         this.name = name;
         this.alias = alias;
         this.function = function;
-        queryExpression = function.createQueryExpression(name);
+        setQueryExpression(queryExpression);
+        this.includeWhen = includeWhen;
+    }
+
+    private SelectColumn(String name, String alias, SqlFunctionEnum function,
+                         SelectExpression selectExpression, Predicate<Object> includeWhen) {
+        this.name = name;
+        this.alias = alias;
+        this.function = function;
+        this.selectExpression = Objects.requireNonNull(selectExpression, "Select expression must not be null");
+        this.includeWhen = includeWhen;
+    }
+
+    // 私有构造函数，只能通过Builder创建
+    private SelectColumn(String name, String alias, SqlFunctionEnum function) {
+        this(name, alias, function, function.createQueryExpression(name), ALWAYS);
     }
 
     private SelectColumn(String name, SqlFunctionEnum function) {
-        this.name = name;
-        this.alias = name;
-        this.function = function;
-        queryExpression = function.createQueryExpression(name);
+        this(name, name, function);
     }
 
     private SelectColumn(String name, String alias, SqlFunctionEnum function, Object... args) {
-        this.name = name;
-        this.alias = alias;
-        this.function = function;
-        queryExpression = function.createQueryExpression(name, args);
+        // Function arguments are captured by the compiled QueryExpression.
+        this(name, alias, function, function.createQueryExpression(name, args), ALWAYS);
     }
 
 
     private SelectColumn(String name, SqlFunctionEnum function, Object... args) {
-        this.name = name;
-        this.alias = name;
-        this.function = function;
-        queryExpression = function.createQueryExpression(name, args);
+        this(name, name, function, args);
+    }
+
+    /** Returns a column that is omitted when the condition rejects this query parameter. */
+    public SelectColumn when(Predicate<Object> condition) {
+        Predicate<Object> checkedCondition = Objects.requireNonNull(condition, "Select condition must not be null");
+        return Objects.nonNull(queryExpression)
+                ? new SelectColumn(name, alias, function, queryExpression, checkedCondition)
+                : new SelectColumn(name, alias, function, selectExpression, checkedCondition);
+    }
+
+    /** Preserves the existing setter while keeping the SELECT operation in sync. */
+    public void setQueryExpression(QueryExpression queryExpression) {
+        this.queryExpression = Objects.requireNonNull(queryExpression, "Query expression must not be null");
+        this.selectExpression = (criteriaBuilder, root, queryParam) -> this.queryExpression.createPredicate(criteriaBuilder, root);
+    }
+
+    public boolean includes(Object queryParam) {
+        return includeWhen.test(queryParam);
+    }
+
+    /** Selects a non-null constant instead of reading an entity property. */
+    public static SelectColumn constant(String alias, Object value) {
+        if (StringUtils.isBlank(alias)) {
+            throw new IllegalArgumentException("Select Column alias must not be empty");
+        }
+        Objects.requireNonNull(value, "Use nullValue(alias, type) for a null constant");
+        return new SelectColumn(alias, alias, SqlFunctionEnum.no, QueryExpression.literal(value), ALWAYS);
+    }
+
+    /** Selects a typed SQL null instead of reading an entity property. */
+    public static <T> SelectColumn nullValue(String alias, Class<T> type) {
+        if (StringUtils.isBlank(alias)) {
+            throw new IllegalArgumentException("Select Column alias must not be empty");
+        }
+        Objects.requireNonNull(type, "Null constant type must not be null");
+        return new SelectColumn(alias, alias, SqlFunctionEnum.no, QueryExpression.nullLiteral(type), ALWAYS);
+    }
+
+    /** Builds a custom Criteria expression, including row-level CASE expressions. */
+    public static SelectColumn expression(String alias, SelectExpression expression) {
+        if (StringUtils.isBlank(alias)) {
+            throw new IllegalArgumentException("Select Column alias must not be empty");
+        }
+        return new SelectColumn(alias, alias, SqlFunctionEnum.no,
+                Objects.requireNonNull(expression, "Select expression must not be null"), ALWAYS);
+    }
+
+    /** Resolves a value from the current query parameter and selects it as a typed literal. */
+    public static <T> SelectColumn dynamic(String alias, Class<T> type, Function<Object, ? extends T> valueResolver) {
+        Class<T> javaType = Objects.requireNonNull(type, "Dynamic value type must not be null");
+        Function<Object, ? extends T> resolver = Objects.requireNonNull(valueResolver, "Dynamic value resolver must not be null");
+        return expression(alias, (criteriaBuilder, root, queryParam) -> {
+            T value = resolver.apply(queryParam);
+            return Objects.isNull(value) ? criteriaBuilder.nullLiteral(javaType) : criteriaBuilder.literal(value);
+        });
     }
 
 
     public Selection<?> selection(CriteriaBuilder criteriaBuilder, Root<?> root) {
-        return queryExpression.createPredicate(criteriaBuilder, root).alias(alias);
+        return selection(criteriaBuilder, root, null);
+    }
+
+    public Selection<?> selection(CriteriaBuilder criteriaBuilder, Root<?> root, Object queryParam) {
+        return selectExpression.create(criteriaBuilder, root, queryParam).alias(alias);
     }
 
     // 静态方法创建Builder
@@ -99,6 +177,7 @@ public class SelectColumn {
         private String name;
         private String alias;
         private Object[] args;
+        private Predicate<Object> includeWhen = ALWAYS;
 
         private Builder() {
         }
@@ -146,6 +225,11 @@ public class SelectColumn {
             return this;
         }
 
+        public Builder when(Predicate<Object> condition) {
+            this.includeWhen = Objects.requireNonNull(condition, "Select condition must not be null");
+            return this;
+        }
+
         /**
          * 构建SelectColumn对象
          *
@@ -157,7 +241,7 @@ public class SelectColumn {
                 throw new IllegalStateException("Select Column name must be set before building");
             }
             String finalAlias = StringUtils.isNotBlank(alias) ? alias : name;
-            return new SelectColumn(name, finalAlias, function, args);
+            return new SelectColumn(name, finalAlias, function, args).when(includeWhen);
         }
     }
 
@@ -213,6 +297,12 @@ public class SelectColumn {
         public SetBuilder function(SqlFunctionEnum function, Object... args) {
             Objects.requireNonNull(currentBuilder, "SetBuilder#function() Must call column() first");
             currentBuilder.function(function,args);
+            return this;
+        }
+
+        public SetBuilder when(Predicate<Object> condition) {
+            Objects.requireNonNull(currentBuilder, "SetBuilder#when() Must call column() first");
+            currentBuilder.when(condition);
             return this;
         }
 

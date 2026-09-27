@@ -65,9 +65,12 @@ public interface QueryExpression {
         return (cb, root) -> cb.round(root.get(property), scale);
     }
 
-    @SuppressWarnings("unused")
     static <T> QueryExpression literal(T value) {
         return (cb, root) -> cb.literal(value);
+    }
+
+    static <T> QueryExpression nullLiteral(Class<T> type) {
+        return (cb, root) -> cb.nullLiteral(type);
     }
 
     static QueryExpression concat(String property, String value) {

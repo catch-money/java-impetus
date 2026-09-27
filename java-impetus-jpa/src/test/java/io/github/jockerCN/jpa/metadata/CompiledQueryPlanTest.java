@@ -20,9 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -197,6 +199,221 @@ class CompiledQueryPlanTest {
         assertThat(SelectColumn.ofNames("second", "id"))
                 .extracting(SelectColumn::getName)
                 .containsExactly("second", "id");
+
+        SelectColumn base = SelectColumn.of("id");
+        SelectColumn conditional = base.when(param -> false);
+        assertThat(base.includes(new Object())).isTrue();
+        assertThat(conditional.includes(new Object())).isFalse();
+        assertThat(SelectColumn.SetBuilder.create()
+                .column("id").when(param -> false).add().build().iterator().next().includes(new Object()))
+                .isFalse();
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void conditionallySelectsEntityFieldOrTypedNullWithoutReadingHiddenField() {
+        EntityMetadata metadata = metadata(ConditionalColumnsQueryParam.class);
+        ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
+        queryParam.columns = List.of(
+                SelectColumn.of("phone").when(param -> ((ConditionalColumnsQueryParam) param).canViewPhone),
+                SelectColumn.nullValue("phone", String.class)
+                        .when(param -> !((ConditionalColumnsQueryParam) param).canViewPhone)
+        );
+
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+        Path<String> phonePath = mock(Path.class);
+        Expression<String> nullExpression = mock(Expression.class);
+        when(root.get("phone")).thenReturn(phonePath);
+        when(phonePath.alias("phone")).thenReturn(phonePath);
+        when(criteriaBuilder.nullLiteral(String.class)).thenReturn(nullExpression);
+        when(nullExpression.alias("phone")).thenReturn(nullExpression);
+
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+
+        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(nullExpression);
+        verify(root, never()).get("phone");
+
+        clearInvocations(criteriaBuilder, criteriaQuery, root, phonePath, nullExpression);
+        queryParam.canViewPhone = true;
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(phonePath);
+        verify(root).get("phone");
+        verify(criteriaBuilder, never()).nullLiteral(String.class);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void selectsNonNullConstantWithoutAnEntityProperty() {
+        EntityMetadata metadata = metadata(ConditionalColumnsQueryParam.class);
+        ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
+        queryParam.columns = List.of(SelectColumn.constant("phone", "hidden"));
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+        Expression<String> literal = mock(Expression.class);
+        when(criteriaBuilder.literal("hidden")).thenReturn(literal);
+        when(literal.alias("phone")).thenReturn(literal);
+
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+
+        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(literal);
+        verifyNoInteractions(root);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void preservesFunctionArgumentsThroughFactoriesAndBuilder() {
+        EntityMetadata metadata = metadata(ConditionalColumnsQueryParam.class);
+        ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
+        queryParam.columns = List.of(
+                SelectColumn.of("amount", "roundedZero", SqlFunctionEnum.round, 0)
+                        .when(param -> true),
+                SelectColumn.builder().name("amount").function(SqlFunctionEnum.round, 1)
+                        .alias("roundedOne").build()
+        );
+
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+        Path amountPath = mock(Path.class);
+        Expression roundedZero = mock(Expression.class);
+        Expression roundedOne = mock(Expression.class);
+        when(root.get("amount")).thenReturn(amountPath);
+        when(criteriaBuilder.round(amountPath, 0)).thenReturn(roundedZero);
+        when(criteriaBuilder.round(amountPath, 1)).thenReturn(roundedOne);
+        when(roundedZero.alias("roundedZero")).thenReturn(roundedZero);
+        when(roundedOne.alias("roundedOne")).thenReturn(roundedOne);
+
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+
+        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(roundedZero, roundedOne);
+        verify(criteriaBuilder).round(amountPath, 0);
+        verify(criteriaBuilder).round(amountPath, 1);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void resolvesDynamicColumnValueFromTheSameParamOnEveryQuery() {
+        EntityMetadata metadata = metadata(ConditionalColumnsQueryParam.class);
+        ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
+        queryParam.dynamicValue = "first";
+        AtomicInteger calls = new AtomicInteger();
+        queryParam.columns = List.of(SelectColumn.dynamic("computed", String.class, param -> {
+            assertThat(param).isSameAs(queryParam);
+            calls.incrementAndGet();
+            return ((ConditionalColumnsQueryParam) param).dynamicValue;
+        }));
+
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+        Expression<String> literal = mock(Expression.class);
+        Expression<String> nullExpression = mock(Expression.class);
+        when(criteriaBuilder.literal("first")).thenReturn(literal);
+        when(criteriaBuilder.nullLiteral(String.class)).thenReturn(nullExpression);
+        when(literal.alias("computed")).thenReturn(literal);
+        when(nullExpression.alias("computed")).thenReturn(nullExpression);
+
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(literal);
+
+        clearInvocations(criteriaBuilder, criteriaQuery, root, literal, nullExpression);
+        queryParam.dynamicValue = null;
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(nullExpression);
+        assertThat(calls).hasValue(2);
+        verifyNoInteractions(root);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void buildsRowLevelCaseExpressionUsingTheCurrentCriteriaTree() {
+        EntityMetadata metadata = metadata(ConditionalColumnsQueryParam.class);
+        ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
+        queryParam.columns = List.of(SelectColumn.expression("phone", (criteriaBuilder, root, param) -> {
+            assertThat(param).isSameAs(queryParam);
+            return criteriaBuilder.<String>selectCase()
+                    .when(criteriaBuilder.isTrue(root.get("visible")), root.get("phone"))
+                    .otherwise(criteriaBuilder.nullLiteral(String.class));
+        }).when(param -> true));
+
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+        CriteriaBuilder.Case<String> caseExpression = mock(CriteriaBuilder.Case.class);
+        Path<Boolean> visiblePath = mock(Path.class);
+        Path<String> phonePath = mock(Path.class);
+        Predicate visiblePredicate = mock(Predicate.class);
+        Expression<String> nullExpression = mock(Expression.class);
+        when(criteriaBuilder.<String>selectCase()).thenReturn(caseExpression);
+        when(root.<Boolean>get("visible")).thenReturn(visiblePath);
+        when(criteriaBuilder.isTrue(visiblePath)).thenReturn(visiblePredicate);
+        when(root.<String>get("phone")).thenReturn(phonePath);
+        when(criteriaBuilder.nullLiteral(String.class)).thenReturn(nullExpression);
+        when(caseExpression.when(visiblePredicate, phonePath)).thenReturn(caseExpression);
+        when(caseExpression.otherwise(nullExpression)).thenReturn(caseExpression);
+        when(caseExpression.alias("phone")).thenReturn(caseExpression);
+
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+
+        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(caseExpression);
+        verify(criteriaBuilder).selectCase();
+        verify(caseExpression).when(visiblePredicate, phonePath);
+        verify(caseExpression).otherwise(nullExpression);
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void keepsLegacyQueryExpressionSetterWorking() {
+        EntityMetadata metadata = metadata(ConditionalColumnsQueryParam.class);
+        ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
+        SelectColumn column = SelectColumn.of("phone");
+        column.setQueryExpression((criteriaBuilder, root) -> criteriaBuilder.literal("overridden"));
+        queryParam.columns = List.of(column);
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+        Expression<String> literal = mock(Expression.class);
+        when(criteriaBuilder.literal("overridden")).thenReturn(literal);
+        when(literal.alias("phone")).thenReturn(literal);
+
+        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
+
+        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
+        verify(criteriaQuery).multiselect(selections.capture());
+        assertThat(selections.getValue()).containsExactly(literal);
+        verifyNoInteractions(root);
+    }
+
+    @Test
+    @SuppressWarnings("rawtypes")
+    void rejectsAProjectionWhoseConditionsRemoveEveryColumn() {
+        EntityMetadata metadata = metadata(ConditionalColumnsQueryParam.class);
+        ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
+        queryParam.columns = List.of(SelectColumn.of("phone").when(param -> false));
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        Root root = mock(Root.class);
+
+        assertThatThrownBy(() -> metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("@Columns has no selected fields");
+        verifyNoInteractions(root, criteriaQuery);
     }
 
     @Test
@@ -454,6 +671,16 @@ class CompiledQueryPlanTest {
 
         @Columns
         public List<SelectColumn> columns;
+    }
+
+    public static final class ConditionalColumnsQueryParam {
+
+        @Columns
+        public List<SelectColumn> columns;
+
+        public boolean canViewPhone;
+
+        public String dynamicValue;
     }
 
     public static final class GuardedQueryParam {

@@ -208,6 +208,29 @@ SelectColumn.SetBuilder
 ```
 - 支持查询函数使用,请参考 [SqlFunctionEnum 聚合函数说明] 部分
 - 投影字段的顺序决定 `Object[]` 和构造函数参数顺序。需要固定顺序时使用 `List<SelectColumn>`；`SelectColumn.SetBuilder` 也会保留添加顺序。普通 `HashSet` 不保证顺序。
+- `SelectColumn.when(param -> ...)` 按本次原始查询参数决定是否选择该列；构建器也支持 `.when(...)`。条件为 `false` 时不会构造该列的 Criteria 表达式。
+- `SelectColumn.constant(alias, value)` 选择非 `null` 常量；`SelectColumn.nullValue(alias, type)` 选择指定类型的 SQL `NULL`。它们不读取实体属性。需要同一别名按条件返回实体字段或掩码时，可以在 `List<SelectColumn>` 中放入两项互斥的条件列：
+
+  ```java
+  List<SelectColumn> columns = List.of(
+          SelectColumn.of("phone")
+                  .when(param -> ((CustomerQueryParam) param).canViewPhone()),
+          SelectColumn.nullValue("phone", String.class)
+                  .when(param -> !((CustomerQueryParam) param).canViewPhone())
+  );
+  ```
+
+  其中 `CustomerQueryParam` 是调用方的查询参数类型。非空列集合若经条件过滤后没有任何选列，会抛出 `IllegalArgumentException`，不会回退为整实体查询。构造投影仍要求本次有效列与实体构造器匹配。
+- `SelectColumn.dynamic(alias, type, resolver)` 在每次构建查询时以原始 `queryParam` 计算该列的值，非 `null` 值使用 Criteria `literal`，`null` 值使用指定类型的 `nullLiteral`。`resolver` 可以调用业务 service；service 由调用方传入或捕获，框架不会为每列额外查找 Bean，也不会缓存本次结果。
+- `SelectColumn.expression(alias, (criteriaBuilder, root, queryParam) -> expression)` 可返回任意当前查询树的 Criteria 表达式，包括 `criteriaBuilder.selectCase()`。这与 `.when(...)` 不同：`.when(...)` 按本次查询参数决定是否选这一列；`CASE WHEN` 可以按数据库每一行的属性决定该列的结果。例如：
+
+  ```java
+  SelectColumn.expression("phone", (cb, root, param) -> cb.<String>selectCase()
+          .when(cb.isTrue(root.<Boolean>get("visible")), root.<String>get("phone"))
+          .otherwise(cb.nullLiteral(String.class)));
+  ```
+
+  表达式应使用回调收到的 `criteriaBuilder`、`root` 构造，不要保存某次查询的 Criteria 对象。原有的 `QueryExpression` 和 `setQueryExpression(...)` 入口保留；需要当前 `queryParam` 时使用新的三参数表达式入口。
 
 ### 特殊条件注解
 
