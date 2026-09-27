@@ -1,10 +1,10 @@
 package io.github.jockerCN.jpa.metadata;
 
-import com.google.common.collect.Sets;
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.jpa.annotation.Columns;
 import io.github.jockerCN.jpa.annotation.Distinct;
 import io.github.jockerCN.jpa.annotation.GroupBy;
+import io.github.jockerCN.jpa.annotation.Limit;
 import io.github.jockerCN.jpa.annotation.OrderBy;
 import io.github.jockerCN.jpa.annotation.Page;
 import io.github.jockerCN.jpa.annotation.PageSize;
@@ -14,15 +14,12 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import lombok.AccessLevel;
 import lombok.Getter;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess.validateFieldType;
@@ -32,39 +29,16 @@ import static io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess.validateFiel
  *
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
-@Getter
 public class EntityMetadata {
 
     /**
      * @Entity 注解标注的实体类 类型
      */
+    @Getter
     private final Class<?> entityType;
 
-    /**
-     * 查询参数类 有限定注解的字段 where条件
-     */
-    private final Map<String, FieldMetadata> fieldsMetadataMap;
-
-    private final Map<Integer, Set<FieldMetadata>> havingMetadataMap;
-
-    private final Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> criteriaQueryMap;
-
-    private final Map<String, Function<Object, Object>> pageQueryMap;
-
-    private final Map<String, Function<Object, Object>> tmpPageQueryMap;
-
-    private String pageFieldName;
-
-    private String pageSizeFieldName;
-
-    private boolean enablePage;
-
-    private Function<Object, Integer> limit;
-
-    @Getter(AccessLevel.NONE)
     private final CompiledQueryPlan compiledQueryPlan;
 
-    @Getter(AccessLevel.NONE)
     private final CompiledFieldValuePlan compiledFieldValuePlan;
 
 
@@ -77,55 +51,53 @@ public class EntityMetadata {
                           Class<? extends QueryParamProcessor> processorType) {
         this.entityType = entityType;
         this.compiledFieldValuePlan = CompiledFieldValuePlan.compile(beanResolver, processorType);
-        Map<String, FieldMetadata> tempfieldsMetadataMap = new HashMap<>();
-        Map<Integer, Set<FieldMetadata>> tempHavingMetadataMap = new HashMap<>();
-        Map<String, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> tempCriteriaQueryMap = new HashMap<>();
+        Map<String, FieldMetadata> whereMetadata = new HashMap<>();
+        Map<Integer, Set<FieldMetadata>> havingMetadata = new HashMap<>();
         List<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> distinctOperations = new ArrayList<>();
         List<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> groupByOperations = new ArrayList<>();
         List<JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> orderByOperations = new ArrayList<>();
-        ProjectionPlan[] projection = new ProjectionPlan[1];
-        this.tmpPageQueryMap = new HashMap<>();
-        fieldsAnnotationMap.forEach((field, annotation) -> {
+        ProjectionPlan projection = null;
+        Function<Object, Integer> limitReader = null;
+        Map<String, Function<Object, Object>> pageReaders = new HashMap<>();
+        for (Map.Entry<Field, Annotation> entry : fieldsAnnotationMap.entrySet()) {
+            Field field = entry.getKey();
+            Annotation annotation = entry.getValue();
             ReflectionUtils.makeAccessible(field);
-            Function<Object, Object> valueReader = CompiledFieldValuePlan.compileReader(field, annotation, beanResolver);
-            if (annotation.annotationType() == Columns.class) {
-                projection[0] = ProjectionPlan.compile(field, (Columns) annotation, entityType, valueReader);
-                FieldAnnotationWrapper wrapper = new FieldAnnotationWrapper(field, annotation, entityType, valueReader);
-                tempCriteriaQueryMap.put(field.getName(),
-                        JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation).orElseThrow().apply(wrapper));
-                return;
-            }
             Optional<FieldMetadata> fieldMetadata = JpaQueryEntityBuilder.buildFieldMetadata(field, annotation);
             if (fieldMetadata.isPresent()) {
-                fieldMetadata.get().setValueReader(valueReader);
-                tempfieldsMetadataMap.put(field.getName(), fieldMetadata.get());
-                return;
+                FieldMetadata metadata = fieldMetadata.get();
+                metadata.setValueReader(CompiledFieldValuePlan.withDefault(field, metadata.getInvoke(), beanResolver));
+                whereMetadata.put(field.getName(), metadata);
+                continue;
+            }
+
+            Optional<FieldMetadata> havingField = JpaQueryEntityBuilder.buildHavingMetadata(field, annotation);
+            if (havingField.isPresent()) {
+                FieldMetadata havingFieldMetadata = havingField.get();
+                havingFieldMetadata.setValueReader(CompiledFieldValuePlan.withDefault(
+                        field, havingFieldMetadata.getInvoke(), beanResolver));
+                havingMetadata.computeIfAbsent(havingFieldMetadata.getHavingIndex(), k -> new HashSet<>()).add(havingFieldMetadata);
+                continue;
+            }
+
+            Function<Object, Object> valueReader = CompiledFieldValuePlan.compileReader(field, annotation, beanResolver);
+            if (annotation.annotationType() == Columns.class) {
+                projection = ProjectionPlan.compile(field, (Columns) annotation, entityType, valueReader);
+                continue;
+            }
+
+            if (annotation.annotationType() == Limit.class) {
+                limitReader = obj -> (Integer) valueReader.apply(obj);
+                continue;
             }
 
 
-            Optional<BiFunction<Field, Object, Function<Object, Integer>>> biFunction = JpaQueryEntityBuilder.buildLimitQuery(annotation);
-
-            if (biFunction.isPresent()) {
-                limit = obj -> (Integer) valueReader.apply(obj);
-                return;
-            }
-
-            Optional<FieldMetadata> havingMetadata = JpaQueryEntityBuilder.buildHavingMetadata(field, annotation);
-            if (havingMetadata.isPresent()) {
-                FieldMetadata havingFieldMetadata = havingMetadata.get();
-                havingFieldMetadata.setValueReader(valueReader);
-                tempHavingMetadataMap.computeIfAbsent(havingFieldMetadata.getHavingIndex(), k -> Sets.newHashSet()).add(havingFieldMetadata);
-                return;
-            }
-
-
-            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCompiledCriteriaQueryMap(annotation);
+            Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> consumerFunctionOption = JpaQueryEntityBuilder.buildCriteriaQueryMap(annotation);
 
             if (consumerFunctionOption.isPresent()) {
                 Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>> jpaConsumerFunction = consumerFunctionOption.get();
                 FieldAnnotationWrapper wrapper = new FieldAnnotationWrapper(field, annotation, entityType, valueReader);
                 JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object> jpaConsumer = jpaConsumerFunction.apply(wrapper);
-                tempCriteriaQueryMap.put(field.getName(), jpaConsumer);
                 if (annotation.annotationType() == Distinct.class) {
                     distinctOperations.add(jpaConsumer);
                 } else if (annotation.annotationType() == GroupBy.class) {
@@ -136,48 +108,28 @@ public class EntityMetadata {
             }
 
             if (annotation.annotationType().equals(Page.class)) {
-                processPageAnnotation(field, valueReader);
+                validateFieldType(field, "@Page", Integer.class);
+                pageReaders.put("page", valueReader);
             }
 
             if (annotation.annotationType().equals(PageSize.class)) {
-                processPageSizeAnnotation(field, valueReader);
+                validateFieldType(field, "@PageSize", Integer.class);
+                pageReaders.put("pageSize", valueReader);
             }
-        });
-
-        this.fieldsMetadataMap = Map.copyOf(tempfieldsMetadataMap);
-        this.criteriaQueryMap = Map.copyOf(tempCriteriaQueryMap);
-        this.havingMetadataMap = Map.copyOf(tempHavingMetadataMap);
-        this.pageQueryMap = Map.copyOf(tmpPageQueryMap);
-        tmpPageQueryMap.clear();
-        // 同时使用了@Page和@PageSize
-        if (StringUtils.hasLength(pageFieldName) && StringUtils.hasLength(pageSizeFieldName)) {
-            enablePage = true;
         }
 
+        boolean enablePage = pageReaders.containsKey("page") && pageReaders.containsKey("pageSize");
         this.compiledQueryPlan = CompiledQueryPlan.compile(
-                fieldsMetadataMap.values(),
-                havingMetadataMap,
-                projection[0],
+                whereMetadata.values(),
+                havingMetadata,
+                projection,
                 distinctOperations,
                 groupByOperations,
                 orderByOperations,
-                limit,
-                enablePage ? pageQueryMap.get("page") : null,
-                enablePage ? pageQueryMap.get("pageSize") : null
+                limitReader,
+                enablePage ? pageReaders.get("page") : null,
+                enablePage ? pageReaders.get("pageSize") : null
         );
-    }
-
-
-    private void processPageAnnotation(Field field, Function<Object, Object> valueReader) {
-        validateFieldType(field, "@Page", Integer.class);
-        pageFieldName = field.getName();
-        tmpPageQueryMap.put("page", valueReader);
-    }
-
-    private void processPageSizeAnnotation(Field field, Function<Object, Object> valueReader) {
-        validateFieldType(field, "@PageSize", Integer.class);
-        pageSizeFieldName = field.getName();
-        tmpPageQueryMap.put("pageSize", valueReader);
     }
 
     public void processQueryParam(Object queryParam) {

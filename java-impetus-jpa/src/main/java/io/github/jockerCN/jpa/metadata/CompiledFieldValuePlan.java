@@ -35,13 +35,19 @@ final class CompiledFieldValuePlan {
                                                    Function<Class<?>, Object> beanResolver) {
         String annotationName = annotation.annotationType().getName();
         MethodHandle getter = FieldValueLookup.getMethodHandle(field, annotationName);
+        Function<Object, Object> rawReader = queryParam -> invokeMethodHandle(getter, queryParam, field, annotationName);
+        return withDefault(field, rawReader, beanResolver);
+    }
+
+    static Function<Object, Object> withDefault(Field field, Function<Object, Object> rawReader,
+                                                Function<Class<?>, Object> beanResolver) {
         QueryDefault queryDefault = field.getAnnotation(QueryDefault.class);
         if (Objects.isNull(queryDefault)) {
-            return queryParam -> invokeMethodHandle(getter, queryParam, field, annotationName);
+            return rawReader;
         }
         Class<? extends QueryValueProvider<?>> providerType = queryDefault.value();
         return queryParam -> {
-            Object value = invokeMethodHandle(getter, queryParam, field, annotationName);
+            Object value = rawReader.apply(queryParam);
             return Objects.isNull(value)
                     ? ((QueryValueProvider<?>) beanResolver.apply(providerType)).provide(queryParam)
                     : value;

@@ -4,7 +4,9 @@ import io.github.jockerCN.jpa.annotation.Columns;
 import io.github.jockerCN.jpa.annotation.QueryDefault;
 import io.github.jockerCN.jpa.annotation.where.Equals;
 import io.github.jockerCN.jpa.metadata.EntityMetadata;
+import io.github.jockerCN.jpa.metadata.FieldMetadata;
 import io.github.jockerCN.jpa.metadata.JpaAnnotationUtils;
+import io.github.jockerCN.jpa.metadata.JpaQueryEntityBuilder;
 import io.github.jockerCN.jpa.query.model.SelectColumn;
 import io.github.jockerCN.jpa.query.value.QueryParamProcessor;
 import io.github.jockerCN.jpa.query.value.QueryValueProvider;
@@ -14,7 +16,9 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.junit.jupiter.api.Test;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,6 +26,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class CompiledFieldValuePlanTest {
+
+    @Test
+    void fieldMetadataInvokeKeepsReadingTheRawField() throws NoSuchFieldException {
+        Field field = Param.class.getDeclaredField("ownerId");
+        ReflectionUtils.makeAccessible(field);
+        FieldMetadata metadata = JpaQueryEntityBuilder.buildFieldMetadata(
+                field, field.getAnnotation(Equals.class)).orElseThrow();
+        Param param = new Param();
+
+        assertThat(metadata.getInvoke().apply(param)).isNull();
+        param.ownerId = 12L;
+        assertThat(metadata.getInvoke().apply(param)).isEqualTo(12L);
+    }
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -62,6 +79,7 @@ class CompiledFieldValuePlanTest {
     }
 
     @Test
+    @SuppressWarnings("rawtypes")
     void defaultProviderReadsSameParamOnlyWhenFieldIsNull() {
         AtomicInteger calls = new AtomicInteger();
         EntityMetadata metadata = new EntityMetadata(TestEntity.class,
@@ -74,14 +92,22 @@ class CompiledFieldValuePlanTest {
                         } : type == ColumnsProvider.class ? new ColumnsProvider() : new Processor(),
                 QueryParamProcessor.None.class);
         Param first = new Param();
-        var reader = metadata.getFieldsMetadataMap().get("ownerId").getValueReader();
-        assertThat(reader.apply(first)).isEqualTo(7L);
+        CriteriaBuilder cb = mock(CriteriaBuilder.class);
+        Root root = mock(Root.class);
+        Path ownerPath = mock(Path.class);
+        Predicate defaultPredicate = mock(Predicate.class);
+        Predicate explicitPredicate = mock(Predicate.class);
+        when(root.get("ownerId")).thenReturn(ownerPath);
+        when(cb.equal(ownerPath, 7L)).thenReturn(defaultPredicate);
+        when(cb.equal(ownerPath, 12L)).thenReturn(explicitPredicate);
+
+        assertThat(metadata.buildPersistenceList(cb, root, first)).containsExactly(defaultPredicate);
         assertThat(first.ownerId).isNull();
         assertThat(calls).hasValue(1);
 
         Param second = new Param();
         second.ownerId = 12L;
-        assertThat(reader.apply(second)).isEqualTo(12L);
+        assertThat(metadata.buildPersistenceList(cb, root, second)).containsExactly(explicitPredicate);
         assertThat(calls).hasValue(1);
     }
 

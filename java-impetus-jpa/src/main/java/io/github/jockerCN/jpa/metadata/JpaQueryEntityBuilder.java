@@ -11,14 +11,12 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static io.github.jockerCN.jpa.metadata.FieldValueLookup.invokeMethodHandle;
 import static io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess.validateFieldType;
 
 /**
@@ -29,8 +27,6 @@ public abstract class JpaQueryEntityBuilder {
     private static final Map<Class<? extends Annotation>, BiFunction<Field, Annotation, FieldMetadata>> fieldMetadataBuild;
 
     private static final Map<Class<? extends Annotation>, BiFunction<Field, Annotation, FieldMetadata>> queryHavingBuild;
-
-    private static final Map<Class<? extends Annotation>, BiFunction<Field, Object, Function<Object, Integer>>> limitQueryBuild;
 
     private static final Map<Class<? extends Annotation>, Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> criteriaQueryMap;
 
@@ -140,10 +136,6 @@ public abstract class JpaQueryEntityBuilder {
         }));
 
 
-        limitQueryBuild = Map.of(Limit.class, (field, obj) -> {
-            MethodHandle getter = FieldValueLookup.getMethodHandle(field, "@Limit");
-            return (ob) -> (Integer) invokeMethodHandle(getter, ob, field, "@Limit");
-        });
         criteriaQueryMap = Map.of(Columns.class, (fieldWrapper -> {
             ProjectionPlan projection = ProjectionPlan.compile(fieldWrapper.field(), (Columns) fieldWrapper.annotation(), fieldWrapper.entityType(), fieldWrapper.valueReader());
             return projection::apply;
@@ -196,14 +188,6 @@ public abstract class JpaQueryEntityBuilder {
 
     public static Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> buildCriteriaQueryMap(Annotation annotation) {
         return Optional.ofNullable(criteriaQueryMap.get(annotation.annotationType()));
-    }
-
-    static Optional<Function<FieldAnnotationWrapper, JpaConsumer<CriteriaBuilder, CriteriaQuery<?>, Root<?>, Object>>> buildCompiledCriteriaQueryMap(Annotation annotation) {
-        return Optional.ofNullable(criteriaQueryMap.get(annotation.annotationType()));
-    }
-
-    public static Optional<BiFunction<Field, Object, Function<Object, Integer>>> buildLimitQuery(Annotation annotation) {
-        return Optional.ofNullable(limitQueryBuild.get(annotation.annotationType()));
     }
 
     public static Optional<FieldMetadata> buildFieldMetadata(Field field, Annotation annotation) {
