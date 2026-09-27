@@ -2,6 +2,7 @@ package io.github.jockerCN.jpa;
 
 import io.github.jockerCN.jpa.metadata.EntityMetadata;
 import io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess;
+import io.github.jockerCN.jpa.query.result.ResultAssembler;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -12,6 +13,7 @@ import jakarta.persistence.criteria.Root;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -42,6 +44,15 @@ public abstract class AbstractJpaQueryManager implements JpaQueryManager {
     }
 
     @Override
+    public <R, T> T query(Object queryParam, Class<R> findType,
+                          ResultAssembler<? super R, ? extends T> assembler) {
+        Objects.requireNonNull(findType, "Query result type must not be null");
+        Objects.requireNonNull(assembler, "Result assembler must not be null");
+        List<?> rows = getTypeQuery(queryParam, findType).getResultList();
+        return rows.isEmpty() ? null : assembler.assemble(queryParam, findType.cast(rows.getFirst()));
+    }
+
+    @Override
     public <T> List<T> queryList(Object queryParam) {
         TypedQuery<?> typeQuery = getTypeQuery(queryParam, null);
         return TypeConvert.cast(typeQuery.getResultList());
@@ -51,6 +62,23 @@ public abstract class AbstractJpaQueryManager implements JpaQueryManager {
     public <T> List<T> queryList(Object queryParam, Class<T> findType) {
         TypedQuery<?> typeQuery = getTypeQuery(queryParam, findType);
         return TypeConvert.cast(typeQuery.getResultList());
+    }
+
+    @Override
+    public <R, T> List<T> queryList(Object queryParam, Class<R> findType,
+                                    ResultAssembler<? super R, ? extends T> assembler) {
+        Objects.requireNonNull(findType, "Query result type must not be null");
+        Objects.requireNonNull(assembler, "Result assembler must not be null");
+        List<?> rows = getTypeQuery(queryParam, findType).getResultList();
+        List<T> results = new ArrayList<>(rows.size());
+        if (rows.isEmpty()) {
+            return results;
+        }
+        ResultAssembler<? super R, ? extends T> bound = assembler.bind(findType.cast(rows.getFirst()));
+        for (Object row : rows) {
+            results.add(bound.assemble(queryParam, findType.cast(row)));
+        }
+        return results;
     }
 
     @Override

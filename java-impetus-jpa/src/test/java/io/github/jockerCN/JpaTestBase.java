@@ -2,6 +2,7 @@ package io.github.jockerCN;
 
 import io.github.jockerCN.configuration.EnableAutoJpa;
 import io.github.jockerCN.query.betweenAnd.BetweenAndQueryTest;
+import io.github.jockerCN.query.columns.ColumnsQueryTest;
 import io.github.jockerCN.query.distinct.DistinctQueryTest;
 import io.github.jockerCN.query.equals.EqualsQueryTest;
 import io.github.jockerCN.query.groupBy.GroupByQueryTest;
@@ -13,6 +14,7 @@ import io.github.jockerCN.query.ltAndLeAndGtAndGe.LtAndLeAndGtAndGeQueryTest;
 import io.github.jockerCN.query.noEquals.NoEqualsQueryTest;
 import io.github.jockerCN.query.nullAndNotNull.NullAndNotNullQueryTest;
 import io.github.jockerCN.query.orderBy.OrderByQueryTest;
+import io.github.jockerCN.query.result.ResultAssemblerQueryTest;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
@@ -38,6 +40,8 @@ import org.springframework.test.context.DynamicPropertySource;
         NoEqualsQueryTest.class,
         DistinctQueryTest.class,
         BetweenAndQueryTest.class,
+        ColumnsQueryTest.class,
+        ResultAssemblerQueryTest.class,
 })
 @SpringBootTest(classes = JpaTestBase.JpaTestConfig.class)
 public class JpaTestBase {

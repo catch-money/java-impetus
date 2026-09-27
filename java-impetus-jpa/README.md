@@ -132,6 +132,21 @@ class CustomerQueryProcessor implements QueryParamProcessor {
 
 查询计划在启动期编译字段读取、provider 类型和 processor 类型；Spring Bean 在实际需要时通过 `SpringProvider` 获取，不额外注册初始化 Bean。执行期间只逐层传递调用方的 `queryParam`，不复制参数或缓存其字段值，也不重新解析注解。query 级 processor 会修改原对象；如果调用方跨请求复用同一对象，其状态和并发访问由调用方控制。`ResultAssembler`、`ResultEnhancer` 不属于本阶段的查询前取值链路。
 
+### 查询后的结果装配
+
+`ResultAssembler` 在 `TypedQuery.getResultList()` 之后逐行映射，不修改 Criteria 查询，也不挂在 `@JpaQuery` 上。原有 `query` / `queryList` 调用不变；需要动态 DTO 时，在本次调用显式传入 assembler：
+
+```java
+List<CustomerView> views = jpaQueryManager.queryList(param, ResultAssembler.bean(CustomerView.class));
+CustomerView first = jpaQueryManager.query(param, ResultAssembler.bean(CustomerView.class));
+
+// 自定义转换时，第二个参数仍是数据库原生结果类型，不是目标 DTO 类型。
+List<CustomerView> custom = jpaQueryManager.queryList(param, Tuple.class,
+        (queryParam, row) -> new CustomerView(row.get("id", Long.class)));
+```
+
+`ResultAssembler.bean(...)` 使用 `Tuple` 别名匹配 JavaBean 可写属性，要求目标类及无参构造器公开；未选中的属性保持对象默认值，不匹配的别名忽略，值需与 setter 参数类型兼容。它按目标类缓存构造器和 setter 结构；列表查询另按本次首行的列结构预绑定一次“列下标 → setter”，随后逐行按下标取值。预绑定只在本次查询内使用，不持有首行、查询参数或结果列表；复用同一个 assembler 执行不同选列的查询也会分别绑定。自定义 assembler 可保留默认逐行行为，或覆盖 `bind(sampleRow)` 做自己的批次准备。无数据库行时 `query()` 返回 `null`，`queryList()` 返回空列表；有行时即使选中列值为 `null`，仍会创建目标对象。复杂映射可传自定义 assembler；`ResultEnhancer` 将作为装配之后的独立扩展处理。
+
 ### 确定你的查询参数被扫描到
 
 - 启动时java-impetus-jpa会打印扫描到的查询参数类

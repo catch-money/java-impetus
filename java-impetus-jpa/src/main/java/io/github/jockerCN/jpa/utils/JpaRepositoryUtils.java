@@ -4,8 +4,10 @@ package io.github.jockerCN.jpa.utils;
 import com.google.common.collect.Lists;
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.jpa.JpaQueryManager;
+import io.github.jockerCN.jpa.query.result.ResultAssembler;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
 import io.github.jockerCN.type.TypeConvert;
+import jakarta.persistence.Tuple;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -51,12 +53,30 @@ public abstract class JpaRepositoryUtils {
         return JPA_QUERY_MANAGER.query(queryParam, tClass);
     }
 
+    public static <R, T> T query(Object queryParam, Class<R> findType,
+                                  ResultAssembler<? super R, ? extends T> assembler) {
+        return JPA_QUERY_MANAGER.query(queryParam, findType, assembler);
+    }
+
+    public static <T> T query(Object queryParam, ResultAssembler<Tuple, T> assembler) {
+        return JPA_QUERY_MANAGER.query(queryParam, assembler);
+    }
+
     public static Long count(Object queryParam) {
         return JPA_QUERY_MANAGER.count(queryParam);
     }
 
     public static <T> List<T> queryList(Object queryParam, Class<T> tClass) {
         return JPA_QUERY_MANAGER.queryList(queryParam, tClass);
+    }
+
+    public static <R, T> List<T> queryList(Object queryParam, Class<R> findType,
+                                            ResultAssembler<? super R, ? extends T> assembler) {
+        return JPA_QUERY_MANAGER.queryList(queryParam, findType, assembler);
+    }
+
+    public static <T> List<T> queryList(Object queryParam, ResultAssembler<Tuple, T> assembler) {
+        return JPA_QUERY_MANAGER.queryList(queryParam, assembler);
     }
 
     public static <T> List<T> queryList(Object queryParam) {
