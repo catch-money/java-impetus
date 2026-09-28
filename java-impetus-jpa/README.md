@@ -105,7 +105,7 @@ param.setPayId("PAY202405852383867"); //设置查询参数
 List<PayEntity> queryList = JpaRepositoryUtils.queryList(param, PayEntity.class); //使用JpaRepositoryUtils查询api
 ```
 
-查询参数不需要继承 `BaseQueryParam`，也不需要提供无参构造方法；启动时根据 `@JpaQuery` 标注的类直接编译查询元数据。`BaseQueryParam` 仅提供常用的分页、限制和选列字段。实体也不需要继承 `JpaPojo`、`AbstractBaseJapPojo` 或 `JpaPojoDTO`，但仍需符合 JPA 自身的实体映射要求。
+查询参数不需要继承框架基类，也不需要提供无参构造方法；启动时根据 `@JpaQuery` 标注的类直接编译查询元数据。分页便利方法使用 `PageParam` 接口，不占用调用方的类继承位置；具体查询参数自行声明带 `@Page`、`@PageSize` 的字段。实体也不需要继承 `JpaPojo`、`AbstractBaseJapPojo` 或 `JpaPojoDTO`，但仍需符合 JPA 自身的实体映射要求。
 
 ### 查询前的有效值处理
 
@@ -145,7 +145,45 @@ List<CustomerView> custom = jpaQueryManager.queryList(param, Tuple.class,
         (queryParam, row) -> new CustomerView(row.get("id", Long.class)));
 ```
 
-`ResultAssembler.bean(...)` 使用 `Tuple` 别名匹配 JavaBean 可写属性，要求目标类及无参构造器公开；未选中的属性保持对象默认值，不匹配的别名忽略，值需与 setter 参数类型兼容。它按目标类缓存构造器和 setter 结构；列表查询另按本次首行的列结构预绑定一次“列下标 → setter”，随后逐行按下标取值。预绑定只在本次查询内使用，不持有首行、查询参数或结果列表；复用同一个 assembler 执行不同选列的查询也会分别绑定。自定义 assembler 可保留默认逐行行为，或覆盖 `bind(sampleRow)` 做自己的批次准备。无数据库行时 `query()` 返回 `null`，`queryList()` 返回空列表；有行时即使选中列值为 `null`，仍会创建目标对象。复杂映射可传自定义 assembler；`ResultEnhancer` 将作为装配之后的独立扩展处理。
+`ResultAssembler.bean(...)` 使用 `Tuple` 别名匹配 JavaBean 可写属性，要求目标类及无参构造器公开；未选中的属性保持对象默认值，不匹配的别名忽略，值需与 setter 参数类型兼容。它按目标类缓存构造器和 setter 结构；列表查询另按本次首行的列结构预绑定一次“列下标 → setter”，随后逐行按下标取值。预绑定只在本次查询内使用，不持有首行、查询参数或结果列表；复用同一个 assembler 执行不同选列的查询也会分别绑定。自定义 assembler 可保留默认逐行行为，或覆盖 `bind(sampleRow)` 做自己的批次准备。无数据库行时 `query()` 返回 `null`，`queryList()` 返回空列表；有行时即使选中列值为 `null`，仍会创建目标对象。
+
+### 可选的结果增强
+
+`ResultEnhancer<T>` 由调用方在任意业务模块实现为 Spring Bean，通过 `queryParamType()` 声明负责的查询参数类型。它不属于 `EntityMetadata` 或 Criteria 查询计划。查询管理器建立一份按查询参数类型查找的增强器注册表；普通 `query(...)` / `queryList(...)` 不执行它，只有 `queryEnhanced(...)` / `queryListEnhanced(...)` 才执行。两组增强入口支持与普通查询相同的默认实体类型、显式 `findType` 和显式 `ResultAssembler` 形式，无须每次传入 enhancer 实例。
+
+```java
+@JpaQuery(Customer.class)
+public class CustomerQueryParam {
+    // 查询字段
+}
+
+@Component
+public class CustomerViewEnhancer implements ResultEnhancer<CustomerView> {
+    @Override
+    public Class<?> queryParamType() {
+        return CustomerQueryParam.class;
+    }
+
+    @Override
+    public CustomerView enhance(Object queryParam, CustomerView result) {
+        return result;
+    }
+
+    @Override
+    public List<CustomerView> enhanceList(Object queryParam, List<CustomerView> results) {
+        return results;
+    }
+}
+
+CustomerView first = jpaQueryManager.queryEnhanced(param, ResultAssembler.bean(CustomerView.class));
+List<CustomerView> views = jpaQueryManager.queryListEnhanced(param, ResultAssembler.bean(CustomerView.class));
+```
+
+先完成数据库查询和可选的逐行装配，再执行增强：`queryEnhanced` 沿用 `getResultList()` 取首项，只把这一项交给 `enhance`；无行时返回 `null`，不调用增强器。`queryListEnhanced` 把整个列表（包括空列表）一次性交给 `enhanceList`，不是逐行调用。增强器拿到原始 `queryParam`，可以修改结果或返回替换结果；其泛型类型应与本次装配后的结果类型一致。增强器 Bean 应保持无本次查询状态，避免跨线程共享参数或结果。`count()` 不执行增强器；若增强器改变列表数量，`count()` 不会自动随之改变。
+
+同一个 `queryParam` 类型最多对应一个 `ResultEnhancer` Bean；重复注册会在首次使用增强入口、建立注册表时抛出 `IllegalStateException`。未注册时，列表增强入口或有结果的单条增强入口会抛出异常；无结果的单条查询仍直接返回 `null`。
+
+增强器不改变 JPA 的实体生命周期，也不会替调用方 detach、复制或禁止 flush。默认查询如果返回 JPA 实体，并且该实体仍由当前事务的 `EntityManager` 托管，那么增强器对实体字段的修改会参与 JPA 的脏检查；后续 flush（通常在事务提交时）可能写回数据库，**不需要显式调用 `save()`**。没有活动事务或实体已经脱管时，修改对象通常不会自动写回；实际行为取决于调用方的事务和持久化上下文边界。仅为返回值脱敏时，建议增强装配后的 DTO；框架不对实体增强增加额外兜底。
 
 ### 确定你的查询参数被扫描到
 
@@ -174,7 +212,7 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 3. **字段映射**：大部分注解的 `value` 属性可以指定具体的数据库实体字段名，不指定则默认使用查询字段名作为sql操作的字段名
 4. **分页机制**：`@Page` 和 `@PageSize` 必须同时使用才能生效，页码从 0 开始计算
 5. **Having 复杂性**：`@Having` 注解较为复杂，支持分组、排序、多条件逻辑组合等高级功能
-6. **查询参数类型**：查询参数类需要使用 `@JpaQuery` 注解；可以继承任意自定义基类，也可以不继承基类。`BaseQueryParam` 是可选的便捷实现
+6. **查询参数类型**：查询参数类需要使用 `@JpaQuery` 注解；可以继承任意自定义基类，也可以不继承基类。只有使用分页便利方法时才需要实现 `PageParam`，普通注解查询不需要实现它
 7. **注解限制**：所有查询字段只能使用单个注解,不管是条件注解还是聚合函数,当多个查询注解标注在同一个字段时则会抛出异常 `has multiple JPA-related annotations that should not coexist`
 
 
@@ -205,7 +243,7 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 
 | 注解 | 等同SQL条件 | 参数类型 | 说明 |
 |------|-------------|----------|------|
-| `@Columns` | `SELECT col1,col2,... FROM` | `Collection<SelectColumn>` | **自定义查询字段**，支持 `List` 或 `Set`。`value` 属性指定返回类型：<br/>• `Tuple.class`（默认）- 返回 JPA Tuple<br/>• `Object[].class` - 返回对象数组<br/>• 实体类.class - 返回构造函数映射的实体对象 |
+| `@Columns` | `SELECT col1,col2,... FROM` | `Collection<SelectColumn>` | **自定义查询字段**，支持 `List` 或 `Set`。`value` 属性选择投影构造策略：<br/>• `Tuple.class`（默认）- 使用 Criteria `multiselect`<br/>• `Object[].class` - 使用 Criteria 数组选列<br/>• 其他值 - 使用实体类的构造投影。实际查询结果类型还取决于调用入口的 `findType`。 |
 | `@Distinct` | `SELECT DISTINCT` | Boolean | **去重查询**。当值为 `true` 时对查询结果去重 |
 
 #### SelectColumn
@@ -223,6 +261,7 @@ SelectColumn.SetBuilder
 ```
 - 支持查询函数使用,请参考 [SqlFunctionEnum 聚合函数说明] 部分
 - 投影字段的顺序决定 `Object[]` 和构造函数参数顺序。需要固定顺序时使用 `List<SelectColumn>`；`SelectColumn.SetBuilder` 也会保留添加顺序。普通 `HashSet` 不保证顺序。
+- 真实数据库组合验证：默认 `@Columns(Tuple.class)` 下，显式 `findType=Tuple.class`、`Object[].class` 或与选列匹配的 DTO 构造器类型可决定本次结果类型；`@Columns(Object[].class)` 下显式 `findType=Object[].class` 或 `Tuple.class` 也可工作。**不传 `findType` 时，查询入口使用实体类型**；默认 Tuple 策略的该调用会返回仅填充选中字段的实体对象，未选中的字段保持 `null`，不能把它当完整实体使用。`@Columns(Object[].class)` 不传 `findType`，或构造投影分支显式传入与实体构造选列不匹配的 DTO 类型，当前 Hibernate 会报结果类型不匹配；需要 DTO 构造投影时，可使用默认 `@Columns(Tuple.class)` 并显式传入 DTO `findType`。
 - `SelectColumn.when(param -> ...)` 按本次原始查询参数决定是否选择该列；构建器也支持 `.when(...)`。条件为 `false` 时不会构造该列的 Criteria 表达式。
 - `SelectColumn.constant(alias, value)` 选择非 `null` 常量；`SelectColumn.nullValue(alias, type)` 选择指定类型的 SQL `NULL`。它们不读取实体属性。需要同一别名按条件返回实体字段或掩码时，可以在 `List<SelectColumn>` 中放入两项互斥的条件列：
 
@@ -447,10 +486,10 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 
 | 方法                                                         | 返回类型  | 说明                                                         |
 | ------------------------------------------------------------ | --------- | ------------------------------------------------------------ |
-| `queryListPage(BaseQueryParam param, Class<T> tClass, int pageSize)` | `List<T>` | **分页查询所有数据**。逐页设置参数中的 `@Page`、`@PageSize` 字段并合并结果。⚠️ 大数据量时需谨慎使用 |
-| `queryListPage(BaseQueryParam param, int pageSize)`                  | `List<T>` | **分页查询所有数据（实体类型）**。功能同上，返回查询参数对应的实体类型 |
+| `queryListPage(PageParam param, Class<T> tClass, int pageSize)` | `List<T>` | **分页查询所有数据**。逐页设置参数页码与页大小并合并结果。⚠️ 大数据量时需谨慎使用 |
+| `queryListPage(PageParam param, int pageSize)`                  | `List<T>` | **分页查询所有数据（实体类型）**。功能同上，返回查询参数对应的实体类型 |
 
-普通查询参数可以自行定义 `@Page`、`@PageSize` 字段，`JpaQueryManager` 始终根据这些注解执行分页。`PageUtils.page(param, pageable)` 接受任意查询参数对象；`Pageable` 只描述返回结果的分页元数据，调用方需要保证它与参数中的分页值一致，排序仍通过查询注解控制。原有 `PageUtils.page(BaseQueryParam)` 保留为便捷入口。批量查询所有页的 `queryListPage` 是会修改参数的专用便捷方法，仍要求 `BaseQueryParam`。
+普通 `JpaQueryManager` 查询仍接受任意 `@JpaQuery` 参数对象，分页只由 `@Page`、`@PageSize` 注解控制，不依赖 `PageParam`。`PageUtils.page(PageParam)` 和上述批量便利方法要求实现 `getPage`、`getPageSize`、`setPage`、`setPageSize`；这些方法供便利 API 使用，具体类仍需在对应的 `Integer` 字段上标注两个分页注解。`PageUtils.page` 沿用 `PageRequest.ofSize(...)` 的第 0 页元数据；`queryListPage` 临时设置每页参数，并在结束或异常时恢复进入方法前的页码和页大小，不在 `EntityMetadata` 中记录本次分页值。`BaseQueryParam` 已移除，新代码可继承自己的基类并实现 `PageParam`。
 
 
 ### JpaQueryManager 查询管理器

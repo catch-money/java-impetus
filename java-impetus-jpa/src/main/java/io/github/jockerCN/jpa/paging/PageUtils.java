@@ -3,7 +3,6 @@ package io.github.jockerCN.jpa.paging;
 
 import io.github.jockerCN.common.SpringProvider;
 import io.github.jockerCN.jpa.JpaQueryManager;
-import io.github.jockerCN.jpa.pojo.BaseQueryParam;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +16,7 @@ public class PageUtils {
 
     private static final JpaQueryManager jpaQueryManager = SpringProvider.getBean(JpaQueryManager.class);
 
-    public static <T> PageImpl<T> page(BaseQueryParam queryParam) {
+    public static <T> PageImpl<T> page(PageParam queryParam) {
         List<T> queryList = jpaQueryManager.queryList(queryParam);
         if (CollectionUtils.isEmpty(queryList)) {
             return new SimplePageImpl<>(queryList, PageRequest.ofSize(queryParam.getPageSize()), 0);
@@ -25,4 +24,5 @@ public class PageUtils {
         Long count = jpaQueryManager.count(queryParam);
         return new SimplePageImpl<>(queryList, PageRequest.ofSize(queryParam.getPageSize()), count);
     }
+
 }

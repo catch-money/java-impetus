@@ -1,12 +1,13 @@
 package io.github.jockerCN.query.page;
 
 import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.Page;
+import io.github.jockerCN.jpa.annotation.PageSize;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
-import io.github.jockerCN.jpa.pojo.BaseQueryParam;
+import io.github.jockerCN.jpa.paging.PageParam;
 import io.github.jockerCN.query.QueryAnnotationTest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 
@@ -37,10 +38,15 @@ public class PageQueryTest implements QueryAnnotationTest {
     }
 
 
-    @EqualsAndHashCode(callSuper = true)
     @JpaQuery(PayEntity.class)
     @Data
-    public static class PageTest extends BaseQueryParam {
+    public static class PageTest implements PageParam {
+
+        @Page
+        private Integer page;
+
+        @PageSize
+        private Integer pageSize;
 
     }
 
