@@ -3,6 +3,7 @@ package io.github.jockerCN;
 import io.github.jockerCN.configuration.EnableAutoJpa;
 import io.github.jockerCN.query.betweenAnd.BetweenAndQueryTest;
 import io.github.jockerCN.query.columns.ColumnsQueryTest;
+import io.github.jockerCN.query.columns.ColumnsQueryShapeTest;
 import io.github.jockerCN.query.columns.ProjectionFindTypeQueryTest;
 import io.github.jockerCN.query.distinct.DistinctQueryTest;
 import io.github.jockerCN.query.equals.EqualsQueryTest;
@@ -45,6 +46,7 @@ import org.springframework.test.context.DynamicPropertySource;
         DistinctQueryTest.class,
         BetweenAndQueryTest.class,
         ColumnsQueryTest.class,
+        ColumnsQueryShapeTest.class,
         ProjectionFindTypeQueryTest.class,
         PageUtilityQueryTest.class,
         ResultAssemblerQueryTest.class,

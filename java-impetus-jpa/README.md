@@ -40,8 +40,8 @@ java-impetus-jpa 自动管理Entity实体对应的Jpa Repository接口,你可以
 
 
 ```java
-@EntityScan(basePackages = "io.github.jockerCN") // @EntityScan 指定查询参数的扫描路径
-@ConfigurationPropertiesScan(basePackages = "io.github.jockerCN")
+@EntityScan(basePackages = "io.github.jockerCN.entity") // JPA 实体扫描路径
+@EnableAutoJpa("io.github.jockerCN.query") // @JpaQuery 参数类扫描路径，独立于普通 JPA
 @SpringBootApplication
 public class App {
     public static void main(String[] args) {
@@ -56,15 +56,12 @@ public class App {
 package io.github.jockerCN.entity;
 
 
-@Getter
-@Setter
-@ToString
-@SuperBuilder
-@AllArgsConstructor
-@NoArgsConstructor
 @Entity(name = "PayEntity")
 @Table(schema = "jpa", name = "pay")
-public class PayEntity extends BaseJpaPojo {
+public class PayEntity {
+
+    @Id
+    private Long id;
 
     @Column(name = "pay_id", nullable = false, unique = true)
     private String payId;
@@ -105,7 +102,9 @@ param.setPayId("PAY202405852383867"); //设置查询参数
 List<PayEntity> queryList = JpaRepositoryUtils.queryList(param, PayEntity.class); //使用JpaRepositoryUtils查询api
 ```
 
-查询参数不需要继承框架基类，也不需要提供无参构造方法；启动时根据 `@JpaQuery` 标注的类直接编译查询元数据。分页便利方法使用 `PageParam` 接口，不占用调用方的类继承位置；具体查询参数自行声明带 `@Page`、`@PageSize` 的字段。实体也不需要继承 `JpaPojo`、`AbstractBaseJapPojo` 或 `JpaPojoDTO`，但仍需符合 JPA 自身的实体映射要求。
+查询参数不需要继承框架基类，也不需要提供无参构造方法；`@EnableAutoJpa` 启动时扫描 `@JpaQuery` 类并编译查询元数据。分页便利方法使用 `PageParam` 接口，不占用调用方的类继承位置；具体查询参数自行声明带 `@Page`、`@PageSize` 的字段。实体也不需要继承 `JpaPojo`、`AbstractBaseJapPojo` 或 `JpaPojoDTO`，但仍需符合 JPA 自身的实体映射要求（如主键与无参构造器）。
+
+2.0 API 迁移要点：`BaseQueryParam` / `PageQueryParam` 已移除，只有分页便利方法需要实现 `PageParam`；`@Columns` 已移除固定结果类型的 `value` 属性，改由本次查询的 `findType` 指定结果类型。未接入处理链的旧 `@Min` 已移除；当前需要 `MIN` 选列时，可在 `@Columns` 中使用 `SelectColumn.of(name, alias, SqlFunctionEnum.min)`。后续更多函数是否需要独立注解，待实际场景明确后再设计。`JpaPojo` 等基类仍可作为可选便利类使用，不是实体映射或查询的前提。
 
 ### 查询前的有效值处理
 
@@ -208,8 +207,8 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 ### 🔥 重要提示
 
 1. **类型限制**：带有 ⚠️ 标记的注解对参数类型有严格要求，使用错误类型会抛出异常
-2. **空值处理**：查询参数类型,请使用包装类,注解会自动忽略 `null` 值、空集合和空数组,当查询参数为`null` 值、空集合和空数组查询参数将不会出现再sql中
-3. **字段映射**：大部分注解的 `value` 属性可以指定具体的数据库实体字段名，不指定则默认使用查询字段名作为sql操作的字段名
+2. **空值处理**：WHERE/HAVING 条件字段的 `null`、空集合和空数组通常不生成对应谓词；动态选列等查询形态注解遵循各自语义。需要表达“未提供值”时，请使用包装类型。
+3. **字段映射**：WHERE/HAVING 等注解的 `value` 属性指定的是 Java 实体属性名，不是数据库列名；不指定时通常使用查询参数字段名。
 4. **分页机制**：`@Page` 和 `@PageSize` 必须同时使用才能生效，页码从 0 开始计算
 5. **Having 复杂性**：`@Having` 注解较为复杂，支持分组、排序、多条件逻辑组合等高级功能
 6. **查询参数类型**：查询参数类需要使用 `@JpaQuery` 注解；可以继承任意自定义基类，也可以不继承基类。只有使用分页便利方法时才需要实现 `PageParam`，普通注解查询不需要实现它
@@ -274,7 +273,7 @@ SelectColumn.SetBuilder
   );
   ```
 
-  其中 `CustomerQueryParam` 是调用方的查询参数类型。非空列集合若经条件过滤后没有任何选列，会抛出 `IllegalArgumentException`，不会回退为整实体查询。构造投影仍要求本次有效列与实体构造器匹配。
+  其中 `CustomerQueryParam` 是调用方的查询参数类型。非空列集合若经条件过滤后没有任何选列，会抛出 `IllegalArgumentException`，不会回退为整实体查询。构造投影要求本次有效列与显式传入的目标类型构造器匹配。
 - `SelectColumn.dynamic(alias, type, resolver)` 在每次构建查询时以原始 `queryParam` 计算该列的值，非 `null` 值使用 Criteria `literal`，`null` 值使用指定类型的 `nullLiteral`。`resolver` 可以调用业务 service；service 由调用方传入或捕获，框架不会为每列额外查找 Bean，也不会缓存本次结果。
 - `SelectColumn.expression(alias, (criteriaBuilder, root, queryParam) -> expression)` 可返回任意当前查询树的 Criteria 表达式，包括 `criteriaBuilder.selectCase()`。这与 `.when(...)` 不同：`.when(...)` 按本次查询参数决定是否选这一列；`CASE WHEN` 可以按数据库每一行的属性决定该列的结果。例如：
 
@@ -300,6 +299,8 @@ SelectColumn.SetBuilder
 | `@PageSize` | `OFFSET ? LIMIT ?` | Integer | **分页查询-页大小**。⚠️ **必须**与 `@Page` 配合使用                                                          |
 
 `@Columns`、`@GroupBy`、`@OrderBy` 同时使用时，执行顺序固定为投影、去重、分组、排序，与查询参数字段的声明顺序无关。多个字段的先后顺序由集合迭代顺序决定；需要多字段排序或固定构造函数参数顺序时，建议使用 `List`。
+
+动态选列也可以与聚合函数、`@Having`、排序和注解分页组合：`@Having` 过滤分组结果，`@Page` / `@PageSize` 对排序后的结果分页。同一个参数对象再次查询时会读取当前的选列和页码。调用方仍需保证本次选列、分组字段、排序字段和 `findType` 构成合法查询；`@OrderBy` 的元素是实体属性名，不是 `SelectColumn` 的别名。
 
 ### @Having 注解详细说明
 
@@ -504,7 +505,7 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 | `query(Object queryParam, Class<T> findType)`     | `T`       | **单条查询（指定类型）**。返回指定类型的结果，支持 DTO、Tuple 等投影查询 |
 | `queryList(Object queryParam)`                    | `List<T>` | **列表查询（实体类型）**。返回查询参数对应实体类型的结果列表 |
 | `queryList(Object queryParam, Class<T> findType)` | `List<T>` | **列表查询（指定类型）**。返回指定类型的结果列表，支持复杂投影查询 |
-| `count(Object queryParams)`                       | `Long`    | **统计查询**。返回符合条件的记录总数，忽略分页和排序条件     |
+| `count(Object queryParams)`                       | `Long`    | **统计查询**。不应用注解分页；其余查询参数仍参与 Criteria 构建，不自动移除 `GROUP BY`、`HAVING` 或 `ORDER BY`。调用方应提供适合单个计数结果的参数 |
 
 
 ## 类型安全
