@@ -13,8 +13,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 @TestConfiguration
 public class ProjectionFindTypeQueryTest implements QueryAnnotationTest {
 
@@ -23,88 +21,54 @@ public class ProjectionFindTypeQueryTest implements QueryAnnotationTest {
 
     @Override
     public void run() {
-        TupleColumnsParam tupleParam = new TupleColumnsParam();
-        tupleParam.id = 1;
-        tupleParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("customerPhone"));
+        ColumnsParam queryParam = new ColumnsParam();
+        queryParam.id = 1;
+        queryParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("customerPhone"));
 
-        Object[] array = queryManager.query(tupleParam, Object[].class);
+        Object[] array = queryManager.query(queryParam, Object[].class);
         asserts(array != null && array.length == 2 && Long.valueOf(1L).equals(array[0])
                         && "13725090127".equals(array[1]),
-                "default @Columns Tuple strategy honors explicit Object[] findType");
+                "@Columns honors explicit Object[] findType");
 
-        ConstructorView view = queryManager.query(tupleParam, ConstructorView.class);
+        Tuple tuple = queryManager.query(queryParam, Tuple.class);
+        asserts(tuple != null && Long.valueOf(1L).equals(tuple.get("id", Long.class)),
+                "the same @Columns parameter supports Tuple findType");
+        List<Tuple> tuples = queryManager.queryList(queryParam, Tuple.class);
+        asserts(tuples.size() == 1 && Long.valueOf(1L).equals(tuples.getFirst().get("id", Long.class)),
+                "list query supports Tuple findType");
+
+        ConstructorView view = queryManager.query(queryParam, ConstructorView.class);
         asserts(view != null && Long.valueOf(1L).equals(view.id)
                         && "13725090127".equals(view.phone),
-                "default @Columns Tuple strategy honors explicit constructor findType");
-        List<ConstructorView> views = queryManager.queryList(tupleParam, ConstructorView.class);
+                "the same @Columns parameter supports constructor findType");
+        List<ConstructorView> views = queryManager.queryList(queryParam, ConstructorView.class);
         asserts(views.size() == 1 && Long.valueOf(1L).equals(views.getFirst().id),
                 "list query honors explicit constructor findType");
 
-        tupleParam.columns = List.of(SelectColumn.of("id"));
-        Object[] partial = queryManager.query(tupleParam, Object[].class);
+        queryParam.columns = List.of(SelectColumn.of("id"));
+        Object[] partial = queryManager.query(queryParam, Object[].class);
         asserts(partial != null && partial.length == 1 && Long.valueOf(1L).equals(partial[0]),
                 "explicit findType follows dynamic columns");
 
-        tupleParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("customerPhone"));
-        PayEntity implicitTupleResult = queryManager.query(tupleParam);
-        asserts(implicitTupleResult != null && Long.valueOf(1L).equals(implicitTupleResult.getId())
-                        && "13725090127".equals(implicitTupleResult.getCustomerPhone())
-                        && implicitTupleResult.getPayId() == null,
+        queryParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("customerPhone"));
+        PayEntity implicitEntity = queryManager.query(queryParam);
+        asserts(implicitEntity != null && Long.valueOf(1L).equals(implicitEntity.getId())
+                        && "13725090127".equals(implicitEntity.getCustomerPhone())
+                        && implicitEntity.getPayId() == null,
                 "without explicit findType, the query returns a partially populated entity");
 
-        ArrayColumnsParam arrayParam = new ArrayColumnsParam();
-        arrayParam.id = 1;
-        arrayParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("customerPhone"));
-        Object[] explicitArray = queryManager.query(arrayParam, Object[].class);
-        asserts(explicitArray != null && explicitArray.length == 2
-                        && Long.valueOf(1L).equals(explicitArray[0]),
-                "@Columns(Object[].class) result");
-
-        Tuple tupleOverride = queryManager.query(arrayParam, Tuple.class);
-        asserts(tupleOverride != null && Long.valueOf(1L).equals(tupleOverride.get("id", Long.class)),
-                "explicit Tuple findType overrides @Columns(Object[].class)");
-        List<Tuple> tupleList = queryManager.queryList(arrayParam, Tuple.class);
-        asserts(tupleList.size() == 1 && Long.valueOf(1L).equals(tupleList.getFirst().get("id", Long.class)),
-                "list query overrides @Columns(Object[].class) with Tuple findType");
-
-        assertThrows(RuntimeException.class, () -> queryManager.query(arrayParam),
-                "Without findType, the current query entry uses the entity type, not @Columns.value");
-
-        EntityConstructorParam constructorParam = new EntityConstructorParam();
-        constructorParam.id = 1;
-        constructorParam.columns = List.of(SelectColumn.of("customerName"));
-        PayEntity constructed = queryManager.query(constructorParam, PayEntity.class);
-        asserts(constructed != null && constructed.getCustomerName() != null,
-                "@Columns entity constructor result");
-
-        assertThrows(RuntimeException.class, () -> queryManager.query(constructorParam, NameView.class),
-                "Explicit DTO findType currently conflicts with the precompiled entity constructor selection");
+        queryParam.columns = List.of(SelectColumn.of("customerName"));
+        NameView nameView = queryManager.query(queryParam, NameView.class);
+        asserts(nameView != null && nameView.name != null,
+                "changing selected columns allows a matching DTO findType on the same parameter");
     }
 
     @JpaQuery(PayEntity.class)
-    public static class TupleColumnsParam {
+    public static class ColumnsParam {
         @Equals
         private Integer id;
 
         @Columns
-        private List<SelectColumn> columns;
-    }
-
-    @JpaQuery(PayEntity.class)
-    public static class ArrayColumnsParam {
-        @Equals
-        private Integer id;
-
-        @Columns(Object[].class)
-        private List<SelectColumn> columns;
-    }
-
-    @JpaQuery(PayEntity.class)
-    public static class EntityConstructorParam {
-        @Equals
-        private Integer id;
-
-        @Columns(PayEntity.class)
         private List<SelectColumn> columns;
     }
 

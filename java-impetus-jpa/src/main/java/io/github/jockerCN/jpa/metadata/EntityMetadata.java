@@ -82,7 +82,7 @@ public class EntityMetadata {
 
             Function<Object, Object> valueReader = CompiledFieldValuePlan.compileReader(field, annotation, beanResolver);
             if (annotation.annotationType() == Columns.class) {
-                projection = ProjectionPlan.compile(field, (Columns) annotation, entityType, valueReader);
+                projection = ProjectionPlan.compile(field, valueReader);
                 continue;
             }
 

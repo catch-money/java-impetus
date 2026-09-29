@@ -137,7 +137,7 @@ public abstract class JpaQueryEntityBuilder {
 
 
         criteriaQueryMap = Map.of(Columns.class, (fieldWrapper -> {
-            ProjectionPlan projection = ProjectionPlan.compile(fieldWrapper.field(), (Columns) fieldWrapper.annotation(), fieldWrapper.entityType(), fieldWrapper.valueReader());
+            ProjectionPlan projection = ProjectionPlan.compile(fieldWrapper.field(), fieldWrapper.valueReader());
             return projection::apply;
         }), Distinct.class, (fieldWrapper -> {
             Field field = fieldWrapper.field();

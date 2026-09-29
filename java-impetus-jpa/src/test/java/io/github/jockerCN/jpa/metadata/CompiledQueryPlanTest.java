@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class CompiledQueryPlanTest {
@@ -74,35 +73,7 @@ class CompiledQueryPlanTest {
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
-    void executesTheProjectionStrategySelectedWhileMetadataIsCompiled() {
-        EntityMetadata metadata = metadata(ObjectArrayQueryParam.class);
-        ObjectArrayQueryParam queryParam = new ObjectArrayQueryParam();
-        queryParam.columns = Set.of(SelectColumn.of("id"));
-
-        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
-        Root root = mock(Root.class);
-        Path idPath = mock(Path.class);
-        CompoundSelection<Object[]> arraySelection = mock(CompoundSelection.class);
-
-        when(root.get("id")).thenReturn(idPath);
-        when(idPath.alias("id")).thenReturn(idPath);
-        when(criteriaBuilder.array(any(Selection[].class))).thenReturn(arraySelection);
-
-        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
-
-        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaBuilder).array(selections.capture());
-        assertThat(selections.getValue()).containsExactly(idPath);
-        verify(root).get("id");
-        verify(idPath).alias("id");
-        verify(criteriaQuery).select(arraySelection);
-        verify(criteriaQuery, never()).multiselect(any(Selection[].class));
-    }
-
-    @Test
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    void keepsTupleProjectionAsThePrecompiledDefaultStrategy() {
+    void appliesCompiledColumnsWithMultiselect() {
         EntityMetadata metadata = metadata(TupleQueryParam.class);
         TupleQueryParam queryParam = new TupleQueryParam();
         queryParam.columns = Set.of(SelectColumn.of("id"));
@@ -121,31 +92,6 @@ class CompiledQueryPlanTest {
         assertThat(selections.getValue()).containsExactly(idPath);
         verify(criteriaBuilder, never()).array(any(Selection[].class));
         verify(criteriaBuilder, never()).construct(any(), any(Selection[].class));
-    }
-
-    @Test
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    void keepsEntityConstructionAsThePrecompiledProjectionStrategy() {
-        EntityMetadata metadata = metadata(ConstructorQueryParam.class);
-        ConstructorQueryParam queryParam = new ConstructorQueryParam();
-        queryParam.columns = Set.of(SelectColumn.of("id"));
-
-        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
-        Root root = mock(Root.class);
-        Path idPath = mock(Path.class);
-        CompoundSelection<TestEntity> constructorSelection = mock(CompoundSelection.class);
-        when(root.get("id")).thenReturn(idPath);
-        when(idPath.alias("id")).thenReturn(idPath);
-        when(criteriaBuilder.construct(eq(TestEntity.class), any(Selection[].class)))
-                .thenReturn(constructorSelection);
-
-        metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
-
-        ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaBuilder).construct(eq(TestEntity.class), selections.capture());
-        assertThat(selections.getValue()).containsExactly(idPath);
-        verify(criteriaQuery).select(constructorSelection);
     }
 
     @Test
@@ -422,7 +368,7 @@ class CompiledQueryPlanTest {
         AtomicBoolean executionStarted = new AtomicBoolean();
         Columns columns = guardedAnnotation(
                 Columns.class,
-                Map.of("value", Object[].class),
+                Map.of(),
                 executionStarted
         );
         OrderBy orderBy = guardedAnnotation(
@@ -445,16 +391,14 @@ class CompiledQueryPlanTest {
         CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
         Root root = mock(Root.class);
         Path idPath = mock(Path.class);
-        CompoundSelection<Object[]> arraySelection = mock(CompoundSelection.class);
         Order order = mock(Order.class);
         when(root.get("id")).thenReturn(idPath);
         when(idPath.alias("id")).thenReturn(idPath);
-        when(criteriaBuilder.array(any(Selection[].class))).thenReturn(arraySelection);
         when(criteriaBuilder.asc(idPath)).thenReturn(order);
 
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
-        verify(criteriaBuilder).array(any(Selection[].class));
+        verify(criteriaQuery).multiselect(any(Selection[].class));
         verify(criteriaBuilder).asc(idPath);
         verify(criteriaBuilder, never()).desc(idPath);
     }
@@ -640,21 +584,9 @@ class CompiledQueryPlanTest {
         public Integer pageSize;
     }
 
-    public static final class ObjectArrayQueryParam {
-
-        @Columns(Object[].class)
-        public Set<SelectColumn> columns;
-    }
-
     public static final class TupleQueryParam {
 
         @Columns
-        public Set<SelectColumn> columns;
-    }
-
-    public static final class ConstructorQueryParam {
-
-        @Columns(TestEntity.class)
         public Set<SelectColumn> columns;
     }
 
