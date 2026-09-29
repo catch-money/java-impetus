@@ -3,10 +3,12 @@ package io.github.jockerCN.jpa.metadata;
 import io.github.jockerCN.jpa.annotation.*;
 import io.github.jockerCN.jpa.annotation.where.*;
 import io.github.jockerCN.jpa.query.model.OderByCondition;
+import io.github.jockerCN.jpa.query.model.NullOrder;
 import io.github.jockerCN.jpa.query.model.QueryPair;
 import io.github.jockerCN.jpa.query.operator.AllType;
 import io.github.jockerCN.type.TypeConvert;
 import jakarta.persistence.criteria.*;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -176,7 +178,7 @@ public abstract class JpaQueryEntityBuilder {
             Field field = fieldWrapper.field();
             OrderBy orderBy = (OrderBy) fieldWrapper.annotation();
             validateFieldType(field, "@OrderBy", Collection.class, String.class);
-            BiFunction<CriteriaBuilder, Expression<?>, Order> orderOperation = buildOrderOperation(orderBy.value());
+            BiFunction<CriteriaBuilder, Expression<?>, Order> orderOperation = buildOrderOperation(orderBy.value(), orderBy.nulls());
             return (criteriaBuilder, criteriaQuery, root, obj) -> {
                 Collection<String> o = TypeConvert.cast(fieldWrapper.valueReader().apply(obj));
                 if (!CollectionUtils.isEmpty(o)) {
@@ -193,10 +195,21 @@ public abstract class JpaQueryEntityBuilder {
 
     }
 
-    private static BiFunction<CriteriaBuilder, Expression<?>, Order> buildOrderOperation(OderByCondition condition) {
-        return switch (condition) {
-            case ASC -> CriteriaBuilder::asc;
-            case DESC -> CriteriaBuilder::desc;
+    private static BiFunction<CriteriaBuilder, Expression<?>, Order> buildOrderOperation(
+            OderByCondition condition, NullOrder nulls) {
+        return switch (nulls) {
+            case DEFAULT -> switch (condition) {
+                case ASC -> CriteriaBuilder::asc;
+                case DESC -> CriteriaBuilder::desc;
+            };
+            case FIRST -> switch (condition) {
+                case ASC -> (cb, expression) -> ((HibernateCriteriaBuilder) cb).asc(expression, true);
+                case DESC -> (cb, expression) -> ((HibernateCriteriaBuilder) cb).desc(expression, true);
+            };
+            case LAST -> switch (condition) {
+                case ASC -> (cb, expression) -> ((HibernateCriteriaBuilder) cb).asc(expression, false);
+                case DESC -> (cb, expression) -> ((HibernateCriteriaBuilder) cb).desc(expression, false);
+            };
         };
     }
 

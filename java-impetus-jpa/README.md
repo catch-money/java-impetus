@@ -295,7 +295,7 @@ SelectColumn.SetBuilder
 
 | 注解 | 等同SQL条件 | 参数类型 | 说明                                                                                            |
 |------|-------------|----------|-----------------------------------------------------------------------------------------------|
-| `@OrderBy` | `ORDER BY field ASC/DESC` | `Collection<String>` | **排序查询**，支持 `List` 或 `Set`。`value` 属性指定排序方向：<br/>• `OderByCondition.ASC` - 升序<br/>• `OderByCondition.DESC` - 降序 |
+| `@OrderBy` | `ORDER BY field ASC/DESC` | `Collection<String>` | **排序查询**，支持 `List` 或 `Set`。`value` 指定 `OderByCondition.ASC` / `DESC`；可选 `nulls = NullOrder.FIRST` / `LAST`，对集合内所有排序字段生效。省略时不指定 NULL 位置，保持数据库原有默认行为 |
 | `@GroupBy` | `GROUP BY field1,field2,...` | `Collection<String>` | **分组查询**，支持 `List` 或 `Set`。每个字符串对应一个分组字段名 |
 | `@Having` | `HAVING function(field) operator ?` | 根据 operator 决定 | **聚合条件查询**。较为复杂，用于对分组后的结果进行过滤，见详细配置                                                           |
 | `@Limit` | `LIMIT ?` | Integer | **限制结果数量**。设置查询返回的最大记录数                                                                       |
@@ -303,6 +303,8 @@ SelectColumn.SetBuilder
 | `@PageSize` | `OFFSET ? LIMIT ?` | Integer | **分页查询-页大小**。⚠️ **必须**与 `@Page` 配合使用                                                          |
 
 `@Columns`、`@GroupBy`、`@OrderBy` 同时使用时，执行顺序固定为投影、去重、分组、排序，与查询参数字段的声明顺序无关。多个字段的先后顺序由集合迭代顺序决定；需要多字段排序或固定构造函数参数顺序时，建议使用 `List`。
+
+`@OrderBy(nulls = NullOrder.LAST)` 使用 Hibernate 6.6 的 Criteria 扩展；不填写 `nulls` 时仍走标准 Criteria 排序，不额外指定 NULL 优先级。`FIRST` / `LAST` 会应用于本次集合中的每个排序字段，但不会改变这些字段在集合中的先后顺序。实际 SQL 由 Hibernate 方言生成。
 
 动态选列也可以与聚合函数、`@Having`、排序和注解分页组合：`@Having` 过滤分组结果，`@Page` / `@PageSize` 对排序后的结果分页。同一个参数对象再次查询时会读取当前的选列和页码。调用方仍需保证本次选列、分组字段、排序字段和 `findType` 构成合法查询；`@OrderBy` 的元素是实体属性名，不是 `SelectColumn` 的别名。
 

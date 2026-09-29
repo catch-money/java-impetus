@@ -1,6 +1,7 @@
 package io.github.jockerCN.jpa.annotation;
 
 import io.github.jockerCN.jpa.query.model.OderByCondition;
+import io.github.jockerCN.jpa.query.model.NullOrder;
 
 import java.lang.annotation.*;
 
@@ -13,5 +14,7 @@ import java.lang.annotation.*;
 public @interface OrderBy {
 
     OderByCondition value() default OderByCondition.ASC;
+
+    NullOrder nulls() default NullOrder.DEFAULT;
 
 }
