@@ -258,7 +258,7 @@ SelectColumn.SetBuilder
      .alias("orderPriceSum").add()  //sum函数 字段别名为 orderPriceSum
      .build()
 ```
-- 支持查询函数使用,请参考 [SqlFunctionEnum 聚合函数说明] 部分
+- 支持查询函数使用,请参考 [SqlFunctionEnum 函数说明] 部分
 - 投影字段的顺序决定 `Object[]` 和构造函数参数顺序。需要固定顺序时使用 `List<SelectColumn>`；`SelectColumn.SetBuilder` 也会保留添加顺序。普通 `HashSet` 不保证顺序。
 - `@Columns` 使用 Criteria `multiselect`。同一个查询参数可在不同调用中显式传入 `Tuple.class`、`Object[].class` 或与当前选列顺序和类型匹配的 DTO 构造器类型。**不传 `findType` 时使用实体类型**，仅填充选中字段，未选中的字段保持 `null`；不能把它当完整实体使用。动态调整选列时，调用方需要保证本次 `findType` 与选列匹配。
 - `SelectColumn.when(param -> ...)` 按本次原始查询参数决定是否选择该列；构建器也支持 `.when(...)`。条件为 `false` 时不会构造该列的 Criteria 表达式。
@@ -316,7 +316,7 @@ SelectColumn.SetBuilder
 | `operator` | HavingOperatorEnum | `no` | **比较操作符**。定义聚合结果与参数值的比较方式                   |
 | `function` | SqlFunctionEnum | `no` | **SQL聚合函数**。对字段应用的聚合函数                      |
 | `related` | RelatedOperatorEnum | `AND` | **逻辑关系**。同组内多个条件间的逻辑连接方式                    |
-| `substring` | int[] | `{0,0}` | **字符串截取参数**。配合 `substring` 函数使用，[起始位置,结束位置] |
+| `substring` | int[] | `{0,0}` | **字符串截取参数**。配合 `substring` 函数使用，[起始位置,长度] |
 | `str` | String | `""` | **字符串参数**。配合字符串函数（concat、locate、coalesce）使用 |
 | `round` | int | `0` | **小数位数**。配合 `round` 函数使用，指定保留的小数位数          |
 | `power` | int | `0` | **幂次方参数**。配合 `power` 函数使用，指定指数值             |
@@ -341,7 +341,7 @@ SelectColumn.SetBuilder
 | `isNotNull` | `IS NOT NULL` | ⚠️ **必须**使用 Boolean 类型，true时生效 |
 | `isTrueOrFalse` | `= true/false` | ⚠️ **必须**使用 Boolean 类型 |
 
-#### SqlFunctionEnum 聚合函数说明
+#### SqlFunctionEnum 函数说明
 
 | 函数 | 等同SQL | 支持的字段类型 |
 |------|---------|---------------|
@@ -350,12 +350,19 @@ SelectColumn.SetBuilder
 | `avg` | `AVG(field)` | Number类型（数字字段） |
 | `max` | `MAX(field)` | 任意类型 |
 | `min` | `MIN(field)` | 任意类型 |
+| `greatest` | `MAX(field)` | Comparable 类型（含字符串、日期、数字） |
+| `least` | `MIN(field)` | Comparable 类型（含字符串、日期、数字） |
 | `count` | `COUNT(field)` | 任意类型 |
 | `countAll` | `COUNT(*)` | 任意类型（忽略field值） |
 | `count1` | `COUNT(1)` | 任意类型（忽略field值） |
 | `countDistinct` | `COUNT(DISTINCT field)` | 任意类型 |
 | `abs` | `ABS(field)` | Number类型（数字字段） |
 | `ceiling` | `CEILING(field)` | Number类型（数字字段） |
+| `floor` | `FLOOR(field)` | Number类型（数字字段） |
+| `sign` | `SIGN(field)` | Number类型（数字字段） |
+| `exp` | `EXP(field)` | Number类型（数字字段） |
+| `ln` | `LN(field)` | Number类型（数字字段，值须大于 0） |
+| `neg` | `-field` | Number类型（数字字段） |
 | `sqrt` | `SQRT(field)` | Number类型（数字字段） |
 | `round` | `ROUND(field, scale)` | Number类型，配合 `round` 属性使用 |
 | `power` | `POWER(field, exponent)` | Number类型，配合 `power` 属性使用 |
@@ -363,10 +370,12 @@ SelectColumn.SetBuilder
 | `lower` | `LOWER(field)` | ⚠️ **必须**使用 String 类型 |
 | `upper` | `UPPER(field)` | ⚠️ **必须**使用 String 类型 |
 | `trim` | `TRIM(field)` | ⚠️ **必须**使用 String 类型 |
-| `substring` | `SUBSTRING(field, start, end)` | ⚠️ **必须**使用 String 类型，配合 `substring` 属性 |
+| `substring` | `SUBSTRING(field, start, length)` | ⚠️ **必须**使用 String 类型，配合 `substring` 属性；第二个数是长度，不是结束位置 |
 | `concat` | `CONCAT(field, str)` | ⚠️ **必须**使用 String 类型，配合 `str` 属性 |
 | `locate` | `LOCATE(str, field)` | ⚠️ **必须**使用 String 类型，配合 `str` 属性 |
 | `coalesce` | `COALESCE(field, str)` | ⚠️ **必须**使用 String 类型，配合 `str` 属性 |
+
+这里的“支持的字段类型”是函数的输入契约，不代表框架对每种数据库方言做运行时校验。`max/min` 特意保留 `AllType`：虽然 Criteria API 的 `max/min` 方法签名偏向数字，实际数据库也可对字符串等字段执行聚合；是否可用以及比较顺序仍由数据库决定。`greatest/least` 使用 Criteria 的 Comparable 聚合入口。`@Having` 的附加参数来自注解属性；`SelectColumn.of(..., function, args)` 的附加参数按函数要求传入，无参数函数不需要 `args`。
 
 #### RelatedOperatorEnum 逻辑关系说明
 

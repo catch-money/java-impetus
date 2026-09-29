@@ -27,6 +27,14 @@ public interface QueryExpression {
         return (cb, root) -> cb.min(root.get(property));
     }
 
+    static <T extends Comparable<? super T>> QueryExpression greatest(String property) {
+        return (cb, root) -> cb.greatest(root.<T>get(property));
+    }
+
+    static <T extends Comparable<? super T>> QueryExpression least(String property) {
+        return (cb, root) -> cb.least(root.<T>get(property));
+    }
+
     static QueryExpression count(String property) {
         return (cb, root) -> cb.count(root.get(property));
     }
@@ -50,6 +58,26 @@ public interface QueryExpression {
 
     static QueryExpression ceiling(String property) {
         return (cb, root) -> cb.ceiling(root.get(property));
+    }
+
+    static QueryExpression floor(String property) {
+        return (cb, root) -> cb.floor(root.get(property));
+    }
+
+    static QueryExpression sign(String property) {
+        return (cb, root) -> cb.sign(root.get(property));
+    }
+
+    static QueryExpression exp(String property) {
+        return (cb, root) -> cb.exp(root.get(property));
+    }
+
+    static QueryExpression ln(String property) {
+        return (cb, root) -> cb.ln(root.get(property));
+    }
+
+    static QueryExpression neg(String property) {
+        return (cb, root) -> cb.neg(root.get(property));
     }
 
     static QueryExpression sqrt(String property) {
@@ -77,8 +105,8 @@ public interface QueryExpression {
         return (cb, root) -> cb.concat(root.get(property), value);
     }
 
-    static QueryExpression substring(String property, int start, int end) {
-        return (cb, root) -> cb.substring(root.get(property), start, end);
+    static QueryExpression substring(String property, int start, int length) {
+        return (cb, root) -> cb.substring(root.get(property), start, length);
     }
 
     static QueryExpression trim(String property) {

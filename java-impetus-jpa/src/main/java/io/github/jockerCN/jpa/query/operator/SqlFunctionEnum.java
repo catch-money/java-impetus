@@ -154,6 +154,7 @@ public enum SqlFunctionEnum implements JavaTypeSupport {
     max {
         @Override
         public Class<?> supportType() {
+            // SQL MAX also works for nonnumeric columns on supported databases.
             return AllType.class;
         }
 
@@ -170,6 +171,7 @@ public enum SqlFunctionEnum implements JavaTypeSupport {
     min {
         @Override
         public Class<?> supportType() {
+            // Keep the same SQL-level contract as MAX despite Criteria's numeric signature.
             return AllType.class;
         }
 
@@ -181,6 +183,38 @@ public enum SqlFunctionEnum implements JavaTypeSupport {
         @Override
         public QueryExpression createQueryExpression(String property, Object... args) {
             return QueryExpression.min(property);
+        }
+    },
+    greatest {
+        @Override
+        public Class<?> supportType() {
+            return Comparable.class;
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Having having) {
+            return QueryExpression.greatest(property);
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Object... args) {
+            return QueryExpression.greatest(property);
+        }
+    },
+    least {
+        @Override
+        public Class<?> supportType() {
+            return Comparable.class;
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Having having) {
+            return QueryExpression.least(property);
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Object... args) {
+            return QueryExpression.least(property);
         }
     },
     count {
@@ -261,6 +295,86 @@ public enum SqlFunctionEnum implements JavaTypeSupport {
         @Override
         public QueryExpression createQueryExpression(String property, Object... args) {
             return QueryExpression.abs(property);
+        }
+    },
+    floor {
+        @Override
+        public Class<?> supportType() {
+            return Number.class;
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Having having) {
+            return QueryExpression.floor(property);
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Object... args) {
+            return QueryExpression.floor(property);
+        }
+    },
+    sign {
+        @Override
+        public Class<?> supportType() {
+            return Number.class;
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Having having) {
+            return QueryExpression.sign(property);
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Object... args) {
+            return QueryExpression.sign(property);
+        }
+    },
+    exp {
+        @Override
+        public Class<?> supportType() {
+            return Number.class;
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Having having) {
+            return QueryExpression.exp(property);
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Object... args) {
+            return QueryExpression.exp(property);
+        }
+    },
+    ln {
+        @Override
+        public Class<?> supportType() {
+            return Number.class;
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Having having) {
+            return QueryExpression.ln(property);
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Object... args) {
+            return QueryExpression.ln(property);
+        }
+    },
+    neg {
+        @Override
+        public Class<?> supportType() {
+            return Number.class;
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Having having) {
+            return QueryExpression.neg(property);
+        }
+
+        @Override
+        public QueryExpression createQueryExpression(String property, Object... args) {
+            return QueryExpression.neg(property);
         }
     },
     round {
