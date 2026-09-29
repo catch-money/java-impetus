@@ -1,7 +1,6 @@
 package io.github.jockerCN.jpa.metadata;
 
 import io.github.jockerCN.jpa.annotation.*;
-import io.github.jockerCN.jpa.annotation.where.*;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.annotation.Annotation;
@@ -23,23 +22,8 @@ public abstract class JpaAnnotationUtils {
 
     static {
         jpaAnnotations = new HashSet<>() {{
-            add(BetweenAnd.class);
-            add(Equals.class);
-            add(NoEquals.class);
-            add(GE.class);
-            add(GT.class);
-            add(IN.class);
-            add(IsNotNull.class);
-            add(IsNull.class);
-            add(IsTrueOrFalse.class);
-            add(LE.class);
-            add(Like.class);
-            add(ILike.class);
-            add(LT.class);
+            addAll(WhereAnnotationRegistry.annotationTypes());
             add(Limit.class);
-            add(NotIn.class);
-            add(NotLike.class);
-            add(NotILike.class);
             add(Columns.class);
             add(Distinct.class);
             add(OrderBy.class);
