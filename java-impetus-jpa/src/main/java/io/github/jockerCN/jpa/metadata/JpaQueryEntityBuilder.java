@@ -109,6 +109,13 @@ public abstract class JpaQueryEntityBuilder {
             metadata.fillAnnotationValue(like.value());
             metadata.likeInit();
             return metadata;
+        }), Map.entry(ILike.class, (field, annotation) -> {
+            ILike like = (ILike) annotation;
+            validateFieldType(field, "@ILike", String.class);
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(like.value());
+            metadata.iLikeInit();
+            return metadata;
         }), Map.entry(LT.class, (field, annotation) -> {
             LT lt = (LT) annotation;
             FieldMetadata metadata = new FieldMetadata(field, annotation);
@@ -120,6 +127,13 @@ public abstract class JpaQueryEntityBuilder {
             FieldMetadata metadata = new FieldMetadata(field, annotation);
             metadata.fillAnnotationValue(notLike.value());
             metadata.notLikeInit();
+            return metadata;
+        }), Map.entry(NotILike.class, (field, annotation) -> {
+            NotILike notILike = (NotILike) annotation;
+            validateFieldType(field, "@NotILike", String.class);
+            FieldMetadata metadata = new FieldMetadata(field, annotation);
+            metadata.fillAnnotationValue(notILike.value());
+            metadata.notILikeInit();
             return metadata;
         }));
 

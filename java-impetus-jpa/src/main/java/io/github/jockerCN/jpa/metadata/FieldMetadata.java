@@ -248,6 +248,10 @@ public class FieldMetadata {
         setPredicate((Ob) -> QueryPredicate.like(getAnnotationValue(), TypeConvert.cast(Ob)));
     }
 
+    public void iLikeInit() {
+        setPredicate((Ob) -> QueryPredicate.iLike(getAnnotationValue(), TypeConvert.cast(Ob)));
+    }
+
     public void havingLikeInit() {
         setHavingPredicate((Ob, Eq) -> {
             Expression<String> expression = TypeConvert.cast(Eq);
@@ -269,6 +273,10 @@ public class FieldMetadata {
 
     public void notLikeInit() {
         setPredicate((Ob) -> QueryPredicate.notLike(getAnnotationValue(), TypeConvert.cast(Ob)));
+    }
+
+    public void notILikeInit() {
+        setPredicate((Ob) -> QueryPredicate.notILike(getAnnotationValue(), TypeConvert.cast(Ob)));
     }
 
     public void havingNotLikeInit() {

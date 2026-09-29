@@ -65,17 +65,17 @@ public class HavingQueryTest implements QueryAnnotationTest {
         LowerTestParam lowerParam = new LowerTestParam();
         lowerParam.setColumns(Sets.newHashSet(SelectColumn.of("bankType")));
         lowerParam.setGroupByItems(Sets.newHashSet("bankType"));
-        lowerParam.setLowerEqual(""); // LOWER(bank_type) = ''
-        lowerParam.setLowerNotEqual("test"); // LOWER(bank_type) != 'test'
+        lowerParam.setLowerEqual("missing"); // false for the fixture's empty bank_type
+        lowerParam.setLowerNotEqual("test"); // true: only the OR branch retains the group
         List<Tuple> lowerResult = jpaQueryManager.queryList(lowerParam, Tuple.class);
-        asserts(!lowerResult.isEmpty(), "LOWER function test failed");
+        asserts(lowerResult.size() == 1, "LOWER OR function test failed");
 
         // 3. 测试UPPER函数
         UpperTestParam upperParam = new UpperTestParam();
         upperParam.setColumns(Sets.newHashSet(SelectColumn.of("tradeState")));
         upperParam.setGroupByItems(Sets.newHashSet("tradeState"));
-        upperParam.setUpperEqual("SUCCESS"); // UPPER(trade_state) = 'SUCCESS'
-        upperParam.setUpperLike("SUC%"); // UPPER(trade_state) LIKE 'SUC%'
+        upperParam.setUpperEqual("MISSING"); // false for the SUCCESS group
+        upperParam.setUpperLike("SUC%"); // true: only the OR branch retains the group
         List<Tuple> upperResult = jpaQueryManager.queryList(upperParam, Tuple.class);
         asserts(upperResult.size() == 1, "UPPER function test failed");
 
@@ -83,7 +83,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         TrimTestParam trimParam = new TrimTestParam();
         trimParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         trimParam.setGroupByItems(Sets.newHashSet("customerName"));
-        trimParam.setTrimEqual("驱蚊器"); // TRIM(customer_name) = '李威宏'
+        trimParam.setTrimEqual("驱蚊器"); // includes the value with a leading space
         trimParam.setTrimNotEqual(""); // TRIM(customer_name) != ''
         List<Tuple> trimResult = jpaQueryManager.queryList(trimParam, Tuple.class);
         asserts(trimResult.size() == 2, "TRIM function test failed");
@@ -92,8 +92,8 @@ public class HavingQueryTest implements QueryAnnotationTest {
         LocateTestParam locateParam = new LocateTestParam();
         locateParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         locateParam.setGroupByItems(Sets.newHashSet("customerName"));
-        locateParam.setLocateGt(0); // LOCATE('李', customer_name) > 0
-        locateParam.setLocateEqual(1); // LOCATE('李', customer_name) = 1
+        locateParam.setLocateGt(1); // false for '李威宏'
+        locateParam.setLocateEqual(1); // true: only the OR branch retains the group
         List<Tuple> locateResult = jpaQueryManager.queryList(locateParam, Tuple.class);
         asserts(locateResult.size() == 1, "LOCATE function test failed");
 
@@ -119,8 +119,8 @@ public class HavingQueryTest implements QueryAnnotationTest {
         ConcatTestParam concatParam = new ConcatTestParam();
         concatParam.setColumns(Sets.newHashSet(SelectColumn.of("customerName")));
         concatParam.setGroupByItems(Sets.newHashSet("customerName", "customerPhone"));
-        concatParam.setConcatEqual("李威宏17577849574"); // CONCAT(customer_name, customer_phone) = '李威宏17577849574'
-        concatParam.setConcatLike("李威宏%"); // CONCAT(customer_name, customer_phone) LIKE '李威宏%'
+        concatParam.setConcatEqual("missing"); // false for '李威宏'
+        concatParam.setConcatLike("李威宏%"); // true: only the OR branch retains the group
         List<Tuple> concatResult = jpaQueryManager.queryList(concatParam, Tuple.class);
         asserts(concatResult.size() == 1, "CONCAT function test failed");
     }
@@ -187,7 +187,7 @@ public class HavingQueryTest implements QueryAnnotationTest {
         minParam.setColumns(Sets.newHashSet(SelectColumn.of("paymentStatus")));
         minParam.setGroupByItems(Sets.newHashSet("paymentStatus"));
         minParam.setMinPayPriceGt(0.0); // MIN(pay_price) > 0
-        minParam.setMinOrderPriceGt(0.0); // MIN(order_price) > 1000
+        minParam.setMinOrderPriceGt(0.0); // MIN(order_price) > 0
         List<Tuple> minResult = jpaQueryManager.queryList(minParam, Tuple.class);
         asserts(minResult.size() == 1, "MIN function test failed");
 

@@ -34,10 +34,12 @@ public abstract class JpaAnnotationUtils {
             add(IsTrueOrFalse.class);
             add(LE.class);
             add(Like.class);
+            add(ILike.class);
             add(LT.class);
             add(Limit.class);
             add(NotIn.class);
             add(NotLike.class);
+            add(NotILike.class);
             add(Columns.class);
             add(Distinct.class);
             add(OrderBy.class);

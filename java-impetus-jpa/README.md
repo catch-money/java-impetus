@@ -230,11 +230,15 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 | `@BetweenAnd` | `WHERE field BETWEEN ? AND ?` | `QueryPair<Comparable<T>>` | **范围查询**。⚠️ **必须**使用 `QueryPair<Comparable<?>>` 类型，包含 first 和 second 两个值 |
 | `@Like` | `WHERE field LIKE ?` | String                    | **模糊查询**。需要在参数值中自行添加 `%` 通配符                                |
 | `@NotLike` | `WHERE field NOT LIKE ?` | String                    | **反向模糊查询**。需要在参数值中自行添加 `%` 通配符                              |
+| `@ILike` | 不区分大小写的 `LIKE` | String | **Hibernate 扩展**。通过 `HibernateCriteriaBuilder.ilike` 构建，调用方自行提供 `%` / `_` 通配符 |
+| `@NotILike` | 不区分大小写的 `NOT LIKE` | String | **Hibernate 扩展**。通过 `HibernateCriteriaBuilder.notIlike` 构建，调用方自行提供 `%` / `_` 通配符 |
 | `@IN` | `WHERE field IN (?,?,...)` | `Collection<?>`           | **包含查询**。⚠️ **必须**使用集合类型（List、Set等）                         |
 | `@NotIn` | `WHERE field NOT IN (?,?,...)` | `Collection<?>`           | **不包含查询**。⚠️ **必须**使用集合类型（List、Set等）                        |
 | `@IsNull` | `WHERE field IS NULL` | Boolean                   | **空值判断**。当值为 `true` 时生效，⚠️ **必须**使用 Boolean 类型              |
 | `@IsNotNull` | `WHERE field IS NOT NULL` | Boolean                   | **非空判断**。当值为 `true` 时生效，⚠️ **必须**使用 Boolean 类型              |
 | `@IsTrueOrFalse` | `WHERE field = true/false` | Boolean                   | **布尔值查询**。根据参数值决定查询 true 还是false                            |
+
+`@ILike` / `@NotILike` 与 `@Like` / `@NotLike` 一样，`value` 指向实体的 Java 属性名，省略时使用查询参数字段名；参数为 `null` 时跳过条件。两者要求查询参数字段为 `String`，并依赖 Hibernate 6.6 的 Criteria 扩展，不是 Jakarta Persistence 标准 API；实际 SQL 由 Hibernate 方言生成。
 
 ### SELECT 查询字段注解
 

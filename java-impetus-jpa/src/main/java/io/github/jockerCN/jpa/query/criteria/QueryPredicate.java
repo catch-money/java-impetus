@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import java.util.Collection;
 
@@ -92,6 +93,11 @@ public interface QueryPredicate {
         return (cb, root) -> cb.like(expression, value);
     }
 
+    /** Hibernate-specific case-insensitive pattern matching. */
+    static QueryPredicate iLike(String property, String value) {
+        return (cb, root) -> ((HibernateCriteriaBuilder) cb).ilike(root.get(property), value);
+    }
+
     /**
      * 实现{@link NotLike}
      *
@@ -105,6 +111,11 @@ public interface QueryPredicate {
 
     static QueryPredicate notLike(Expression<String> expression, String value) {
         return (cb, root) -> cb.notLike(expression, value);
+    }
+
+    /** Hibernate-specific negated case-insensitive pattern matching. */
+    static QueryPredicate notILike(String property, String value) {
+        return (cb, root) -> ((HibernateCriteriaBuilder) cb).notIlike(root.get(property), value);
     }
 
 

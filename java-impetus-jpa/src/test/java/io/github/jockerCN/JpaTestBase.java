@@ -9,6 +9,7 @@ import io.github.jockerCN.query.distinct.DistinctQueryTest;
 import io.github.jockerCN.query.equals.EqualsQueryTest;
 import io.github.jockerCN.query.function.SqlFunctionQueryTest;
 import io.github.jockerCN.query.groupBy.GroupByQueryTest;
+import io.github.jockerCN.query.having.HavingQueryTest;
 import io.github.jockerCN.query.inAndNotIn.InAndNotInQueryTest;
 import io.github.jockerCN.query.isTrueOrFalse.IsTrueOrFalseQueryTest;
 import io.github.jockerCN.query.likeAndNotLike.LikeAndNotLikeQueryTest;
@@ -42,6 +43,7 @@ import org.springframework.test.context.DynamicPropertySource;
         IsTrueOrFalseQueryTest.class,
         InAndNotInQueryTest.class,
         GroupByQueryTest.class,
+        HavingQueryTest.class,
         EqualsQueryTest.class,
         SqlFunctionQueryTest.class,
         NoEqualsQueryTest.class,
