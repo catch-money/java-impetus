@@ -221,8 +221,8 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 
 | 注解 | 等同SQL条件 | 参数类型                      | 说明                                                          |
 |------|-------------|---------------------------|-------------------------------------------------------------|
-| `@Equals` | `WHERE field = ?` | 任意类型                      | **等值查询**，最常用的条件注解。`value` 属性可指定数据库实体字段名，默认使用属性名             |
-| `@NoEquals` | `WHERE field != ?` | 任意类型                      | **不等值查询**。`value` 属性可指定数据库实体字段名，默认使用属性名                     |
+| `@Equals` | `WHERE field = ?` | 任意类型                      | **等值查询**，最常用的条件注解。`value` 属性可指定 Java 实体属性名，默认使用查询参数字段名             |
+| `@NoEquals` | `WHERE field != ?` | 任意类型                      | **不等值查询**。`value` 属性可指定 Java 实体属性名，默认使用查询参数字段名                     |
 | `@GT` | `WHERE field > ?` | Comparable 类型             | **大于查询**。支持数字、日期等Comparable<?>可比较类型                         |
 | `@GE` | `WHERE field >= ?` | Comparable 类型             | **大于等于查询**。支持数字、日期等Comparable<?>可比较类型                       |
 | `@LT` | `WHERE field < ?` | Comparable 类型             | **小于查询**。支持数字、日期等Comparable<?>可比较类型                         |
@@ -444,11 +444,11 @@ public class PayQueryParam {
     @BetweenAnd("createTime")  // WHERE create_time BETWEEN ? AND ?
     private QueryPair<LocalDateTime> createTimeRange;
     
-    @IN("status")  // WHERE status IN (?,?,...)
-    private List<String> statusList;
+    @IN("paymentStatus")  // WHERE payment_status IN (?,?,...)
+    private List<Integer> statusList;
     
-    @Like("orderNo")  // WHERE order_no LIKE ?
-    private String orderNoLike; // 需要自己添加%，如："%123%"
+    @Like("orderId")  // WHERE order_id LIKE ?
+    private String orderIdLike; // 需要自己添加%，如："%123%"
     
     @OrderBy(OderByCondition.DESC)  // ORDER BY create_time DESC
     private Set<String> orderFields = Set.of("createTime");
@@ -496,7 +496,7 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 | `query(Object param, Class<T> tClass)`             | `T`       | **单条查询**。根据查询参数返回单个实体对象，无结果时返回 null |
 | `queryList(Object param)`                          | `List<T>` | **列表查询**。返回查询参数对应实体类型的结果列表             |
 | `queryList(Object param, Class<T> tClass)`         | `List<T>` | **列表查询（指定类型）**。返回指定类型的结果列表，支持投影查询 |
-| `count(Object param)`                              | `Long`    | **统计查询**。返回符合条件的记录总数                         |
+| `count(Object param)`                              | `Long`    | **统计查询**。不应用注解分页；其余查询参数仍参与构建，分组与 HAVING 由调用方控制，需保证查询适合返回单个计数结果                         |
 
 #### 分页查询
 
@@ -524,10 +524,9 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 
 
 ## 类型安全
-- 运行时类型验证：java-impetus-jpa会在启动时对条件注解标注的字段进行类型校验,当不满足类型约束时,则会抛出[JpaProcessException.java](src/main/java/io/github/jockerCN/jpa/exception/JpaProcessException.java)异常.这会终止程序启动.
-  - 对于函数操作的类型,并不做强制类型校验,但是可以通过[HavingOperatorEnum.java](src/main/java/io/github/jockerCN/jpa/query/operator/HavingOperatorEnum.java)的supportType方法获取支持的类型
-  - [AllType.java](src/main/java/io/github/jockerCN/jpa/query/operator/AllType.java)表示支持任意类型.
-  - 当使用函数操作时,开发人员应主动确认SQL 函数操作类型的正确性,否则java-impetus-jpa只会在操作SQL执行时依赖数据库检测执行的正确性.
+- 启动期类型校验：java-impetus-jpa 会对声明了类型约束的查询注解字段进行校验；不满足约束时抛出 [JpaProcessException.java](src/main/java/io/github/jockerCN/jpa/exception/JpaProcessException.java)，使查询参数注册失败。
+- `@Having` 会按 [HavingOperatorEnum.java](src/main/java/io/github/jockerCN/jpa/query/operator/HavingOperatorEnum.java) 的 `supportType()` 校验参数字段；这不等于框架已完整校验所选 SQL 函数的输入类型和数据库方言兼容性。[AllType.java](src/main/java/io/github/jockerCN/jpa/query/operator/AllType.java) 表示该处不限制 Java 字段类型。
+- 调用方仍需确认函数与实际字段、参数及数据库方言的组合是否合法；框架不对任意 SQL 语义做全面预检。
 
 
 ## 接口统一分页处理

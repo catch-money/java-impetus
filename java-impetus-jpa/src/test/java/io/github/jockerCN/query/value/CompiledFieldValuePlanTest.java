@@ -20,6 +20,13 @@ import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -111,6 +118,54 @@ class CompiledFieldValuePlanTest {
         assertThat(calls).hasValue(1);
     }
 
+    @Test
+    void compiledMetadataKeepsConcurrentQueryParamsIsolated() throws Exception {
+        CyclicBarrier providerBarrier = new CyclicBarrier(2);
+        QueryValueProvider<Long> provider = queryParam -> {
+            ConcurrentParam param = (ConcurrentParam) queryParam;
+            assertThat(param.processed).isTrue();
+            try {
+                providerBarrier.await(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            } catch (BrokenBarrierException | TimeoutException e) {
+                throw new IllegalStateException(e);
+            }
+            return param.expectedOwnerId;
+        };
+        EntityMetadata metadata = new EntityMetadata(TestEntity.class,
+                JpaAnnotationUtils.validateAnnotationsOnFields(ConcurrentParam.class),
+                type -> type == OwnerProvider.class ? provider : new ConcurrentProcessor(),
+                ConcurrentProcessor.class);
+        ConcurrentParam first = new ConcurrentParam(11L);
+        ConcurrentParam second = new ConcurrentParam(22L);
+
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            Future<?> firstResult = executor.submit(() -> assertConcurrentPredicate(metadata, first));
+            Future<?> secondResult = executor.submit(() -> assertConcurrentPredicate(metadata, second));
+            firstResult.get(10, TimeUnit.SECONDS);
+            secondResult.get(10, TimeUnit.SECONDS);
+        }
+
+        assertThat(first.ownerId).isNull();
+        assertThat(second.ownerId).isNull();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertConcurrentPredicate(EntityMetadata metadata, ConcurrentParam param) {
+        CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
+        Root<?> root = mock(Root.class);
+        Path<Long> ownerPath = mock(Path.class);
+        Predicate predicate = mock(Predicate.class);
+        when(root.<Long>get("ownerId")).thenReturn(ownerPath);
+        when(criteriaBuilder.equal(ownerPath, param.expectedOwnerId)).thenReturn(predicate);
+
+        metadata.processQueryParam(param);
+        assertThat(metadata.buildPersistenceList(criteriaBuilder, root, param)).containsExactly(predicate);
+        verify(criteriaBuilder).equal(ownerPath, param.expectedOwnerId);
+    }
+
     static class TestEntity {
         Long id;
         Long ownerId;
@@ -124,6 +179,25 @@ class CompiledFieldValuePlanTest {
         @Columns
         @QueryDefault(ColumnsProvider.class)
         List<SelectColumn> columns;
+    }
+
+    static class ConcurrentParam {
+        @Equals
+        @QueryDefault(OwnerProvider.class)
+        Long ownerId;
+        final Long expectedOwnerId;
+        boolean processed;
+
+        ConcurrentParam(Long expectedOwnerId) {
+            this.expectedOwnerId = expectedOwnerId;
+        }
+    }
+
+    public static class ConcurrentProcessor implements QueryParamProcessor {
+        @Override
+        public void process(Object queryParam) {
+            ((ConcurrentParam) queryParam).processed = true;
+        }
     }
 
     public static class OwnerProvider implements QueryValueProvider<Long> {
