@@ -4,6 +4,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.security.Security;
 
+/** Registers Bouncy Castle for the legacy crypto APIs in this module. */
 public final class BouncyCastleBootstrap {
 
     static {

@@ -10,6 +10,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 /**
+ * RSA/OAEP encryption and SHA-256 signatures.
+ *
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 public class RSAProvider {

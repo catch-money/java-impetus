@@ -1,7 +1,7 @@
 
-# Java Impetus ![Java](https://img.shields.io/badge/Java-21-orange?style=flat&logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.3-brightgreen?style=flat&logo=spring-boot&logoColor=white) ![Maven](https://img.shields.io/badge/Maven-Build%20Tool-blue?style=flat&logo=apache-maven&logoColor=white) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/catch-money/java-impetus)
+# Java Impetus ![Java](https://img.shields.io/badge/Java-21-orange?style=flat&logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen?style=flat&logo=spring-boot&logoColor=white) ![Maven](https://img.shields.io/badge/Maven-Build%20Tool-blue?style=flat&logo=apache-maven&logoColor=white) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/catch-money/java-impetus)
 
-> 基于 Java 21 和 Spring Boot 3.x 的企业级快速开发框架
+> 基于 Java 21 和 Spring Boot 4.x 的企业级快速开发框架
 
 Java Impetus 是一个专注于提供**语法糖式工具类**和**框架扩展封装**的企业级开发类库。它不对现有框架进行任务的修改，而是在原有基础上提供更便捷的 API 和工具，以减少开发过程中繁琐的配置和封装。
 
@@ -33,12 +33,17 @@ java-impetus-common 提供了开发过程中的一些常用的工具类
 
 使用方式和内容可查阅文档[README.md](java-impetus-common/README.md)
 
+## [java-impetus-crypto](java-impetus-crypto)
+java-impetus-crypto 提供独立的加密、哈希与旧密文兼容能力，不依赖 Spring
+
+使用方式和内容可查阅文档[README.md](java-impetus-crypto/README.md)
+
 ## 🚀 快速开始
 
 ### 📋 环境要求
 
 - **Java**: 21+
-- **Spring Boot**: 3.x
+- **Spring Boot**: 4.x
 - **Maven**: 3.8+
 
 ### 📥 版本管理
@@ -51,7 +56,7 @@ java-impetus-common 提供了开发过程中的一些常用的工具类
         <dependency>
             <groupId>io.github.jocker-cn</groupId>
             <artifactId>java-impetus-dependencies</artifactId>
-            <version>1.1.0</version>
+            <version>2.0.0</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>

@@ -1,7 +1,5 @@
 package io.github.jockerCN.type;
 
-import io.github.jockerCN.number.NumberUtils;
-
 import java.math.BigDecimal;
 import java.util.Objects;
 
@@ -12,10 +10,11 @@ import java.util.Objects;
 public interface TypeConvert {
 
 
-    static <T> T cast(Object obj, Class<T> al) {
-        return al.cast(obj);
+    static <T> T cast(Object obj, Class<T> type) {
+        return type.cast(obj);
     }
 
+    /** The caller is responsible for the runtime type; generic type arguments cannot be checked. */
     @SuppressWarnings("unchecked")
     static <T> T cast(Object obj) {
         return (T) obj;
@@ -74,7 +73,14 @@ public interface TypeConvert {
     }
 
     static Character toChar(Object obj) {
-        return Objects.isNull(obj) ? null : toString(obj).charAt(0);
+        if (Objects.isNull(obj)) {
+            return null;
+        }
+        String value = toString(obj);
+        if (value.isEmpty()) {
+            throw new IllegalArgumentException("Cannot convert an empty value to Character");
+        }
+        return value.charAt(0);
     }
 
     static Short toShort(Object obj) {
@@ -82,10 +88,20 @@ public interface TypeConvert {
     }
 
     static Boolean toBoolean(Object obj) {
-        return Objects.isNull(obj) ? null : Boolean.parseBoolean(toString(obj));
+        if (Objects.isNull(obj)) {
+            return null;
+        }
+        String value = toString(obj).trim();
+        if ("true".equalsIgnoreCase(value)) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(value)) {
+            return false;
+        }
+        throw new IllegalArgumentException("Invalid Boolean value: " + value);
     }
     static BigDecimal toBigDecimal(Object obj) {
-        return Objects.isNull(obj) ? null : NumberUtils.fromBigDecimal(obj);
+        return Objects.isNull(obj) ? null : new BigDecimal(toString(obj));
     }
 
     static Integer toInteger(Object obj) {

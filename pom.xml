@@ -7,18 +7,19 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus-dependencies</artifactId>
-        <version>1.1.1</version>
+        <version>2.0.0</version>
         <relativePath/>
     </parent>
     
     <artifactId>java-impetus</artifactId>
-    <version>1.1.1</version>
+    <version>2.0.0</version>
     <packaging>pom</packaging>
     <description>java-impetus parent pom</description>
     <name>java-impetus</name>
     <modules>
         <module>java-impetus-native-image</module>
         <module>java-impetus-common</module>
+        <module>java-impetus-crypto</module>
         <module>java-impetus-spring-common</module>
         <module>java-impetus-redis</module>
         <module>java-impetus-jpa</module>

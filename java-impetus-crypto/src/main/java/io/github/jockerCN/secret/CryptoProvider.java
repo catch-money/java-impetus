@@ -1,16 +1,20 @@
 package io.github.jockerCN.secret;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import io.github.jockerCN.crypto.HashUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 
 /**
+ * Legacy AES/ECB API retained for decrypting existing ciphertext.
+ * New encryption should use {@link io.github.jockerCN.crypto.AesGcmCipher}.
+ *
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
+@Deprecated(since = "2.0")
 public class CryptoProvider {
 
     private final byte[] keys;
@@ -27,7 +31,7 @@ public class CryptoProvider {
     }
 
     public CryptoProvider(byte[] keys) {
-        this.keys = keys;
+        this.keys = Arrays.copyOf(keys, keys.length);
     }
 
     public CryptoProvider(int segmentLength, int totalLength) {
@@ -56,7 +60,7 @@ public class CryptoProvider {
     }
 
     private byte[] getKeys() {
-        return keys;
+        return Arrays.copyOf(keys, keys.length);
     }
 
     public boolean containsKey(byte[] keys) {
@@ -88,22 +92,11 @@ public class CryptoProvider {
     }
 
     public static String toSHA256(String input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(input.getBytes());
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not available", e);
-        }
+        return HashUtils.sha256Hex(input.getBytes());
     }
 
+    @SuppressWarnings("deprecation")
     public static String md5(String data) {
-        return DigestUtils.md5Hex(data);
+        return HashUtils.md5Hex(data);
     }
 }

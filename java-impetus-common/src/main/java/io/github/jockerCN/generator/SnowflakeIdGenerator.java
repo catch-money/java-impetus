@@ -3,41 +3,44 @@ package io.github.jockerCN.generator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Inet4Address;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.LongSupplier;
 import java.util.zip.CRC32;
 
-@SuppressWarnings("unused")
+/**
+ * Snowflake-style positive IDs: 39-bit milliseconds since 2025-01-01 UTC,
+ * 5-bit data center, 5-bit machine, and 14-bit sequence.
+ * A data-center/machine pair must be unique across simultaneously running nodes.
+ */
 @Slf4j
 public class SnowflakeIdGenerator {
 
-    // 开始时间戳 (2025-01-01 00:00:00 UTC)
     private static final long START_TIMESTAMP = 1735689600000L;
-
-    // 各部分位数
-    private static final long SEQUENCE_BITS = 14; // 序列号占用位数
-    private static final long MACHINE_ID_BITS = 5; // 机器ID占用位数
-    private static final long DATA_CENTER_ID_BITS = 5; // 数据中心ID占用位数
-
-    // 每部分最大值
+    private static final int SEQUENCE_BITS = 14;
+    private static final int MACHINE_ID_BITS = 5;
+    private static final int DATA_CENTER_ID_BITS = 5;
+    private static final int MACHINE_ID_SHIFT = SEQUENCE_BITS;
+    private static final int DATA_CENTER_ID_SHIFT = SEQUENCE_BITS + MACHINE_ID_BITS;
+    private static final int TIMESTAMP_SHIFT = SEQUENCE_BITS + MACHINE_ID_BITS + DATA_CENTER_ID_BITS;
     private static final long MAX_SEQUENCE = (1L << SEQUENCE_BITS) - 1;
     private static final long MAX_MACHINE_ID = (1L << MACHINE_ID_BITS) - 1;
     private static final long MAX_DATA_CENTER_ID = (1L << DATA_CENTER_ID_BITS) - 1;
+    private static final long MAX_TIMESTAMP_DELTA = (1L << (Long.SIZE - TIMESTAMP_SHIFT - 1)) - 1;
 
-    // 位移偏移量
-    private static final long MACHINE_ID_SHIFT = SEQUENCE_BITS;
-    private static final long DATA_CENTER_ID_SHIFT = SEQUENCE_BITS + MACHINE_ID_BITS;
-    private static final long TIMESTAMP_SHIFT = SEQUENCE_BITS + MACHINE_ID_BITS + DATA_CENTER_ID_BITS;
-
-    // 数据中心ID和机器ID
     private final long dataCenterId;
     private final long machineId;
     private final int maxAttempts;
-    // 当前毫秒内的序列号
-    private long sequence = 0L;
-
-    // 上次生成ID的时间戳
+    private final LongSupplier clock;
+    private long sequence;
     private long lastTimestamp = -1L;
 
+    /**
+     * Convenience constructor for a single-node setup. IP hashing is not a
+     * distributed worker-ID allocator; use explicit IDs for multiple nodes.
+     */
     public SnowflakeIdGenerator(int maxCenterData) {
         this(getDefaultDataCenterId(maxCenterData), 1);
     }
@@ -46,91 +49,118 @@ public class SnowflakeIdGenerator {
         this(dataCenterId, machineId, 0);
     }
 
-    private static long getDefaultDataCenterId(int max) {
-        try {
-            String hostAddress = Inet4Address.getLocalHost().getHostAddress();
-            log.info("Using IP address for DataCenter ID [{}] generation: {}", max, hostAddress);
-            return getHost(hostAddress, max);
-        } catch (Exception e) {
-            log.warn("Failed to get local IP address, using random DataCenter ID", e);
-            return ThreadLocalRandom.current().nextInt(32);
-        }
+    public SnowflakeIdGenerator(long dataCenterId, long machineId, int maxAttempts) {
+        this(dataCenterId, machineId, maxAttempts, System::currentTimeMillis);
     }
 
-    public SnowflakeIdGenerator(long dataCenterId, long machineId, int maxAttempts) {
-        if (dataCenterId > MAX_DATA_CENTER_ID || dataCenterId < 0) {
-            throw new IllegalArgumentException("DataCenter ID out of range");
+    SnowflakeIdGenerator(long dataCenterId, long machineId, int maxAttempts, LongSupplier clock) {
+        if (dataCenterId < 0 || dataCenterId > MAX_DATA_CENTER_ID) {
+            throw new IllegalArgumentException("Data center ID must be in [0, 31]");
         }
-        if (machineId > MAX_MACHINE_ID || machineId < 0) {
-            throw new IllegalArgumentException("Machine ID out of range");
+        if (machineId < 0 || machineId > MAX_MACHINE_ID) {
+            throw new IllegalArgumentException("Machine ID must be in [0, 31]");
         }
         this.dataCenterId = dataCenterId;
         this.machineId = machineId;
-        this.maxAttempts = maxAttempts <= 0 ? 100_0000 : maxAttempts;
+        this.maxAttempts = maxAttempts <= 0 ? 1_000_000 : maxAttempts;
+        this.clock = Objects.requireNonNull(clock, "clock");
     }
 
+    /** Converts a unique 10-bit worker ID into data-center and machine IDs. */
+    public static SnowflakeIdGenerator forWorkerId(int workerId) {
+        if (workerId < 0 || workerId > 1023) {
+            throw new IllegalArgumentException("Worker ID must be in [0, 1023]");
+        }
+        return new SnowflakeIdGenerator(workerId >>> MACHINE_ID_BITS, workerId & MAX_MACHINE_ID);
+    }
+
+    public int workerId() {
+        return (int) ((dataCenterId << MACHINE_ID_BITS) | machineId);
+    }
 
     public String nextIdAsString(String prefix) {
-        return String.join("", prefix, nextIdAsString());
+        return Objects.requireNonNull(prefix, "prefix") + nextIdAsString();
     }
 
-    public synchronized String nextIdAsString() {
-        return String.valueOf(nextId());
+    public String nextIdAsString() {
+        return Long.toString(nextId());
     }
 
     public synchronized long nextId() {
-        long currentTimestamp = System.currentTimeMillis();
-
-        if (currentTimestamp < lastTimestamp) {
-            throw new RuntimeException("System Clock moved backwards. Refusing to generate ID.");
+        long timestamp = clock.getAsLong();
+        if (timestamp < START_TIMESTAMP) {
+            throw new IllegalStateException("Clock is before the Snowflake epoch");
+        }
+        if (timestamp < lastTimestamp) {
+            throw new IllegalStateException("Clock moved backwards by "
+                    + (lastTimestamp - timestamp) + " ms");
         }
 
-        if (currentTimestamp == lastTimestamp) {
+        if (timestamp == lastTimestamp) {
             sequence = (sequence + 1) & MAX_SEQUENCE;
             if (sequence == 0) {
-                // 等待下一毫秒
-                currentTimestamp = waitForNextMillis(lastTimestamp);
+                timestamp = waitForNextMillis(lastTimestamp);
             }
         } else {
-            sequence = 0L;
+            sequence = 0;
         }
 
-        lastTimestamp = currentTimestamp;
-
-        return ((currentTimestamp - START_TIMESTAMP) << TIMESTAMP_SHIFT) |
-                (dataCenterId << DATA_CENTER_ID_SHIFT) |
-                (machineId << MACHINE_ID_SHIFT) |
-                sequence;
+        long elapsed = timestamp - START_TIMESTAMP;
+        if (elapsed > MAX_TIMESTAMP_DELTA) {
+            throw new IllegalStateException("Snowflake timestamp bits are exhausted");
+        }
+        lastTimestamp = timestamp;
+        return (elapsed << TIMESTAMP_SHIFT)
+                | (dataCenterId << DATA_CENTER_ID_SHIFT)
+                | (machineId << MACHINE_ID_SHIFT)
+                | sequence;
     }
 
-    private long waitForNextMillis(long lastTimestamp) {
-        int attempts = 0;
-        long timestamp;
-
-        do {
-            timestamp = System.currentTimeMillis();
-            if (++attempts >= maxAttempts) {
-                // 超过最大尝试次数，返回修正后的时间戳
-                log.error("System clock stalled for too long ({} attempts reached). Refusing to generate ID. Last timestamp: [{}].", maxAttempts, lastTimestamp);
-                throw new RuntimeException("System clock stalled for too long.");
+    private long waitForNextMillis(long previousTimestamp) {
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+            long timestamp = clock.getAsLong();
+            if (timestamp > previousTimestamp) {
+                return timestamp;
             }
-        } while (timestamp <= lastTimestamp);
-
-        return timestamp;
+            Thread.onSpinWait();
+        }
+        throw new IllegalStateException("Clock did not advance after " + maxAttempts + " attempts");
     }
 
-
-    private static int getHost(String ipAddress, int max) {
-        //CRC32 哈希增强分布均匀性
-        CRC32 crc = new CRC32();
-        crc.update(ipAddress.getBytes());
-        return (int) (crc.getValue() % (max + 1));
+    /** Decodes an ID produced with this module's epoch and bit layout. */
+    public static IdParts parse(long id) {
+        if (id < 0) {
+            throw new IllegalArgumentException("Snowflake ID must be non-negative");
+        }
+        long elapsed = id >>> TIMESTAMP_SHIFT;
+        return new IdParts(Instant.ofEpochMilli(START_TIMESTAMP + elapsed),
+                (id >>> DATA_CENTER_ID_SHIFT) & MAX_DATA_CENTER_ID,
+                (id >>> MACHINE_ID_SHIFT) & MAX_MACHINE_ID,
+                id & MAX_SEQUENCE);
     }
 
+    public record IdParts(Instant timestamp, long dataCenterId, long machineId, long sequence) {
+    }
 
-    private static final SnowflakeIdGenerator defaultSnowflakeIdGenerator = new SnowflakeIdGenerator(1);
+    private static long getDefaultDataCenterId(int max) {
+        if (max < 0 || max > MAX_DATA_CENTER_ID) {
+            throw new IllegalArgumentException("Maximum data center ID must be in [0, 31]");
+        }
+        try {
+            String hostAddress = Inet4Address.getLocalHost().getHostAddress();
+            CRC32 crc = new CRC32();
+            crc.update(hostAddress.getBytes(StandardCharsets.UTF_8));
+            return crc.getValue() % (max + 1L);
+        } catch (Exception e) {
+            log.warn("Failed to resolve local IP; choosing a non-unique fallback data center ID", e);
+            return ThreadLocalRandom.current().nextInt(max + 1);
+        }
+    }
 
+    private static final SnowflakeIdGenerator DEFAULT_INSTANCE = new SnowflakeIdGenerator(1);
+
+    /** Single-process convenience instance; not a cross-host uniqueness guarantee. */
     public static SnowflakeIdGenerator getInstance() {
-        return defaultSnowflakeIdGenerator;
+        return DEFAULT_INSTANCE;
     }
 }

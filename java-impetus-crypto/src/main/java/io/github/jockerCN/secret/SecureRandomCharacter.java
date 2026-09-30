@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 /**
+ * Random printable characters for legacy key generation.
+ *
  * @author jokerCN <a href="https://github.com/jocker-cn">
  */
 public abstract class SecureRandomCharacter {
