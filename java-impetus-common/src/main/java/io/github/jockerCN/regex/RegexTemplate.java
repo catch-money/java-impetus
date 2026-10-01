@@ -17,6 +17,10 @@ public final class RegexTemplate {
     public static final Pattern HEX_PATTERN = Pattern.compile("[0-9A-Fa-f]+");
     public static final Pattern UUID_PATTERN = Pattern.compile("[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}");
 
+    /** 8-64 printable ASCII characters, including upper/lower case letters, a digit and punctuation. */
+    public static final Pattern PASSWORD_COMPLEX_PATTERN = Pattern.compile(
+            "\\A(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^A-Za-z0-9])[!-~]{8,64}\\z");
+
     /** Pragmatic email shape only; it does not implement the complete email address standard. */
     public static final Pattern EMAIL_PATTERN = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+");
     /** Mainland China mobile number shape only; number assignment must be checked separately. */

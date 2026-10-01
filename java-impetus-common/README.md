@@ -10,7 +10,7 @@ java-impetus-common 是整个 java-impetus 框架的基础工具库，提供了�
 - **🔐 加密解密工具**：已迁至独立的 [java-impetus-crypto](../java-impetus-crypto/README.md) 模块
 - **📦 流式处理工具**：[StreamUtils.java](src/main/java/io/github/jockerCN/stream/StreamUtils.java)增强的 Stream API 工具，简化集合操作
 - **🔑 编号生成工具**：[SnowflakeIdGenerator.java](src/main/java/io/github/jockerCN/generator/SnowflakeIdGenerator.java) 与 [SerialNoUtils.java](src/main/java/io/github/jockerCN/generator/SerialNoUtils.java)提供 ID 和可组合业务编号
-- **🏷️ 枚举工具**：[BaseEnum.java](src/main/java/io/github/jockerCN/enums/BaseEnum.java)统一的枚举处理和缓存机制
+- **🏷️ 枚举工具**：[EnumUtils.java](src/main/java/io/github/jockerCN/enums/EnumUtils.java)支持普通枚举的任意字段匹配
 - **📝 表达式解析**：[ExpressionParse.java](src/main/java/io/github/jockerCN/expression/ExpressionParse.java)支持数学表达式和 EL 表达式解析
 - **📊 二维码生成**：[ZxingUtils.java](src/main/java/io/github/jockerCN/zxing/ZxingUtils.java)基于 ZXing 的二维码和条形码生成工具
 
@@ -55,7 +55,7 @@ int exact = NumberUtils.convertToIntExact("2K"); // 小数或溢出时抛出异�
 - 单位换算（码转米、支持K/M后缀）
 - 空值安全处理
 
-`convertToInt` 保留原有截断行为；需要拒绝小数和整数溢出时使用 `convertToIntExact`。`RegexTemplate` 提供手机号、国际号码、邮箱、UUID、整数、小数等常用格式正则；这些表达式只检查格式，不验证号码分配或邮箱是否真实存在。
+`convertToInt` 保留原有截断行为；需要拒绝小数和整数溢出时使用 `convertToIntExact`。`RegexTemplate` 提供手机号、国际号码、邮箱、UUID、整数、小数等常用格式正则；这些表达式只检查格式，不验证号码分配或邮箱是否真实存在。`PASSWORD_COMPLEX_PATTERN` 匹配 8–64 位无空白的 ASCII 可打印字符，且须同时包含大小写字母、数字和标点符号；这是可选的格式策略，不检测常见密码或泄露密码。
 
 ### 🔐 加密解密工具
 
@@ -88,32 +88,32 @@ List<User> sortedUsers = StreamUtils.sortToList(users, User::getCreateTime.rever
 
 空集合或 `null` 集合会提前返回空结果，不执行 mapper / predicate；返回的 List、Set 和 Map 均可修改。普通 `toSet`、`groupByKey`、`groupCount`、`toMap`、`partition` 使用哈希集合／映射，不保证迭代顺序；`sortToSet` 保留排序后的迭代顺序。`toMap` 遇到重复键默认保留第一个值，可传入合并函数自定义行为。`distinctByKey` 使用顺序流，结果保持输入顺序。
 
-### 🏷️ 枚举工具 - BaseEnum & EnumUtils
+### 🏷️ 枚举工具 - EnumUtils
 
-统一的枚举处理框架，提供枚举值的快速查找和缓存：
+直接使用普通枚举；传入字段 getter 即可按任意属性查找：
 
 ```java
-// 定义枚举
-public enum StatusEnum implements BaseEnum<StatusEnum, Integer, String> {
-    ACTIVE(1, "激活"),
-    INACTIVE(0, "禁用");
-    
-    private final Integer value;
-    private final String desc;
-    
-    // getter methods...
-}
+public enum StatusEnum {
+    ACTIVE(1, "激活", true),
+    INACTIVE(0, "禁用", false);
 
-// 枚举查找
-StatusEnum status = EnumUtils.getEnumByValue(1, StatusEnum.class);
-StatusEnum byDesc = EnumUtils.getEnumByDesc("激活", StatusEnum.class);
+    private final Integer code;
+    private final String label;
+    private final boolean enabled;
+
+    // 构造函数及 code()/label()/enabled() getter...
+}
+StatusEnum status = EnumUtils.findBy(StatusEnum.class, StatusEnum::code, 1);
+StatusEnum byLabel = EnumUtils.findBy(StatusEnum.class, StatusEnum::label, "激活");
+StatusEnum enabled = EnumUtils.findBy(StatusEnum.class, StatusEnum::enabled, true);
+StatusEnum required = EnumUtils.requireBy(StatusEnum.class, StatusEnum::code, 1);
 ```
 
 **功能特点**：
-- 统一的枚举接口规范
-- 自动缓存提高查找性能
-- 支持按值和描述查找
-- 类型安全的枚举处理
+- `findBy` 未命中返回 `null`，`requireBy` 未命中抛出异常，`findByOrDefault` 可指定回退值
+- `find` 可传自定义谓词；名称和序号也可用 `getEnumByName`、`getEnumByOrdinal` 查找
+- 不固定 `value`、`desc` 字段，`BaseEnum` 及其专用查找入口已移除
+- 以声明顺序查找，重复属性值取第一个；通过 `ClassValue` 缓存每个枚举类型的不可变常量列表，避免每次重新获取常量数组
 
 ### 🔧 类型转换工具 - TypeConvert
 
@@ -244,8 +244,16 @@ Result<Void> simpleSuccess = Result.ok();
 // 失败结果
 Result<Void> failure = Result.failWithMsg("操作失败");
 Result<Void> unauthorized = Result.failWithUNAuth("未登录");
+Result<Void> conflict = Result.with(Result.StatusCode.CONFLICT);
+Result<Void> missing = Result.with(Result.StatusCode.RESOURCE_NOT_FOUND);
 
 ```
+
+`Result` 是响应体／方法结果对象，`code` 不会自动设置 HTTP 响应状态。常用 HTTP 错误码包括 400、401、403、404、405、408、409、410、413、415、422、429、500、502、503、504；可用 `with(StatusCode)`、`with(data, StatusCode)` 或自定义 message 创建结果。重复或语义错误的旧状态项已移除，旧工厂方法仍可调用，但返回码规范化：`failWithTokenError`→401、`failWithNoPermission`→403、`failWithServerError`→500、`failWithNotFound`→404。`isOk()` 仍只表示 `code == 200`，`isError()` 是其反面；`WARN` 与业务专有状态码仍不按 HTTP 码分类。需要真正返回 HTTP 4xx/5xx 时，由 Web 层另行设置响应状态。`Result` 保持可变 bean，并提供无参构造以便反序列化。
+
+### 虚拟线程工具 - AsyncExecutorUtils
+
+`executor(Runnable)` 保留即发即弃行为；需要拿返回值或异常时用 `runAsync(Runnable)`、`supplyAsync(Supplier)` 获取 `CompletableFuture`。原 `executorWithFuture` 和 `executor(Supplier)` 继续可用。所有入口都为每个任务创建虚拟线程，线程名带内部递增序号；不暴露线程句柄或工厂。虚拟线程会继承调用方的 inheritable thread-local；`CompletableFuture.cancel` 不保证中断正在执行的任务。
 
 ## 其他实用工具
 

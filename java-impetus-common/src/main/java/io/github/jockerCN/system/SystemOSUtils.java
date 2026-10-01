@@ -1,7 +1,6 @@
 package io.github.jockerCN.system;
 
 
-import io.github.jockerCN.enums.BaseEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -103,7 +102,7 @@ public abstract class SystemOSUtils {
 
     @Getter
     @AllArgsConstructor
-    public enum OSEnum implements BaseEnum<OSEnum, String, String> {
+    public enum OSEnum {
 
         WINDOWS("Windows", ""),
         UNIX("Unix", ""),
