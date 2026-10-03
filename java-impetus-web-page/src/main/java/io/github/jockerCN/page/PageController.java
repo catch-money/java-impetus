@@ -2,6 +2,7 @@ package io.github.jockerCN.page;
 
 
 import io.github.jockerCN.Result;
+import io.github.jockerCN.jpa.paging.PageUtils;
 import io.github.jockerCN.jpa.pojo.BaseQueryParam;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.web.bind.annotation.GetMapping;
