@@ -14,8 +14,12 @@ class TypeConvertTest {
         List<String> values = TypeConvert.cast(List.of("value"));
         assertEquals(List.of("value"), values);
         assertEquals("text", TypeConvert.cast("text", String.class));
+        assertNull(TypeConvert.cast(null, String.class));
+        assertNull(TypeConvert.<String>cast(null));
         assertThrows(ClassCastException.class, () -> TypeConvert.cast(1L, String.class));
-        assertThrows(ClassCastException.class, () -> TypeConvert.castInt(1L));
+        assertThrows(ClassCastException.class, () -> {
+            String ignored = TypeConvert.cast(1L);
+        });
     }
 
     @Test
@@ -25,7 +29,8 @@ class TypeConvertTest {
         assertNull(TypeConvert.toBoolean(null));
         assertEquals(42, TypeConvert.toInteger("42"));
         assertEquals(new BigDecimal("12.30"), TypeConvert.toBigDecimal("12.30"));
-        assertEquals(new BigDecimal("12.30"), TypeConvert.toBigDecimal(new BigDecimal("12.30")));
+        BigDecimal decimal = new BigDecimal("12.30");
+        assertSame(decimal, TypeConvert.toBigDecimal(decimal));
         assertTrue(TypeConvert.toBoolean(" TRUE "));
         assertFalse(TypeConvert.toBoolean("false"));
         assertThrows(IllegalArgumentException.class, () -> TypeConvert.toBoolean("yes"));
