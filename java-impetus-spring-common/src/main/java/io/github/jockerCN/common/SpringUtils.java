@@ -1,30 +1,39 @@
 package io.github.jockerCN.common;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.AntPathMatcher;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
-@SuppressWarnings("unused")
-public abstract class SpringUtils {
+import java.util.Map;
+import java.util.Objects;
 
+/** Small conveniences around Spring's path matching. */
+public final class SpringUtils {
 
     private static final AntPathMatcher ANT_PATH_MATCHER = new AntPathMatcher();
 
-
-    public static boolean antPathMatch(final String pattern, final String str) {
-        return ANT_PATH_MATCHER.match(pattern, str);
+    private SpringUtils() {
     }
 
-
-    public static String emptyOrDefault(final String str, String defaultValue) {
-        return str == null ? defaultValue : str;
+    public static boolean antPathMatch(String pattern, String path) {
+        return ANT_PATH_MATCHER.match(pattern, path);
     }
 
-    public static String blackOrDefault(final String str, String defaultValue) {
-        return StringUtils.isBlank(str) ? defaultValue : str;
+    /** Returns path variables; Spring throws when the path does not match the pattern. */
+    public static Map<String, String> antPathVariables(String pattern, String path) {
+        return ANT_PATH_MATCHER.extractUriTemplateVariables(pattern, path);
     }
 
+    /** Only null is replaced; an empty string remains an empty string. */
+    public static String emptyOrDefault(String value, String defaultValue) {
+        return Objects.isNull(value) ? defaultValue : value;
+    }
 
+    public static String blankOrDefault(String value, String defaultValue) {
+        return Objects.isNull(value) || value.isBlank() ? defaultValue : value;
+    }
+
+    /** @deprecated Typo retained for existing callers; use {@link #blankOrDefault(String, String)}. */
+    @Deprecated
+    public static String blackOrDefault(String value, String defaultValue) {
+        return blankOrDefault(value, defaultValue);
+    }
 }

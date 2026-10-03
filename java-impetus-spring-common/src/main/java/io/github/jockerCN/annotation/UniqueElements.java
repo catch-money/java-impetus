@@ -1,7 +1,6 @@
 package io.github.jockerCN.annotation;
 
-import io.github.jockerCN.validate.CommonValidation;
-import io.github.jockerCN.validate.ValidationAdapter;
+import io.github.jockerCN.validate.UniqueElementsValidation;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -11,24 +10,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
+/** Requires all elements of an array or Iterable to be distinct. */
 @Documented
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = CommonValidation.class)
-public @interface Validator {
+@Constraint(validatedBy = UniqueElementsValidation.class)
+public @interface UniqueElements {
 
-    String message() default "validation failed";
-
-    /** Preserve the former nonempty constraint; set false to let empty values pass. */
     boolean required() default true;
+
+    String message() default "elements must be unique";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
-
-    Class<? extends ValidationAdapter>[] adapter() default {};
-
 }

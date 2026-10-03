@@ -1,7 +1,6 @@
 package io.github.jockerCN.annotation;
 
-import io.github.jockerCN.validate.CommonValidation;
-import io.github.jockerCN.validate.ValidationAdapter;
+import io.github.jockerCN.validate.EnumValueValidation;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -11,24 +10,23 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
+/** Checks a scalar, array, or Iterable against an ordinary enum's property values. */
 @Documented
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = CommonValidation.class)
-public @interface Validator {
+@Constraint(validatedBy = EnumValueValidation.class)
+public @interface EnumValue {
 
-    String message() default "validation failed";
+    Class<? extends Enum<?>> enumType();
 
-    /** Preserve the former nonempty constraint; set false to let empty values pass. */
+    /** "name", "ordinal", or a public no-argument accessor/public field. */
+    String property() default "name";
+
     boolean required() default true;
+
+    String message() default "invalid enum value";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
-
-    Class<? extends ValidationAdapter>[] adapter() default {};
-
 }

@@ -1,7 +1,6 @@
 package io.github.jockerCN.annotation;
 
-import io.github.jockerCN.validate.CommonValidation;
-import io.github.jockerCN.validate.ValidationAdapter;
+import io.github.jockerCN.validate.AllowedValuesValidation;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -11,24 +10,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
+/** Restricts a CharSequence to a declared set of values. */
 @Documented
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = CommonValidation.class)
-public @interface Validator {
+@Constraint(validatedBy = AllowedValuesValidation.class)
+public @interface AllowedValues {
 
-    String message() default "validation failed";
+    String[] value();
 
-    /** Preserve the former nonempty constraint; set false to let empty values pass. */
+    boolean ignoreCase() default false;
+
     boolean required() default true;
+
+    String message() default "value is not allowed";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
-
-    Class<? extends ValidationAdapter>[] adapter() default {};
-
 }

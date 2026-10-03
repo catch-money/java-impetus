@@ -9,6 +9,9 @@ import io.github.jockerCN.annotation.Validator;
 @FunctionalInterface
 public interface ValidationAdapter {
 
-
     Result<?> validate(Object o, Validator commonValidator);
+
+    /** Check annotation configuration once before values are validated. */
+    default void validateConfiguration(Validator annotation) {
+    }
 }

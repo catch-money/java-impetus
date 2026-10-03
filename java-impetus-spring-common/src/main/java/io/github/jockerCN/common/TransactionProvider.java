@@ -1,82 +1,105 @@
 package io.github.jockerCN.common;
 
-import io.github.jockerCN.type.TypeConvert;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Objects;
+import java.util.function.IntConsumer;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
-public class TransactionProvider {
+/** Transaction-bound callbacks run on the transaction completion thread. */
+public final class TransactionProvider {
 
+    private TransactionProvider() {
+    }
 
-    public static void setRollbackOnly() {
-        getTransactionStatus().setRollbackOnly();
+    public static boolean isTransactionActive() {
+        return TransactionSynchronizationManager.isActualTransactionActive();
     }
 
     public static TransactionStatus getTransactionStatus() {
         return TransactionAspectSupport.currentTransactionStatus();
     }
 
+    public static void setRollbackOnly() {
+        getTransactionStatus().setRollbackOnly();
+    }
 
     public static void setIfRollbackOnly() {
         try {
             setRollbackOnly();
-        } catch (NoTransactionException execution) {
-            //LOOP
+        } catch (NoTransactionException ignored) {
+            // No proxied transaction is bound to this thread.
         }
     }
 
-    public static void alwaysExecuteIfAfterCommit(Runnable runnable) {
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            doAfterCommit(runnable);
-        } else {
-            runnable.run();
-        }
-    }
-
-    public static void doAfterCommit(Runnable runnable) {
+    public static void doAfterCommit(Runnable action) {
+        requireSynchronization();
+        Objects.requireNonNull(action, "action");
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                TransactionSynchronization.super.afterCommit();
-                runnable.run();
+                action.run();
             }
         });
     }
 
-    public static Object doAfterCommit(FunctionWrapper<?,?> wrapper,Object argument) {
-        AtomicReference<Object> atomicReference = new AtomicReference<>();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                TransactionSynchronization.super.afterCommit();
-                atomicReference.set(wrapper.run(TypeConvert.cast(argument)));
-            }
-        });
-        return atomicReference.get();
-    }
-
-    public static void alwaysExecuteAfterCompletion(Runnable runnable) {
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            doAfterCompletion(runnable);
+    public static void alwaysExecuteIfAfterCommit(Runnable action) {
+        Objects.requireNonNull(action, "action");
+        if (hasSynchronization()) {
+            doAfterCommit(action);
         } else {
-            runnable.run();
+            action.run();
         }
     }
 
-    public static void doAfterCompletion(Runnable runnable) {
+    public static void doAfterRollback(Runnable action) {
+        requireSynchronization();
+        Objects.requireNonNull(action, "action");
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {
-                TransactionSynchronization.super.afterCompletion(status);
-                runnable.run();
+                if (status == STATUS_ROLLED_BACK) {
+                    action.run();
+                }
             }
         });
+    }
+
+    public static void doAfterCompletion(Runnable action) {
+        Objects.requireNonNull(action, "action");
+        doAfterCompletion(status -> action.run());
+    }
+
+    public static void doAfterCompletion(IntConsumer action) {
+        requireSynchronization();
+        Objects.requireNonNull(action, "action");
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                action.accept(status);
+            }
+        });
+    }
+
+    public static void alwaysExecuteAfterCompletion(Runnable action) {
+        Objects.requireNonNull(action, "action");
+        if (hasSynchronization()) {
+            doAfterCompletion(action);
+        } else {
+            action.run();
+        }
+    }
+
+    private static boolean hasSynchronization() {
+        return isTransactionActive() && TransactionSynchronizationManager.isSynchronizationActive();
+    }
+
+    private static void requireSynchronization() {
+        if (!hasSynchronization()) {
+            throw new IllegalStateException("An active Spring transaction with synchronization is required");
+        }
     }
 }

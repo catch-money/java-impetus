@@ -1,386 +1,112 @@
-# java-impetus-spring-common ![Static Badge](https://img.shields.io/badge/spring_boot-3.5.3-brightgreen?style=flat&logo=spring-boot&logoColor=white)
+# java-impetus-spring-common
 
-java-impetus-spring-common 是基于 Spring Boot 的通用工具模块，提供了 Spring 生态系统下的增强功能和工具类。
+Spring Boot 4 扩展模块，提供 Spring 容器访问、事务回调、Jakarta Validation 适配和少量 Spring 工具。Java Impetus 版本与仓库根 POM 保持一致；Spring Boot 版本由 BOM 管理。
 
-该模块在 java-impetus-common 的基础上，集成了 Spring 框架的特性，提供了 Bean 管理、事务处理、数据验证、事件驱动等功能。让开发者可以更便捷地使用 Spring 的核心功能，同时提供了统一的工具类和最佳实践。
+## 自动配置与依赖
 
-## 核心特性
+引入 `io.github.jocker-cn:java-impetus-spring-common` 后，`JavaImpetusSpringAutoConfiguration` 自动注册 `SpringProvider` 和 `SpringExecutorHandle`。应用自行定义同类型 Bean 时，自动配置会让位。业务代码优先使用构造器注入；`SpringProvider` 用于无法注入的旧代码或框架入口。它仅维护最近安装的一个活动 `ApplicationContext`，不适合作为多个并存应用上下文的路由器。
 
-- **🍃 Spring Bean 管理**：提供便捷的 Spring Bean 获取和管理工具
-- **🔄 事务处理工具**：增强的事务管理和回调处理工具
-- **✅ 数据验证框架**：灵活的自定义验证框架，支持枚举验证等
-- **📡 事件驱动机制**：简化的事件发布和处理机制
-- **🔧 Spring 工具类**：常用的 Spring 相关工具方法
-- **⚙️ 自动配置支持**：基于 Spring Boot 的自动配置机制
-
-## 快速开始
-
-### 在你的 `pom.xml` 中添加依赖：
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-validation</artifactId>
-    <version>3.5.3</version>
-</dependency>
-
-<dependency>
-    <groupId>io.github.jocker-cn</groupId>
-    <artifactId>java-impetus-spring-common</artifactId>
-    <version>1.1.0</version>
-</dependency>
-```
-
-### 启用自动配置
-
-模块会自动配置，无需额外设置：
+模块不再包装 Spring 事件。直接注入 `ApplicationEventPublisher` 发布对象，并用 `@EventListener` 接收：
 
 ```java
-@SpringBootApplication
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
-```
+public record OrderCreated(long orderId) {}
 
-## 核心组件介绍
-
-### 🍃 Spring Bean 管理 - SpringProvider
-
-提供静态方法访问 Spring 容器中的 Bean，简化 Bean 的获取和管理：
-
-```java
-// 按类型获取 Bean
-UserService userService = SpringProvider.getBean(UserService.class);
-
-// 按名称获取 Bean
-UserService service = SpringProvider.getBean("userServiceImpl");
-
-// 获取指定类型的所有 Bean
-Collection<PaymentProcessor> processors = SpringProvider.getBeans(PaymentProcessor.class);
-Map<String, PaymentProcessor> processorMap = SpringProvider.getBeansOfType(PaymentProcessor.class);
-
-// 获取 Bean 或默认值
-CacheService cacheService = SpringProvider.getBeanOrDefault(CacheService.class, defaultCache);
-```
-
-**使用场景**：
-- 在非 Spring 管理的类中获取 Spring Bean
-- 动态获取服务实现类
-- 获取配置 Bean 和工具类
-
-### 🔄 事务处理工具 - TransactionProvider
-
-增强的事务管理工具，提供事务状态检查和回调处理：
-
-```java
-// 获取当前事务状态
-TransactionStatus status = TransactionProvider.getTransactionStatus();
-
-// 标记事务回滚
-TransactionProvider.setRollbackOnly();
-
-// 安全设置回滚（无事务时不抛异常）
-TransactionProvider.setIfRollbackOnly();
-
-// 事务提交后执行
-TransactionProvider.doAfterCommit(() -> {
-    // 发送邮件、清除缓存等操作
-    emailService.sendNotification();
-});
-
-// 总是执行（有事务时在提交后，无事务时立即执行）
-TransactionProvider.alwaysExecuteIfAfterCommit(() -> {
-    logService.recordOperation();
-});
-
-// 事务完成后执行（无论成功或失败）
-TransactionProvider.doAfterCompletion(() -> {
-    cleanupResources();
-});
-```
-
-### 🔧 Spring 执行器 - SpringExecutorHandle
-
-提供事务性的任务执行工具，统一异常处理和事务管理：
-
-```java
-SpringExecutorHandle executor = SpringExecutorHandle.getInstance();
-
-// 执行有事务的任务（异常时回滚）
-executor.execute(() -> {
-    userService.updateUser(user);
-    orderService.createOrder(order);
-});
-
-// 执行并返回结果
-User result = executor.execute(() -> {
-    return userService.createUser(userData);
-});
-
-// 抛出异常版本（不捕获异常）
-executor.executeThrows(() -> {
-    // 可能抛出检查异常的操作
-    riskOperations();
-});
-
-// 执行任务并在事务提交后执行回调
-String orderId = executor.execute(orderData, (data) -> {
-    return orderService.create(data);
-}, (result) -> {
-    // 事务提交后发送通知
-    notificationService.sendOrderCreated(result);
-});
-```
-
-### ✅ 数据验证框架
-
-#### 自定义验证注解 - @Validator
-
-灵活的自定义验证框架，支持多种验证适配器：
-
-```java
-public class UserCreateRequest {
-    
-    @Validator(
-        enumType = UserStatus.class,
-        message = "用户状态不正确",
-        adapter = {EnumValidateAdapter.class}
-    )
-    private Integer status;
-}
-```
-
-#### 枚举验证适配器 - EnumValidateAdapter
-
-专门用于验证枚举值的适配器：
-
-```java
-// 定义枚举
-public enum UserStatus implements BaseEnum<UserStatus, Integer, String> {
-    ACTIVE(1, "激活"),
-    INACTIVE(0, "禁用");
-    // ...
-}
-
-// 使用验证
-@Validator(enumType = UserStatus.class, adapter = {EnumValidateAdapter.class})
-private Integer userStatus;
-```
-
-#### 验证工具类 - ValidationUtil
-
-提供编程式验证工具：
-
-```java
-// 验证对象并返回结果
-Result<Void> result = ValidationUtil.validate(userRequest);
-if (result.isError()) {
-    return Result.failWithMsg(result.getMessage());
-}
-
-// 验证对象并抛出异常
-try {
-    ValidationUtil.validate(request, CreateGroup.class);
-} catch (BindException e) {
-    // 处理验证失败
-}
-
-// 简单对象验证
-Result<Void> validResult = ValidationUtil.validateObject(data);
-```
-
-### 📡 事件驱动机制
-
-#### 事件发布 - EventPush
-
-简化的事件发布工具：
-
-```java
-// 发布事件
-EventPush.push(new UserCreatedEvent(userId, userInfo));
-EventPush.push("简单的字符串事件");
-EventPush.push(complexDataObject);
-```
-
-#### 事件处理 - EventProcess
-
-实现 EventProcess 接口来处理特定事件：
-
-```java
-@Component
-public class UserEventProcess implements EventProcess {
-    
-    @Override
-    public boolean isProcess(Object source) {
-        return source instanceof UserCreatedEvent;
-    }
-    
-    @Override
-    public void process(Object source) {
-        UserCreatedEvent event = (UserCreatedEvent) source;
-        // 处理用户创建事件
-        welcomeService.sendWelcomeEmail(event.getUserId());
-        statisticsService.incrementUserCount();
-    }
-}
-```
-
-#### 通用事件监听器 - GenericEventListener
-
-自动分发事件到对应的处理器：
-
-```java
-// 自动配置，无需手动处理
-// 框架会自动将 GenericEvent 分发到匹配的 EventProcess
-```
-
-## 自动配置
-
-模块提供自动配置类 `JavaImpetusSpringAutoConfiguration`，自动注册以下 Bean：
-
-- **SpringProvider**：Spring Bean 访问工具
-- **GenericEventListener**：通用事件监听器
-- **EventPush**：事件发布工具
-
-```java
-@AutoConfiguration
-@ConditionalOnClass(SpringProvider.class)
-public class JavaImpetusSpringAutoConfiguration {
-    // 自动配置逻辑
-}
-```
-
-## 使用示例
-
-### 完整的服务层示例
-
-```java
 @Service
-@Transactional
-public class OrderService {
-    
-    public Result<Order> createOrder(OrderCreateRequest request) {
-        // 1. 数据验证
-        Result<Void> validation = ValidationUtil.validate(request);
-        if (validation.isError()) {
-            return Result.failWithMsg(validation.getMessage());
-        }
-        
-        // 2. 事务性操作
-        return SpringExecutorHandle.getInstance().execute(() -> {
-            // 创建订单
-            Order order = buildOrder(request);
-            orderRepository.save(order);
-            
-            // 扣减库存
-            inventoryService.decreaseStock(request.getProductId(), request.getQuantity());
-            
-            return order;
-        });
+class OrderService {
+    private final ApplicationEventPublisher publisher;
+
+    OrderService(ApplicationEventPublisher publisher) {
+        this.publisher = publisher;
     }
-    
-    @Transactional
-    public void processOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow();
-        
-        // 更新订单状态
-        order.setStatus(OrderStatus.PROCESSING);
-        orderRepository.save(order);
-        
-        // 事务提交后发送通知
-        TransactionProvider.doAfterCommit(() -> {
-            EventPush.push(new OrderProcessedEvent(orderId));
-        });
+
+    void create(long id) {
+        publisher.publishEvent(new OrderCreated(id));
+    }
+
+    @EventListener
+    void onCreated(OrderCreated event) {
+        // 处理事件
     }
 }
 ```
 
-### 自定义验证适配器示例
+## Bean 与 Spring 工具
+
+`SpringProvider.getBean(type/name)`、`getBeanIfAvailable(type)`、`getBeanIfUnique(type)`、`getBeansOfType(type)`、`containsBean(name)` 和配置读取方法可用于静态访问。`getBeanOrDefault(type, fallback)` 只在唯一或首选 Bean 可确定时返回 Bean；不存在或歧义时返回默认值。上下文尚未初始化或已经销毁时，访问 Bean 会抛出 `IllegalStateException`。
+
+`SpringUtils.antPathMatch` 和 `antPathVariables` 使用 Spring 路径匹配。`emptyOrDefault` 仅在值为 `null` 时使用默认值；`blankOrDefault` 还将空白字符串视为缺省。旧拼写 `blackOrDefault` 暂保留为弃用别名。
+
+### 配置与资源
+
+简单配置可通过 `SpringProvider.getProperty(name, type)`、带默认值的重载或 `getRequiredProperty(name, type)` 类型化读取。`acceptsProfile(expression)` 支持 Spring profile 表达式；高级用法可直接取得 `getEnvironment()`。
+
+成组配置可用 `SpringConfigurationUtils.bind(prefix, type)` 返回 `Optional<T>`，或 `bindRequired(prefix, type)` 在没有配置时抛出异常。它只是按当前 `Environment` 绑定对象，不会注册 Bean，也不会自动执行 Jakarta Validation：
 
 ```java
-@Component
-public class CustomValidateAdapter implements ValidationAdapter {
-    
-    @Override
-    public Result<?> validate(Object value, Validator validator) {
-        if (value instanceof String str) {
-            if (str.length() < 6) {
-                return Result.failWithMsg("密码长度不能少于6位");
-            }
-            if (!str.matches(".*[A-Z].*")) {
-                return Result.failWithMsg("密码必须包含大写字母");
-            }
-        }
-        return Result.ok();
-    }
-}
+public record ClientOptions(String name, Duration timeout) {}
 
-// 使用自定义适配器
-public class UserRequest {
-    @Validator(
-        message = "密码格式不正确",
-        adapter = {CustomValidateAdapter.class}
-    )
-    private String password;
-}
+ClientOptions options = SpringConfigurationUtils.bindRequired("demo.client", ClientOptions.class);
 ```
 
-### 事件驱动架构示例
+`SpringResourceUtils.readUtf8(location)`、`readString(location, charset)`、`readBytes(location)` 通过 Spring `Resource` 输入流读取，不依赖资源有实际文件路径，因此也适用于 JAR 内的 classpath 资源。`SpringProvider.getResource(location)` 和 `getResources(locationPattern)` 则保留原生 `Resource` 或模式扫描结果。上述读取方法会一次性加载全部内容，大文件请使用 `Resource.getInputStream()` 流式处理。
+
+## 事务
+
+`SpringExecutorHandle` 是 Spring 管理的事务代理入口，须通过注入或 `getInstance()` 调用，不要自行 `new` 或在类内部自调用事务方法。
 
 ```java
-// 1. 定义事件
-public record UserRegisteredEvent(Long userId, String email, LocalDateTime timestamp) {}
-
-// 2. 发布事件
-@Service
-public class UserService {
-    public User registerUser(UserRegisterRequest request) {
-        User user = createUser(request);
-        
-        // 发布用户注册事件
-        EventPush.push(new UserRegisteredEvent(
-            user.getId(), 
-            user.getEmail(), 
-            LocalDateTime.now()
-        ));
-        
-        return user;
-    }
-}
-
-// 3. 处理事件
-@Component
-public class UserRegisteredEventProcess implements EventProcess {
-    
-    @Override
-    public boolean isProcess(Object source) {
-        return source instanceof UserRegisteredEvent;
-    }
-    
-    @Override
-    public void process(Object source) {
-        UserRegisteredEvent event = (UserRegisteredEvent) source;
-        
-        // 发送欢迎邮件
-        emailService.sendWelcomeEmail(event.email());
-        
-        // 初始化用户配置
-        userConfigService.initDefaultConfig(event.userId());
-        
-        // 记录统计信息
-        statisticsService.recordUserRegistration(event.timestamp());
-    }
-}
+Order order = executor.execute(() -> orderRepository.save(input));
+Result<Order> result = executor.executeResult(() -> orderRepository.save(input));
+executor.executeAfterCommit(input, orderRepository::save, notifier::notify);
 ```
 
-## 设计理念
+`execute`/`executeThrows` 保留原始返回类型并向外传播异常，使事务正常回滚。需要将运行时异常转为 `Result<T>` 时使用 `executeResult`；它会先标记事务回滚。`executeAfterCommit` 返回 action 的结果，并在成功提交后执行回调。
 
-java-impetus-spring-common 遵循以下设计原则：
+`TransactionProvider` 提供 `isTransactionActive`、`setRollbackOnly`、`doAfterCommit`、`doAfterRollback`、`doAfterCompletion`。三个 `doAfter...` 方法要求当前线程存在活动事务和同步机制，否则抛出异常。`alwaysExecuteIfAfterCommit`、`alwaysExecuteAfterCompletion` 在没有事务时立即执行。
 
-1. **Spring 原生集成**：充分利用 Spring 的特性和机制
-2. **简化开发**：提供简单易用的 API，减少样板代码
-3. **事务安全**：提供事务安全的工具方法
-4. **事件驱动**：支持松耦合的事件驱动架构
-5. **扩展性**：提供可扩展的验证和处理机制
+## 校验
+
+`@Validator` 只负责自定义适配器链，不再承载枚举、白名单等专用参数。适配器可以是 Spring Bean，也可以有 public 无参构造器；每个适配器都必须通过。由于 Jakarta Validation 可并发调用同一校验器，自定义适配器应保持无状态或线程安全。
+
+字段约束 `@EnumValue`、`@AllowedValues`、`@UniqueElements` 与 `@Validator` 均默认 `required=true`：`null`、空字符串、空集合及空数组不通过；设为 `false` 时放行。非空值仍需符合各约束的类型及规则。`@UniqueElements` 保留旧适配器对数组和任意 `Iterable` 的支持；如果只校验 `Collection`，也可以直接选用 Hibernate Validator 自带的同名约束。
+
+普通 Java 枚举不需要继承项目接口。`@EnumValue` 默认比较枚举名称，也能通过 `property` 指定 `ordinal` 或公开访问器/字段：
+
+```java
+enum Status {
+    OPEN(1), CLOSED(2);
+    private final int code;
+    Status(int code) { this.code = code; }
+    public int code() { return code; }
+}
+
+record Request(
+        @EnumValue(enumType = Status.class, property = "code") Integer status,
+        @AllowedValues(value = {"read", "write"}, ignoreCase = true) String action,
+        @UniqueElements List<String> tags
+) {}
+```
+
+`@EnumValue` 也支持枚举实例、数组和 `Iterable`，属性值严格按 Java 类型比较，不会自动将字符串转换为数字。`@AllowedValues` 仅接受文本；`@UniqueElements` 接受数组或 `Iterable`，至多允许一个 `null` 元素。给 `@Validator` 不配置适配器属于配置错误。
+
+两个常见的跨字段约束也可直接标在 DTO 类型上：
+
+```java
+@FieldsEqual(first = "password", second = "confirmation")
+record PasswordChange(String password, String confirmation) {}
+
+@AtLeastOnePresent({"email", "phone"})
+record Contact(String email, String phone) {}
+```
+
+`@FieldsEqual` 使用 `Objects.equals`，两个字段均为 `null` 时相等；如需必填，请同时加 `@NotNull` 等标准约束。`@AtLeastOnePresent` 将 `null`、空值和纯空白文本视为未提供。两者支持 record 访问器、JavaBean 属性和字段；不存在的属性视为配置错误。
+
+`ValidationUtil.validateObject(object, groups...)` 返回首个错误的 `Result<Void>`；`validateMessages` 返回全部错误；`validate(object, groups...)` 以 `BindException` 暴露全部字段错误。无 Spring 容器时使用 Jakarta Validation 默认实现，存在 Spring Validator Bean 时优先使用它。
+
+## 2.0 迁移说明
+
+- 删除 `EventPush`、`EventProcess`、`GenericEvent`、`GenericEventListener`；调用方改用 Spring 原生事件 API。
+- 删除 `FunctionWrapper` 和依赖它的事务回调重载；改用 `executeAfterCommit` 或 `TransactionProvider.doAfterCommit`。
+- 枚举校验不再依赖 `BaseEnum`。旧的 `@Validator(enumType = ..., enumProperty = ...)` 改为 `@EnumValue(enumType = ..., property = ...)`。
+- 旧的白名单和去重适配器用法分别改为 `@AllowedValues`、`@UniqueElements`；`@Validator` 现在只接受自定义 `adapter`。
+- `SpringExecutorHandle.execute(Supplier<T>)` 不再把失败 `Result` 强转为 `T`，而是传播异常。需要结果包装时使用 `executeResult`。

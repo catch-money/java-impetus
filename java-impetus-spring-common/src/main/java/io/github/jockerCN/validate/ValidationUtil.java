@@ -1,63 +1,83 @@
 package io.github.jockerCN.validate;
 
-
 import io.github.jockerCN.Result;
+import io.github.jockerCN.common.SpringProvider;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
-public abstract class ValidationUtil {
+/** Programmatic Jakarta validation using Spring's validator when available. */
+public final class ValidationUtil {
 
-    private static final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
-
-    private static final Validator validator = validatorFactory.getValidator();
-
-    public static <T> Result<Void> validate(T obj) {
-        Set<ConstraintViolation<T>> validate = validator.validate(obj);
-
-        if (validate.isEmpty()) {
-            return Result.ok();
-        }
-        String failMessage = "";
-        for (ConstraintViolation<T> constraintViolation : validate) {
-            failMessage = constraintViolation.getMessage();
-            break;
-        }
-        return Result.failWithMsg(failMessage);
+    private ValidationUtil() {
     }
 
+    public static <T> Result<Void> validate(T object) {
+        return validateObject(object);
+    }
+
+    public static <T> Result<Void> validateObject(T object, Class<?>... groups) {
+        if (Objects.isNull(object)) {
+            return Result.failWithMsg("Object to validate must not be null");
+        }
+        List<String> messages = validateMessages(object, groups);
+        return messages.isEmpty() ? Result.ok() : Result.failWithMsg(messages.getFirst());
+    }
+
+    /** Returns all interpolated messages in stable property-path order. */
+    public static <T> List<String> validateMessages(T object, Class<?>... groups) {
+        Objects.requireNonNull(object, "object");
+        return violations(object, groups).stream().map(ConstraintViolation::getMessage).toList();
+    }
+
+    /** Preserves the existing Spring BindException API with all violations attached. */
     public static <T> void validate(T object, Class<?>... groups) throws BindException {
-        Set<ConstraintViolation<T>> violations = validator.validate(object, groups);
-        if (!violations.isEmpty()) {
-            BindingResult bindingResult = new BeanPropertyBindingResult(object, object.getClass().getName());
-            for (ConstraintViolation<T> violation : violations) {
-                String propertyPath = violation.getPropertyPath().toString();
-                String message = violation.getMessage();
-                bindingResult.rejectValue(propertyPath, "500", message);
-            }
-            throw new BindException(bindingResult);
+        Objects.requireNonNull(object, "object");
+        List<ConstraintViolation<T>> failures = violations(object, groups);
+        if (failures.isEmpty()) {
+            return;
         }
+        BindingResult result = new BeanPropertyBindingResult(object, object.getClass().getName());
+        for (ConstraintViolation<T> failure : failures) {
+            String path = failure.getPropertyPath().toString();
+            if (path.isEmpty()) {
+                result.reject("validation", failure.getMessage());
+            } else {
+                result.rejectValue(path, "validation", failure.getMessage());
+            }
+        }
+        throw new BindException(result);
     }
 
-    public static <T> Result<Void> validateObject(T var1, Class<?>... var2) {
-        if (Objects.isNull(var1)) {
-            return Result.failEmpty();
+    private static <T> List<ConstraintViolation<T>> violations(T object, Class<?>... groups) {
+        return validator().validate(object, groups).stream()
+                .sorted(Comparator.comparing((ConstraintViolation<T> violation) -> violation.getPropertyPath().toString())
+                        .thenComparing(ConstraintViolation::getMessage))
+                .toList();
+    }
+
+    private static Validator validator() {
+        ApplicationContext context = SpringProvider.getApplicationContext();
+        if (context != null) {
+            Validator springValidator = context.getBeanProvider(Validator.class).getIfAvailable();
+            if (springValidator != null) {
+                return springValidator;
+            }
         }
-        Set<ConstraintViolation<T>> violations = validator.validate(var1, var2);
-        if (CollectionUtils.isNotEmpty(violations)) {
-            return Result.failWithMsg(violations.stream().iterator().next().getMessageTemplate());
-        }
-        return Result.ok();
+        return DefaultValidatorHolder.VALIDATOR;
+    }
+
+    private static final class DefaultValidatorHolder {
+        private static final ValidatorFactory FACTORY = Validation.buildDefaultValidatorFactory();
+        private static final Validator VALIDATOR = FACTORY.getValidator();
     }
 }
