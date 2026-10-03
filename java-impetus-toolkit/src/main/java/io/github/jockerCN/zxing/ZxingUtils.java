@@ -1,7 +1,6 @@
 package io.github.jockerCN.zxing;
 
 
-import com.google.common.collect.Maps;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
@@ -69,7 +68,7 @@ public class ZxingUtils {
      * @throws WriterException 编码异常
      */
     public static BitMatrix createBarcodeBitMatrix(String content, int width, int height) throws WriterException {
-        HashMap<EncodeHintType, Object> hints = Maps.newHashMap();
+        HashMap<EncodeHintType, Object> hints = new HashMap<>();
         // 编码
         hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
         // 边框
@@ -127,7 +126,7 @@ public class ZxingUtils {
 
 
     public static BitMatrix createQRBitMatrix(String content, int width, int height) throws WriterException {
-        HashMap<EncodeHintType, ? super Object> hints = Maps.newHashMap();
+        HashMap<EncodeHintType, Object> hints = new HashMap<>();
         // 编码
         hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
         // 容错等级
