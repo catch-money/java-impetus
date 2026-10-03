@@ -38,7 +38,8 @@
         <ezylang.version>3.7.0</ezylang.version>
         <jakarta.jakartaee-api.version>11.0.0</jakarta.jakartaee-api.version>
         <jakarta.el-api.version>6.0.1</jakarta.el-api.version>
-        <jackson-bom.version>3.1.5</jackson-bom.version>
+        <expressly.version>6.0.0</expressly.version>
+        <jackson-bom.version>3.2.3</jackson-bom.version>
         <jsr305.version>3.0.2</jsr305.version>
         <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
         <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
@@ -46,7 +47,6 @@
         <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
         <bcprov-jdk18on.version>1.86</bcprov-jdk18on.version>
         <commons-compress.version>1.28.0</commons-compress.version>
-        <caffeine.version>3.3.0</caffeine.version>
     </properties>
 
     <url>https://github.com/catch-money/java-impetus</url>
@@ -95,6 +95,12 @@
 
             <dependency>
                 <groupId>io.github.jocker-cn</groupId>
+                <artifactId>java-impetus-toolkit</artifactId>
+                <version>${java-impetus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.jocker-cn</groupId>
                 <artifactId>java-impetus-crypto</artifactId>
                 <version>${java-impetus.version}</version>
             </dependency>
@@ -114,12 +120,6 @@
             <dependency>
                 <groupId>io.github.jocker-cn</groupId>
                 <artifactId>java-impetus-spring-common</artifactId>
-                <version>${java-impetus.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>io.github.jocker-cn</groupId>
-                <artifactId>java-impetus-gson</artifactId>
                 <version>${java-impetus.version}</version>
             </dependency>
 
@@ -236,15 +236,15 @@
             </dependency>
 
             <dependency>
-                <groupId>com.github.ben-manes.caffeine</groupId>
-                <artifactId>caffeine</artifactId>
-                <version>${caffeine.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>jakarta.el</groupId>
                 <artifactId>jakarta.el-api</artifactId>
                 <version>${jakarta.el-api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish.expressly</groupId>
+                <artifactId>expressly</artifactId>
+                <version>${expressly.version}</version>
             </dependency>
 
             <dependency>

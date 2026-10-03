@@ -6,9 +6,8 @@ Each row has a matching `src/main/resources/META-INF/spring/org.springframework.
 
 | Module | Auto-configuration | Current contract |
 | --- | --- | --- |
-| `java-impetus-spring-common` | `JavaImpetusSpringAutoConfiguration` | Provides `SpringProvider`, `GenericEventListener`, and `EventPush` when the Spring support class is present |
-| `java-impetus-gson` | `JavaImpetusGsonAutoConfiguration` | Provides the configured `Gson` only when the application has none |
-| `java-impetus-jackson` | `JavaImpetusJacksonAutoConfiguration` | Provides the configured `ObjectMapper` only when the application has none; wiring depends on `springProvider` |
+| `java-impetus-spring-common` | `JavaImpetusSpringAutoConfiguration` | Provides `SpringProvider` and `SpringExecutorHandle` when absent; Spring's native application events need no wrapper beans |
+| `java-impetus-jackson` | `JavaImpetusJacksonAutoConfiguration` | Provides a `JsonMapper` from `JacksonConfig` before Boot's Jackson auto-configuration unless the application supplies one, then provides `JacksonJson` using that Mapper unless overridden |
 | `java-impetus-redis` | `JavaImpetusRedisAutoConfiguration` | Provides `RedisUtils` when `StringRedisTemplate` is present; it does not provide `RedissonClient` |
 | `java-impetus-web-page` | `JavaImpetusWebAutoConfiguration` | Provides `ModuleParamArgumentResolver` when `SpringProvider` is already a bean |
 

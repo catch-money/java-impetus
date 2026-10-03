@@ -6,17 +6,18 @@ Java Impetus is a Java 21, Maven multi-module library that adds utility APIs and
 
 Only the modules listed in the module map below are in scope unless a task explicitly broadens it.
 
-Use the source and POM files as the current truth. Some README examples still mention older `1.1.0` or Spring Boot `3.5.3` versions, while the current POMs use Java Impetus `1.1.1` and Spring Boot `3.5.7`.
+Use the source and POM files as the current truth. The active root POM uses Java Impetus `2.0.0` and its BOM inherits Spring Boot `4.1.1`; some child modules and README examples still reference older versions.
 
 ## Module map
 
 | Module | Responsibility | Important entry points |
 | --- | --- | --- |
 | `java-impetus-dependencies` | Dependency and plugin version management | Standalone BOM `pom.xml`; it is not part of the root reactor |
-| `java-impetus-common` | Shared result type, fluent helpers, time, number, crypto, collections, tasks, and other utilities | `Result`, `TypeConvert`, `LocalDateUtils`, `NumberUtils` |
-| `java-impetus-spring-common` | Spring context access, transactions, validation, and generic events | `JavaImpetusSpringAutoConfiguration`, `SpringProvider`, `EventPush` |
-| `java-impetus-gson` | Gson configuration and static JSON helpers | `JavaImpetusGsonAutoConfiguration`, `GsonConfig`, `GsonUtils` |
-| `java-impetus-jackson` | Jackson configuration, default-value deserialization, and JSON helpers | `JavaImpetusJacksonAutoConfiguration`, `JacksonConfig`, `JacksonUtils` |
+| `java-impetus-common` | Shared result type, flow engine, time, number, collections, and core utilities | `Result`, `TypeConvert`, `DateTimeUtils`, `NumberUtils` |
+| `java-impetus-toolkit` | Optional Java utility dependencies, expressions, and ZXing helpers | `ExpressionParse`, `ZxingUtils` |
+| `java-impetus-crypto` | Independent encryption, signatures, MAC, and encoding helpers | `SymmetricCrypto`, `AsymmetricCrypto`, `MessageAuthentication`, `CryptoUtils` |
+| `java-impetus-spring-common` | Spring context access, transactions, and validation | `JavaImpetusSpringAutoConfiguration`, `SpringProvider`, `TransactionProvider` |
+| `java-impetus-jackson` | Jackson 3 defaults and JSON convenience methods | `JacksonConfig`, `JacksonJson`, `JavaImpetusJacksonAutoConfiguration` |
 | `java-impetus-redis` | `StringRedisTemplate` and Redisson helpers | `JavaImpetusRedisAutoConfiguration`, `RedisUtils`, `RedissonUtils` |
 | `java-impetus-jpa` | Annotation-driven Criteria API queries, generated repositories, and paging | `EnableAutoJpa`, `JpaQueryEntityBuilder`, `EntityMetadata`, `JpaRepositoryUtils` |
 | `java-impetus-web-common` | Opt-in CORS, exception handling, logging, and HTTP converters | `EnableCorsFilter`, `EnableGlobalException`, `EnableJacksonConverters` |
@@ -26,8 +27,10 @@ Use the source and POM files as the current truth. Some README examples still me
 The main dependency direction is:
 
 ```text
-common -> spring-common -> gson / jackson / redis / jpa
-spring-common + jackson -> web-common
+common -> spring-common -> redis / jpa
+common -> jackson
+common -> toolkit
+spring-common + legacy jackson -> web-common (pending migration)
 jpa + web-common -> web-page
 ```
 
@@ -35,14 +38,14 @@ Keep dependencies pointing in this direction. Spring and framework dependencies 
 
 ## Maven and versioning invariants
 
-- The root POM has `packaging=pom` and uses `io.github.jocker-cn:java-impetus-dependencies:1.1.1` with an empty `relativePath`. The checked-in BOM is therefore maintained and validated separately from the root reactor.
+- The root POM has `packaging=pom` and uses `io.github.jocker-cn:java-impetus-dependencies:2.0.0` with an empty `relativePath`. The checked-in BOM is therefore maintained and validated separately from the root reactor.
 - Put shared dependency and plugin versions in `java-impetus-dependencies/pom.xml`; avoid scattering versions across child POMs.
 - Keep the Maven group ID `io.github.jocker-cn` distinct from the case-sensitive Java package root `io.github.jockerCN`.
 - Do not run either script under `deploy/`, `mvn deploy`, Central Publishing, or GPG signing unless publishing was explicitly requested. The root build binds GPG signing to `verify`, so prefer `compile`, `test`, or `package` for ordinary validation.
 
 ## Spring extension invariants
 
-- `spring-common`, `gson`, `jackson`, `redis`, and `web-page` register auto-configurations through `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`. Keep each resource entry synchronized with its configuration class.
+- `spring-common`, `jackson`, `redis`, and `web-page` register auto-configurations through `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`. Keep each resource entry synchronized with its configuration class.
 - `web-common` is opt-in through `@Enable...` annotations and `@Import`; do not silently turn those features into unconditional auto-configuration.
 - Preserve consumer override points. Use focused conditions such as `@ConditionalOnMissingBean`, `@ConditionalOnBean`, or `@ConditionalOnClass` when the neighboring module establishes that behavior.
 - Several static helpers resolve beans through `SpringProvider`, sometimes during class initialization. Exercise them only after the Spring context is ready, and bootstrap that context in tests.

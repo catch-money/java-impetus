@@ -19,11 +19,11 @@
     <modules>
         <module>java-impetus-native-image</module>
         <module>java-impetus-common</module>
+        <module>java-impetus-toolkit</module>
         <module>java-impetus-crypto</module>
         <module>java-impetus-spring-common</module>
         <module>java-impetus-redis</module>
         <module>java-impetus-jpa</module>
-        <module>java-impetus-gson</module>
         <module>java-impetus-jackson</module>
         <module>java-impetus-web-common</module>
         <module>java-impetus-web-page</module>

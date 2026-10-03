@@ -33,10 +33,19 @@ java-impetus-common 提供了开发过程中的一些常用的工具类
 
 使用方式和内容可查阅文档[README.md](java-impetus-common/README.md)
 
+## [java-impetus-toolkit](java-impetus-toolkit)
+java-impetus-toolkit 是可选的 Java 工具集依赖入口，提供常用集合工具依赖、表达式解析及二维码、条形码工具
+
+使用方式和内容可查阅文档[README.md](java-impetus-toolkit/README.md)
+
 ## [java-impetus-crypto](java-impetus-crypto)
 java-impetus-crypto 提供独立的加密、哈希与旧密文兼容能力，不依赖 Spring
 
 使用方式和内容可查阅文档[README.md](java-impetus-crypto/README.md)
+
+## 模块 Skills
+
+第三方项目可按依赖模块单独选用 skill；目录与复制说明见 [.agents/skills/README.md](.agents/skills/README.md)。目前已提供 [java-impetus-common skill](.agents/skills/java-impetus-common/SKILL.md)。
 
 ## 🚀 快速开始
 
