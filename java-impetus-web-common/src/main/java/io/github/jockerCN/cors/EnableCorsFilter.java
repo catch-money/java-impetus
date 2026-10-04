@@ -8,6 +8,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({CustomerCorsFilter.class})
+@Import(CorsFilterConfiguration.class)
 public @interface EnableCorsFilter {
 }

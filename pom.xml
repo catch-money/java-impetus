@@ -29,7 +29,6 @@
         <module>java-impetus-web-page</module>
         <module>java-impetus-auth</module>
         <module>java-impetus-auth-impl</module>
-        <module>java-impetus-simple-security</module>
     </modules>
 
     <properties>

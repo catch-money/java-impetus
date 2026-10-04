@@ -5,7 +5,11 @@
 | 使用方 skill | 对应依赖 | 用途 |
 | --- | --- | --- |
 | [java-impetus-common](java-impetus-common/SKILL.md) | `io.github.jocker-cn:java-impetus-common` | 基础工具、结果封装与流程编排 |
+| [java-impetus-toolkit](java-impetus-toolkit/SKILL.md) | `io.github.jocker-cn:java-impetus-toolkit` | EL／公式计算、二维码与条形码、可选工具依赖 |
 | [java-impetus-spring-common](java-impetus-spring-common/SKILL.md) | `io.github.jocker-cn:java-impetus-spring-common` | Spring 容器与配置、资源、事务和校验扩展 |
+| [java-impetus-redis](java-impetus-redis/SKILL.md) | `io.github.jocker-cn:java-impetus-redis` | Redis 静态工具、Redisson 自动配置、计数与锁 |
+| [java-impetus-web-common](java-impetus-web-common/SKILL.md) | `io.github.jocker-cn:java-impetus-web-common` | CORS、动态日志、Jackson HTTP 转换、异常响应、请求 ID 与参数绑定 |
+| [java-impetus-web-page](java-impetus-web-page/SKILL.md) | `io.github.jocker-cn:java-impetus-web-page` | 注解模块映射、统一 JPA 分页 API 与 Web 参数绑定 |
 | [java-impetus-crypto](java-impetus-crypto/SKILL.md) | `io.github.jocker-cn:java-impetus-crypto` | AES-GCM、RSA、HMAC、Base64 与摘要 |
 | [java-impetus-jackson](java-impetus-jackson/SKILL.md) | `io.github.jocker-cn:java-impetus-jackson` | Jackson 3 默认配置与 JSON 便捷 API |
 | [java-impetus-jpa](java-impetus-jpa/SKILL.md) | `io.github.jocker-cn:java-impetus-jpa` | 注解驱动查询、动态选列、分页与结果处理 |

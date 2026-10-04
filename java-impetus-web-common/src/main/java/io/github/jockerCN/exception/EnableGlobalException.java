@@ -13,6 +13,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@Import({GlobalExceptionController.class})
+@Import(GlobalExceptionConfiguration.class)
 public @interface EnableGlobalException {
 }

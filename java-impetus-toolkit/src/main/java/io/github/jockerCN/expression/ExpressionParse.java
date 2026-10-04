@@ -29,36 +29,56 @@ public class ExpressionParse {
 
     private static final Logger logger = LoggerFactory.getLogger(ExpressionParse.class);
 
-    private static final ELProcessor EL_PROCESSOR = new ELProcessor();
-
-
     private static final String EL_BEAN_NAME = "score";
 
     public static boolean elProcess(final String expression, Object bean) {
         try {
-            EL_PROCESSOR.defineBean(EL_BEAN_NAME, bean);
-            return EL_PROCESSOR.eval(expression);
+            return evaluateCondition(newProcessor(bean), expression);
         } catch (Exception e) {
-            logger.error("ElProcess error,el:{},bean:{}", expression, bean, e);
+            logger.error("ElProcess error,el:{}", expression, e);
             return false;
         }
     }
 
     public static <T> T elProcess(final List<Pair<T, String>> expressionPair, Object bean, T defaultValue) {
-        EL_PROCESSOR.defineBean(EL_BEAN_NAME, bean);
         String expression = "";
         try {
+            ELProcessor processor = newProcessor(bean);
             for (Pair<T, String> pair : expressionPair) {
                 expression = pair.getRight();
-                if (EL_PROCESSOR.eval(expression)) {
+                if (evaluateCondition(processor, expression)) {
                     return pair.getLeft();
                 }
             }
         } catch (Exception e) {
-            logger.error("ElProcess error,el:{},bean:{}", expression, bean, e);
+            logger.error("ElProcess error,el:{}", expression, e);
             return defaultValue;
         }
         return defaultValue;
+    }
+
+    /**
+     * Evaluates an EL expression with named beans and returns the requested type.
+     * Unlike the condition helpers, evaluation errors are propagated to the caller.
+     */
+    public static <T> T elValue(String expression, Class<T> resultType, Map<String, ?> beans) {
+        ELProcessor processor = new ELProcessor();
+        beans.forEach(processor::defineBean);
+        return processor.getValue(expression, resultType);
+    }
+
+    private static ELProcessor newProcessor(Object bean) {
+        ELProcessor processor = new ELProcessor();
+        processor.defineBean(EL_BEAN_NAME, bean);
+        return processor;
+    }
+
+    private static boolean evaluateCondition(ELProcessor processor, String expression) {
+        Object result = processor.eval(expression);
+        if (result instanceof Boolean matched) {
+            return matched;
+        }
+        throw new IllegalArgumentException("EL condition must return a boolean: " + expression);
     }
 
 

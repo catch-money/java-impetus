@@ -12,10 +12,11 @@ Read [the module wiring map](references/module-wiring.md) before changing config
 ## Requirements
 
 - Keep auto-configuration classes small and focused on bean wiring.
+- Log configuration initialization and library bean registration at INFO using the application's logging facade; do not log secrets or request data.
 - Use the narrowest condition supported by the module's contract. Preserve a consumer bean with `@ConditionalOnMissingBean`; guard optional types or prerequisites with class/bean conditions.
 - Add an `AutoConfiguration.imports` entry only for actual `@AutoConfiguration` classes, and keep the fully qualified name exact.
-- Do not convert `web-common`'s explicit `@Enable...` features into automatic behavior unless the task explicitly changes that contract.
-- Do not auto-create a Redisson client; `RedissonUtils` consumes a client supplied by the application.
+- Keep `web-common`'s explicit `@Enable...` features opt-in. Its `@AutoLog` aspect is automatically wired because the method annotation itself expresses opt-in; no extra Enable annotation is needed.
+- Redis may provide a default `RedissonClient` from Boot's resolved Redis connection details. Preserve application-supplied clients and native Redisson `Config` overrides; close only the client created by this auto-configuration through its bean lifecycle.
 - Preserve `provided` dependency scopes when the consuming application owns the framework runtime.
 - Avoid accessing `SpringProvider`-backed static helpers before the application context and required beans exist.
 - Document a new or changed bean, condition, or enable annotation in the owning module README.
