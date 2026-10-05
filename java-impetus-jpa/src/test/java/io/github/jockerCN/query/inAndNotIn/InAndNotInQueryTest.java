@@ -1,8 +1,8 @@
 package io.github.jockerCN.query.inAndNotIn;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.where.IN;
-import io.github.jockerCN.customize.annotation.where.NotIn;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.IN;
+import io.github.jockerCN.jpa.annotation.where.NotIn;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.query.QueryAnnotationTest;

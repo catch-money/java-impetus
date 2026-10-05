@@ -3,6 +3,7 @@ package io.github.jockerCN;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import static io.github.jockerCN.Result.StatusCode.*;
 
@@ -12,6 +13,7 @@ import static io.github.jockerCN.Result.StatusCode.*;
  */
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Result<T> {
 
     private T data;
@@ -58,53 +60,57 @@ public class Result<T> {
     }
 
     public static <T> Result<T> fail() {
-        return new Result<>(null, FAIL.code, FAIL.message);
+        return new Result<>(null, INTERNAL_SERVER_ERROR.code, INTERNAL_SERVER_ERROR.message);
     }
 
     public static <T> Result<T> failEmpty() {
-        return new Result<>(null, FAIL.code, "");
+        return new Result<>(null, INTERNAL_SERVER_ERROR.code, "");
     }
 
     public static <T> Result<T> failWithMsg(String message) {
-        return new Result<>(null, FAIL.code, message);
+        return new Result<>(null, INTERNAL_SERVER_ERROR.code, message);
     }
 
     public static <T> Result<T> failWithUNAuth() {
-        return new Result<>(null, UN_AUTHORIZE.code, UN_AUTHORIZE.message);
+        return new Result<>(null, UNAUTHORIZED.code, UNAUTHORIZED.message);
     }
 
     public static <T> Result<T> failWithNoPermission() {
-        return new Result<>(null, NO_PERMISSION.code, NO_PERMISSION.message);
+        return new Result<>(null, FORBIDDEN.code, FORBIDDEN.message);
     }
 
     public static <T> Result<T> failWithNoPermission(String message) {
-        return new Result<>(null, NO_PERMISSION.code, message);
+        return new Result<>(null, FORBIDDEN.code, message);
     }
 
 
     public static <T> Result<T> failWithUNAuth(String message) {
-        return new Result<>(null, UN_AUTHORIZE.code, message);
+        return new Result<>(null, UNAUTHORIZED.code, message);
     }
 
 
     public static <T> Result<T> failWithServerError() {
-        return new Result<>(null, SERVER_ERROR.code, SERVER_ERROR.message);
+        return new Result<>(null, INTERNAL_SERVER_ERROR.code, INTERNAL_SERVER_ERROR.message);
     }
 
     public static <T> Result<T> failWithServerError(String message) {
-        return new Result<>(null, SERVER_ERROR.code, message);
+        return new Result<>(null, INTERNAL_SERVER_ERROR.code, message);
     }
 
     public static <T> Result<T> failWithTokenError(String message) {
-        return new Result<>(null, TOKEN_ERROR.code, message);
+        return new Result<>(null, UNAUTHORIZED.code, message);
     }
 
     public static <T> Result<T> failWithTokenError() {
-        return new Result<>(null, TOKEN_ERROR.code, TOKEN_ERROR.message);
+        return new Result<>(null, UNAUTHORIZED.code, UNAUTHORIZED.message);
     }
 
     public static <T> Result<T> failWithLocked(String message) {
         return new Result<>(null, LOCKED.code, message);
+    }
+
+    public static <T> Result<T> failWithLocked() {
+        return new Result<>(null, LOCKED.code, LOCKED.message);
     }
 
     public static <T> Result<T> failWithDisabled() {
@@ -116,7 +122,11 @@ public class Result<T> {
     }
 
     public static <T> Result<T> failWithNotFound() {
-        return new Result<>(null, NOT_FOUND.code, NOT_FOUND.message);
+        return new Result<>(null, RESOURCE_NOT_FOUND.code, RESOURCE_NOT_FOUND.message);
+    }
+
+    public static <T> Result<T> failWithNotFound(String message) {
+        return new Result<>(null, RESOURCE_NOT_FOUND.code, message);
     }
 
     public static <T> Result<T> failWithUnderReview() {
@@ -127,21 +137,48 @@ public class Result<T> {
         return new Result<>(data, code, message);
     }
 
+    public static <T> Result<T> with(StatusCode status) {
+        return with(null, status);
+    }
+
+    public static <T> Result<T> with(T data, StatusCode status) {
+        return new Result<>(data, status.code, status.message);
+    }
+
+    public static <T> Result<T> with(T data, StatusCode status, String message) {
+        return new Result<>(data, status.code, message);
+    }
+
+    /**
+     * Codes in the response body. They do not change the actual HTTP response status.
+     * {@link Result#isOk()} means code 200 only. Business-specific states remain
+     * separate from the standard HTTP-style error codes.
+     */
     @Getter
     @AllArgsConstructor
     public enum StatusCode {
         SUCCESS(200, "success"),
         WARN(600, "warn"),
-        UN_AUTHORIZE(401, "unAuthorize"),
-        NO_PERMISSION(402, "permission denied"),
-        REQUEST_BAD(400, "request args bad"),
-        SERVER_ERROR(501, "Server Error"),
-        TOKEN_ERROR(201, "Token Error"),
         DISABLED(3000, "disabled"),
         LOCKED(3001, "locked"),
         UNDER_REVIEW(3002, "account under review"),
-        NOT_FOUND(4000, "account not found"),
-        FAIL(500, "failed"),
+
+        BAD_REQUEST(400, "Bad Request"),
+        UNAUTHORIZED(401, "Unauthorized"),
+        FORBIDDEN(403, "Forbidden"),
+        RESOURCE_NOT_FOUND(404, "Not Found"),
+        METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
+        REQUEST_TIMEOUT(408, "Request Timeout"),
+        CONFLICT(409, "Conflict"),
+        GONE(410, "Gone"),
+        PAYLOAD_TOO_LARGE(413, "Content Too Large"),
+        UNSUPPORTED_MEDIA_TYPE(415, "Unsupported Media Type"),
+        UNPROCESSABLE_CONTENT(422, "Unprocessable Content"),
+        TOO_MANY_REQUESTS(429, "Too Many Requests"),
+        INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
+        BAD_GATEWAY(502, "Bad Gateway"),
+        SERVICE_UNAVAILABLE(503, "Service Unavailable"),
+        GATEWAY_TIMEOUT(504, "Gateway Timeout"),
         ;
 
         final int code;

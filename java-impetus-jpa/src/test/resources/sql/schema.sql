@@ -23,6 +23,7 @@ create table jpa.pay
     description    varchar(255)   default ''                   not null comment '商品描述',
     payment_time   timestamp(3)                                null comment '支付完成时间',
     remark         varchar(255)   default ''                   not null comment '备注',
+    optional_note  varchar(255)                                null comment '可空测试字段',
     create_time    timestamp(3)   default CURRENT_TIMESTAMP(3) not null,
     update_time    timestamp(3)   default CURRENT_TIMESTAMP(3) not null on update CURRENT_TIMESTAMP(3),
     deleted        tinyint        default 1                    not null,

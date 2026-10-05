@@ -2,9 +2,14 @@ package io.github.jockerCN;
 
 import io.github.jockerCN.configuration.EnableAutoJpa;
 import io.github.jockerCN.query.betweenAnd.BetweenAndQueryTest;
+import io.github.jockerCN.query.columns.ColumnsQueryTest;
+import io.github.jockerCN.query.columns.ColumnsQueryShapeTest;
+import io.github.jockerCN.query.columns.ProjectionFindTypeQueryTest;
 import io.github.jockerCN.query.distinct.DistinctQueryTest;
 import io.github.jockerCN.query.equals.EqualsQueryTest;
+import io.github.jockerCN.query.function.SqlFunctionQueryTest;
 import io.github.jockerCN.query.groupBy.GroupByQueryTest;
+import io.github.jockerCN.query.having.HavingQueryTest;
 import io.github.jockerCN.query.inAndNotIn.InAndNotInQueryTest;
 import io.github.jockerCN.query.isTrueOrFalse.IsTrueOrFalseQueryTest;
 import io.github.jockerCN.query.likeAndNotLike.LikeAndNotLikeQueryTest;
@@ -13,9 +18,13 @@ import io.github.jockerCN.query.ltAndLeAndGtAndGe.LtAndLeAndGtAndGeQueryTest;
 import io.github.jockerCN.query.noEquals.NoEqualsQueryTest;
 import io.github.jockerCN.query.nullAndNotNull.NullAndNotNullQueryTest;
 import io.github.jockerCN.query.orderBy.OrderByQueryTest;
+import io.github.jockerCN.query.page.PageUtilityQueryTest;
+import io.github.jockerCN.query.result.ResultAssemblerQueryTest;
+import io.github.jockerCN.query.result.ResultEnhancerQueryTest;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
@@ -34,10 +43,18 @@ import org.springframework.test.context.DynamicPropertySource;
         IsTrueOrFalseQueryTest.class,
         InAndNotInQueryTest.class,
         GroupByQueryTest.class,
+        HavingQueryTest.class,
         EqualsQueryTest.class,
+        SqlFunctionQueryTest.class,
         NoEqualsQueryTest.class,
         DistinctQueryTest.class,
         BetweenAndQueryTest.class,
+        ColumnsQueryTest.class,
+        ColumnsQueryShapeTest.class,
+        ProjectionFindTypeQueryTest.class,
+        PageUtilityQueryTest.class,
+        ResultAssemblerQueryTest.class,
+        ResultEnhancerQueryTest.class,
 })
 @SpringBootTest(classes = JpaTestBase.JpaTestConfig.class)
 public class JpaTestBase {
@@ -45,11 +62,11 @@ public class JpaTestBase {
     @DynamicPropertySource
     static void dynamicProperties(DynamicPropertyRegistry registry) {
         // 数据源配置
-        registry.add("spring.datasource.url", () -> "jdbc:mysql://192.168.112.129:3306/jpa?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&verifyServerCertificate=false&useSSL=false&allowPublicKeyRetrieval=true");
+        registry.add("spring.datasource.url", () -> "jdbc:mysql://182.254.228.202:43306/jpa?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&verifyServerCertificate=false&useSSL=false&allowPublicKeyRetrieval=true");
         registry.add("spring.datasource.type", () -> "com.zaxxer.hikari.HikariDataSource");
         registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
         registry.add("spring.datasource.username", () -> "root");
-        registry.add("spring.datasource.password", () -> "123456");
+        registry.add("spring.datasource.password", () -> "txy@sql@1.COM");
 
         // HikariCP 连接池配置
         registry.add("spring.datasource.hikari.connection-timeout", () -> "30000"); // 30s
@@ -88,6 +105,16 @@ public class JpaTestBase {
             excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE)
     )
     static class JpaTestConfig{
+
+        @Bean
+        ResultEnhancerQueryTest.EntityEnhancer entityEnhancer() {
+            return new ResultEnhancerQueryTest.EntityEnhancer();
+        }
+
+        @Bean
+        ResultEnhancerQueryTest.ViewEnhancer viewEnhancer() {
+            return new ResultEnhancerQueryTest.ViewEnhancer();
+        }
 
     }
 }

@@ -1,90 +1,79 @@
 package io.github.jockerCN.validate;
 
-
-import com.google.common.collect.Maps;
 import io.github.jockerCN.Result;
 import io.github.jockerCN.annotation.Validator;
+import io.github.jockerCN.common.SpringProvider;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ValidationException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.objenesis.instantiator.util.ClassUtils;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.ObjectUtils;
 
-import java.util.Map;
-import java.util.Objects;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
-public class CommonValidation implements ConstraintValidator<Validator, Object> {
+/** One immutable adapter chain per constraint declaration; safe for concurrent isValid calls. */
+public final class CommonValidation implements ConstraintValidator<Validator, Object> {
 
-    private static final Map<Class<? extends ValidationAdapter>, ValidationAdapter> CUSTOM_ADAPTER = Maps.newHashMap();
-
-    private Validator commonValidator;
+    private Validator annotation;
+    private List<ValidationAdapter> adapters;
 
     @Override
     public void initialize(Validator constraintAnnotation) {
-        commonValidator = constraintAnnotation;
-        final var classes = commonValidator.adapter();
-        for (Class<? extends ValidationAdapter> adapter : classes) {
-            CUSTOM_ADAPTER.computeIfAbsent(adapter, (k) -> {
-                try {
-                    return ClassUtils.newInstance(adapter);
-                } catch (Exception e) {
-                    throw new ValidationException(String.format("customer ValidationAdapter init failed: %s, ValidationAdapter: %s", e.getMessage(), adapter), e);
-                }
-            });
+        annotation = constraintAnnotation;
+        List<Class<? extends ValidationAdapter>> types = new ArrayList<>(List.of(annotation.adapter()));
+        if (types.isEmpty()) {
+            throw new ValidationException("@Validator requires at least one adapter");
         }
-        ConstraintValidator.super.initialize(constraintAnnotation);
+        List<ValidationAdapter> resolved = new ArrayList<>(types.size());
+        for (Class<? extends ValidationAdapter> type : types) {
+            ValidationAdapter adapter = resolve(type);
+            adapter.validateConfiguration(annotation);
+            resolved.add(adapter);
+        }
+        adapters = List.copyOf(resolved);
     }
 
     @Override
-    public boolean isValid(Object o, ConstraintValidatorContext context) {
-        if (ObjectUtils.isEmpty(o)) {
-            return false;
+    public boolean isValid(Object value, ConstraintValidatorContext context) {
+        if (ObjectUtils.isEmpty(value)) {
+            return !annotation.required() || violation(context, annotation.message());
         }
-        final var classes = commonValidator.adapter();
-        if (Objects.isNull(classes)) {
-           throw new ValidationException("@Validator adapter is null");
-        }
-        return customAdapters(classes, o, context);
-    }
-
-    private boolean customAdapters(Class<? extends ValidationAdapter>[] classes, Object o, ConstraintValidatorContext context) {
-        Result<?> result = Result.failEmpty();
-        for (Class<? extends ValidationAdapter> aClass : classes) {
-            // 没有对应的适配器
-            var runResult = runCustomAdapter(aClass, o);
-            if (Objects.isNull(runResult)) {
-                continue;
+        for (ValidationAdapter adapter : adapters) {
+            Result<?> result = adapter.validate(value, annotation);
+            if (result == null) {
+                throw new ValidationException(adapter.getClass().getName() + " returned null");
             }
-            if ((result = runResult).isError()){
-                break;
+            if (!result.isOk()) {
+                String message = result.getMessage();
+                return violation(context, message == null || message.isBlank() ? annotation.message() : message);
             }
-        }
-
-        if (result.isError()) {
-            return resetErrorMsg(result, context);
         }
         return true;
     }
 
-    private boolean resetErrorMsg(Result<?> result, ConstraintValidatorContext context) {
-        var failMsg = commonValidator.message();
-        if (StringUtils.isNotBlank(result.getMessage())) {
-            failMsg = result.getMessage();
-        }
-        context.buildConstraintViolationWithTemplate(failMsg).addConstraintViolation();
+    private static boolean violation(ConstraintValidatorContext context, String message) {
+        context.disableDefaultConstraintViolation();
+        context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
         return false;
     }
 
-    private Result<?> runCustomAdapter(Class<? extends ValidationAdapter> validationClass, Object o) {
-        ValidationAdapter validationAdapter = CUSTOM_ADAPTER.get(validationClass);
-        if (Objects.nonNull(validationAdapter)) {
-            return validationAdapter.validate(o, commonValidator);
+    private static ValidationAdapter resolve(Class<? extends ValidationAdapter> type) {
+        ApplicationContext context = SpringProvider.getApplicationContext();
+        if (context != null) {
+            try {
+                return context.getBean(type);
+            } catch (NoSuchBeanDefinitionException ignored) {
+                // A plain public adapter is also usable outside a Spring context.
+            }
         }
-        return null;
+        try {
+            return type.getConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            throw new ValidationException("Adapter " + type.getName()
+                    + " needs a Spring bean or public no-argument constructor", e);
+        }
     }
-
 }

@@ -1,10 +1,10 @@
 package io.github.jockerCN.number;
 
 import io.github.jockerCN.regex.RegexTemplate;
-import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 
@@ -70,6 +70,28 @@ public abstract class NumberUtils {
     //负数 true
     public static boolean isNegative(BigDecimal value) {
         return value.signum() == -1;
+    }
+
+    public static boolean isPositive(BigDecimal value) {
+        return value.signum() == 1;
+    }
+
+    public static boolean betweenInclusive(BigDecimal value, BigDecimal min, BigDecimal max) {
+        if (greater(min, max)) {
+            throw new IllegalArgumentException("min must be less than or equal to max");
+        }
+        return greaterAndEq(value, min) && lessAndEq(value, max);
+    }
+
+    public static BigDecimal clamp(BigDecimal value, BigDecimal min, BigDecimal max) {
+        if (greater(min, max)) {
+            throw new IllegalArgumentException("min must be less than or equal to max");
+        }
+        return max(min, min(value, max));
+    }
+
+    public static BigDecimal round(BigDecimal value, int scale, RoundingMode roundingMode) {
+        return value.setScale(scale, roundingMode);
     }
 
     public static boolean lessAndEq(BigDecimal v1, BigDecimal v2) {
@@ -160,6 +182,19 @@ public abstract class NumberUtils {
         return result;
     }
 
+    public static BigDecimal sum(BigDecimal... values) {
+        Objects.requireNonNull(values, "values");
+        return add(ZERO, values);
+    }
+
+    public static BigDecimal average(int scale, RoundingMode roundingMode, BigDecimal... values) {
+        Objects.requireNonNull(values, "values");
+        if (values.length == 0) {
+            throw new IllegalArgumentException("values must not be empty");
+        }
+        return sum(values).divide(BigDecimal.valueOf(values.length), scale, roundingMode);
+    }
+
     public static BigDecimal add(BigDecimal v1, BigDecimal v2, int newScale, RoundingMode roundingMode) {
         return v1.add(v2).setScale(newScale, roundingMode);
     }
@@ -168,7 +203,7 @@ public abstract class NumberUtils {
     public static BigDecimal mul(BigDecimal v1, BigDecimal... v2) {
         BigDecimal result = v1;
         for (BigDecimal bigDecimal : v2) {
-            result = v1.multiply(bigDecimal);
+            result = result.multiply(bigDecimal);
         }
         return result;
     }
@@ -178,15 +213,15 @@ public abstract class NumberUtils {
     }
 
     public static BigDecimal convert(String value) {
-        if (StringUtils.isBlank(value)) {
-            throw new NullPointerException("NumberUtils#convert() args [value] is null");
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("NumberUtils#convert() value must not be blank");
         }
         Matcher matcher = RegexTemplate.NUMBER_PATTERN.matcher(value);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("NumberUtils#convert() Invalid input format: " + value);
         }
         BigDecimal numericValue = fromBigDecimal(matcher.group(1));
-        String unitPart = matcher.group(2).trim().toLowerCase();
+        String unitPart = matcher.group(2).toLowerCase(Locale.ROOT);
         return switch (unitPart) {
             case "m" -> numericValue.multiply(ONE_MILLION);
             case "k" -> numericValue.multiply(ONE_THOUSAND);
@@ -197,6 +232,11 @@ public abstract class NumberUtils {
 
     public static Integer convertToInt(String value) {
         return convert(value).intValue();
+    }
+
+    /** Converts without silently truncating a fraction or overflowing an int. */
+    public static Integer convertToIntExact(String value) {
+        return convert(value).intValueExact();
     }
 
 }

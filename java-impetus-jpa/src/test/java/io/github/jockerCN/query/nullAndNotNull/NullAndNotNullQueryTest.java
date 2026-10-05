@@ -1,8 +1,8 @@
 package io.github.jockerCN.query.nullAndNotNull;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.where.IsNotNull;
-import io.github.jockerCN.customize.annotation.where.IsNull;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.IsNotNull;
+import io.github.jockerCN.jpa.annotation.where.IsNull;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.query.QueryAnnotationTest;

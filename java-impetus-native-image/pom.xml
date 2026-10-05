@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus</artifactId>
-        <version>1.1.0</version>
+        <version>2.0.0</version>
     </parent>
 
     <artifactId>java-impetus-native-image</artifactId>
@@ -16,6 +16,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <native.agent.enabled>false</native.agent.enabled>
     </properties>
 
     <build>
@@ -42,7 +43,7 @@
                         <path>
                             <groupId>org.springframework.boot</groupId>
                             <artifactId>spring-boot-configuration-processor</artifactId>
-                            <version>3.3.0</version>
+                            <version>4.1.1</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -50,7 +51,7 @@
             <plugin>
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
-                <version>0.9.27</version>
+                <version>1.1.14</version>
                 <configuration>
                     <imageName>Suwdm</imageName>
                     <mainClass>io.github.jockerCN.SuwdmApp</mainClass>
@@ -63,7 +64,7 @@
                         <buildArg>-H:Log=registerResource</buildArg>
                     </buildArgs>
                     <agent>
-                        <enabled>true</enabled>
+                        <enabled>${native.agent.enabled}</enabled>
                     </agent>
                     <metadataRepository>
                         <enabled>true</enabled>
@@ -72,4 +73,13 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <properties>
+                <native.agent.enabled>true</native.agent.enabled>
+            </properties>
+        </profile>
+    </profiles>
 </project>

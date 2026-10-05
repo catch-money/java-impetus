@@ -17,6 +17,7 @@ public class JapQueryAnnotationTest extends JpaTestBase {
     private ApplicationContext applicationContext;
 
     @Test
+
     public void run() {
         Map<String, QueryAnnotationTest> beansOfType = applicationContext.getBeansOfType(QueryAnnotationTest.class);
         for (Map.Entry<String, QueryAnnotationTest> queryAnnotationTestEntry : beansOfType.entrySet()) {

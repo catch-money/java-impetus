@@ -1,8 +1,9 @@
 package io.github.jockerCN.configuration;
 
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.util.JpaQueryEntityProcess;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.metadata.JpaQueryEntityProcess;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanNameGenerator;
@@ -11,8 +12,7 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.lang.NonNull;
-import org.springframework.objenesis.instantiator.util.ClassUtils;
+
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -51,11 +51,10 @@ public class JpaQueryConfig implements ImportBeanDefinitionRegistrar {
                     JpaQuery jpaQuery = jpaClass.getAnnotation(JpaQuery.class);
                     if (jpaQuery != null) {
                         log.info("@JpaQuery Process {}", jpaClass);
-                        Object o = ClassUtils.newInstance(jpaClass);
-                        JpaQueryEntityProcess.createQueryParam(jpaQuery, o);
+                        JpaQueryEntityProcess.createQueryParam(jpaQuery, jpaClass);
                     }
                 } catch (ClassNotFoundException e) {
-                    log.warn("@JpaQuery Class Found Error {}",className,e);
+                    log.warn("@JpaQuery Class Found Error {}", className, e);
                 }
             }
         }

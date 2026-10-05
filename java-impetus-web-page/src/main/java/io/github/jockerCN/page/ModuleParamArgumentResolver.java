@@ -1,139 +1,71 @@
 package io.github.jockerCN.page;
 
-import io.github.jockerCN.common.SpringProvider;
-import io.github.jockerCN.customize.QueryPair;
-import io.github.jockerCN.exception.CustomerArgumentResolverException;
-import io.github.jockerCN.jpa.pojo.BaseQueryParam;
-import io.github.jockerCN.time.LocalDateUtils;
-import io.github.jockerCN.type.TypeConvert;
+import io.github.jockerCN.jpa.paging.PageParam;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.core.MethodParameter;
-import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.format.support.DefaultFormattingConversionService;
-import org.springframework.lang.NonNull;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.BindException;
+import org.springframework.validation.annotation.ValidationAnnotationUtils;
 import org.springframework.web.bind.ServletRequestParameterPropertyValues;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.beans.PropertyEditorSupport;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.lang.annotation.Annotation;
+import java.util.Map;
+import java.util.Objects;
 
+/** Routes and binds one fresh query parameter using MVC's own binder and conversion service. */
 public class ModuleParamArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final Map<String, Class<? extends BaseQueryParam>> MODULE_PARAM_CLASS_MAP;
+    private final Map<String, Class<? extends PageParam>> modules;
 
-    private final static DefaultFormattingConversionService conversionService = new DefaultFormattingConversionService(){{
-        addConverter(new StringToQueryPairConverter(conversionService));
-    }};
+    public ModuleParamArgumentResolver(Map<String, Class<? extends PageParam>> modules) {
+        this.modules = Map.copyOf(modules);
+    }
 
-    public ModuleParamArgumentResolver() {
-        Collection<PageMapper> pageMappers = SpringProvider.getBeans(PageMapper.class);
-        if (CollectionUtils.isEmpty(pageMappers)) {
-            MODULE_PARAM_CLASS_MAP = PageMapper.defaultEmptyPageMapper().getQueryParamClassMap();
-        } else {
-            MODULE_PARAM_CLASS_MAP = new HashMap<>(128);
-            for (PageMapper pageMapper : pageMappers) {
-                MODULE_PARAM_CLASS_MAP.putAll(pageMapper.getQueryParamClassMap());
-            }
+    public Class<? extends PageParam> getQueryParamType(String module) {
+        if (Objects.isNull(module) || module.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page query module parameter is required");
         }
+        Class<? extends PageParam> type = modules.get(module);
+        if (Objects.isNull(type)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid module parameter");
+        }
+        return type;
     }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(ModulePageParam.class)
-                && BaseQueryParam.class.isAssignableFrom(parameter.getParameterType());
+                && PageParam.class.isAssignableFrom(parameter.getParameterType());
     }
 
     @Override
-    public Object resolveArgument(@NonNull MethodParameter parameter,
-                                  ModelAndViewContainer mavContainer,
-                                  NativeWebRequest webRequest,
-                                  WebDataBinderFactory binderFactory) throws Exception {
-
+    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer container,
+                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
-        Objects.requireNonNull(request);
-        String module = request.getParameter("module");
-
-        if (StringUtils.isBlank(module)) {
-            throw new CustomerArgumentResolverException("Page query module parameter is required");
+        Class<? extends PageParam> type = getQueryParamType(Objects.requireNonNull(request).getParameter("module"));
+        if (!parameter.getParameterType().isAssignableFrom(type)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Module query parameter type does not match the endpoint");
         }
-
-        Class<? extends BaseQueryParam> paramClass = MODULE_PARAM_CLASS_MAP.get(module);
-        if (Objects.isNull(paramClass)) {
-            throw new CustomerArgumentResolverException("Invalid module parameter");
-        }
-
-        BaseQueryParam param = paramClass.getDeclaredConstructor().newInstance();
-
-        ServletRequestParameterPropertyValues propertyValues = new ServletRequestParameterPropertyValues(request);
-        WebDataBinder binder = new WebDataBinder(param);
-        binder.registerCustomEditor(LocalDateTime.class, new LocalDateTimeEditor());
-        binder.registerCustomEditor(LocalDateTime.class, new LocalDateTimeEditor());
-        binder.setConversionService(conversionService);
-        binder.bind(propertyValues);
-        return param;
-    }
-
-
-    public static class LocalDateTimeEditor extends PropertyEditorSupport {
-
-        @Override
-        public void setAsText(String text) throws IllegalArgumentException {
-            if (text != null && !text.isEmpty()) {
-                setValue(LocalDateUtils.stringToLocalDateTime(text));
+        PageParam queryParam = BeanUtils.instantiateClass(type);
+        WebDataBinder binder = Objects.requireNonNull(binderFactory).createBinder(webRequest, queryParam, "queryParam");
+        binder.bind(new ServletRequestParameterPropertyValues(request));
+        for (Annotation annotation : parameter.getParameterAnnotations()) {
+            Object[] hints = ValidationAnnotationUtils.determineValidationHints(annotation);
+            if (Objects.nonNull(hints)) {
+                binder.validate(hints);
+                break;
             }
         }
+        if (binder.getBindingResult().hasErrors()) {
+            throw new BindException(binder.getBindingResult());
+        }
+        return queryParam;
     }
-
-
-    public static class LocalDateEditor extends PropertyEditorSupport {
-
-        @Override
-        public void setAsText(String text) throws IllegalArgumentException {
-            if (text != null && !text.isEmpty()) {
-                setValue(LocalDateUtils.stringToLocalDate(text));
-            }
-        }
-    }
-
-
-    public static class StringToQueryPairConverter implements GenericConverter {
-
-        private final DefaultFormattingConversionService conversionService;
-
-        public StringToQueryPairConverter(DefaultFormattingConversionService conversionService) {
-            this.conversionService = conversionService;
-        }
-
-        @Override
-        public Set<ConvertiblePair> getConvertibleTypes() {
-            return Collections.singleton(new ConvertiblePair(String[].class, QueryPair.class));
-        }
-
-        @Override
-        public Object convert(Object source, @NonNull TypeDescriptor sourceType, @NonNull TypeDescriptor targetType) {
-            Objects.requireNonNull(source, "StringToQueryPairConverter#convert source is null");
-            Class<?> rawClass = targetType.getResolvableType().getGeneric(0).getRawClass();
-            Objects.requireNonNull(rawClass, "StringToQueryPairConverter#convert targetType generic class is null");
-
-            Object[] sourceArray = (Object[]) source;
-            Object first = sourceArray[0];
-            Object second = sourceArray[1];
-            try {
-                first = conversionService.convert(first, rawClass);
-                second = conversionService.convert(second, rawClass);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("StringToQueryPairConverter#convert source convert failed", e);
-            }
-            return new QueryPair<>(TypeConvert.cast(first), TypeConvert.cast(second));
-        }
-    }
-
 }

@@ -1,22 +1,15 @@
 package io.github.jockerCN.common;
 
-
 import io.github.jockerCN.Result;
-import io.github.jockerCN.type.TypeConvert;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
-@Slf4j
-@Component
+/** A Spring-managed proxy entry point for short transactional operations. */
+@SuppressWarnings("unused")
 public class SpringExecutorHandle {
-
 
     public static SpringExecutorHandle getInstance() {
         return SpringProvider.getBean(SpringExecutorHandle.class);
@@ -27,14 +20,10 @@ public class SpringExecutorHandle {
         runnable.run();
     }
 
+    /** Propagates failures so Spring can roll the transaction back. */
     @Transactional(rollbackFor = Exception.class)
     public void execute(Runnable runnable) {
-        try {
-            runnable.run();
-        } catch (Exception e) {
-            log.error("SpringExecutorHandle execute Runnable failed:{}", e.getMessage(), e);
-            TransactionProvider.setIfRollbackOnly();
-        }
+        runnable.run();
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -42,30 +31,28 @@ public class SpringExecutorHandle {
         return supplier.get();
     }
 
+    /** Returns the supplier's actual type; never substitutes a Result for T. */
     @Transactional(rollbackFor = Exception.class)
     public <T> T execute(Supplier<T> supplier) {
-        try {
-            return supplier.get();
-        } catch (Exception e) {
-            log.error("SpringExecutorHandle execute Supplier failed:{}", e.getMessage(), e);
-            TransactionProvider.setIfRollbackOnly();
-            return TypeConvert.cast(Result.failWithMsg(e.getMessage()));
-        }
+        return supplier.get();
     }
 
+    /** Returns a typed result while explicitly marking the caught failure for rollback. */
     @Transactional(rollbackFor = Exception.class)
-    public <T, R> R execute(T object, FunctionWrapper<T, R> wrapper, FunctionWrapper<?, ?> afterCommit) {
+    public <T> Result<T> executeResult(Supplier<T> supplier) {
         try {
-            R run = wrapper.run(object);
-            if (Objects.nonNull(afterCommit)) {
-                TransactionProvider.doAfterCommit(afterCommit, run);
-            }
-            return run;
-        } catch (Exception e) {
-            log.error("SpringExecutorHandle execute FunctionWrapper failed:{}", e.getMessage(), e);
-            TransactionProvider.setIfRollbackOnly();
-            return TypeConvert.cast(Result.failWithMsg(e.getMessage()));
+            return Result.ok(supplier.get());
+        } catch (RuntimeException failure) {
+            TransactionProvider.setRollbackOnly();
+            return Result.failWithMsg(failure.getMessage());
         }
     }
 
+    /** Schedules a callback with the computed value only after a successful commit. */
+    @Transactional(rollbackFor = Exception.class)
+    public <T, R> R executeAfterCommit(T input, Function<T, R> action, Consumer<? super R> afterCommit) {
+        R result = action.apply(input);
+        TransactionProvider.doAfterCommit(() -> afterCommit.accept(result));
+        return result;
+    }
 }

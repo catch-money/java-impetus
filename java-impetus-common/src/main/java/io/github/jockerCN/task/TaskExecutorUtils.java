@@ -1,12 +1,10 @@
 package io.github.jockerCN.task;
 
 import io.github.jockerCN.async.AsyncExecutorUtils;
-import io.github.jockerCN.time.TimeFormatterTemplate;
+import io.github.jockerCN.time.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.StopWatch;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author jokerCN <a href="https://github.com/jocker-cn">
@@ -22,16 +20,15 @@ public abstract class TaskExecutorUtils {
      * @param task     任务（Runnable）
      */
     public static void executor(String taskName, Runnable task, Object... args) {
-        log.info("{} task start. args[{}] time：{}", taskName, args, LocalDateTime.now().format(TimeFormatterTemplate.FORMATTER_YMD_THMS_MILLIS));
+        log.info("{} task start. args[{}] time：{}", taskName, args, LocalDateTime.now().format(DateTimeUtils.FORMATTER_YMD_THMS_MILLIS));
 
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        long startNanos = System.nanoTime();
 
         try {
             task.run();
         } finally {
-            stopWatch.stop();
-            log.info("{} task end. time:{}, spent：{} s", taskName, LocalDateTime.now().format(TimeFormatterTemplate.FORMATTER_YMD_THMS_MILLIS), stopWatch.getTotalTime(TimeUnit.SECONDS));
+            double elapsedSeconds = (System.nanoTime() - startNanos) / 1_000_000_000.0;
+            log.info("{} task end. time:{}, spent：{} s", taskName, LocalDateTime.now().format(DateTimeUtils.FORMATTER_YMD_THMS_MILLIS), elapsedSeconds);
         }
     }
 

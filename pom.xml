@@ -7,27 +7,27 @@
     <parent>
         <groupId>io.github.jocker-cn</groupId>
         <artifactId>java-impetus-dependencies</artifactId>
-        <version>1.1.0</version>
+        <version>2.0.0</version>
         <relativePath/>
     </parent>
     
     <artifactId>java-impetus</artifactId>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
     <packaging>pom</packaging>
     <description>java-impetus parent pom</description>
     <name>java-impetus</name>
     <modules>
         <module>java-impetus-native-image</module>
         <module>java-impetus-common</module>
+        <module>java-impetus-toolkit</module>
+        <module>java-impetus-crypto</module>
         <module>java-impetus-spring-common</module>
         <module>java-impetus-redis</module>
         <module>java-impetus-jpa</module>
-        <module>java-impetus-gson</module>
         <module>java-impetus-jackson</module>
         <module>java-impetus-web-common</module>
         <module>java-impetus-web-page</module>
         <module>java-impetus-auth</module>
-        <module>java-impetus-auth-impl</module>
     </modules>
 
     <properties>
@@ -52,8 +52,8 @@
 
     <licenses>
         <license>
-            <name>Apache License</name>
-            <url>https://www.apache.org/licenses/</url>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
         </license>
     </licenses>
 
@@ -71,21 +71,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>sonatype</publishingServerId>
+                    <autoPublish>true</autoPublish>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>${maven-gpg-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

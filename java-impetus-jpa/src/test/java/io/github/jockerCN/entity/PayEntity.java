@@ -66,6 +66,9 @@ public class PayEntity extends BaseJpaPojo {
     @Column(name = "remark", nullable = false, length = 255, columnDefinition = "VARCHAR(255) DEFAULT ''")
     private String remark;
 
+    @Column(name = "optional_note")
+    private String optionalNote;
+
     @Column(name = "trade_state", nullable = false)
     private String tradeState;
 

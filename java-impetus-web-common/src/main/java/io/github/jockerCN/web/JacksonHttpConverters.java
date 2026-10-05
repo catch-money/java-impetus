@@ -1,56 +1,31 @@
 package io.github.jockerCN.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverters;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.nio.charset.StandardCharsets;
+/** Supplies only the JSON converter; Spring keeps its other native converters. */
+@Configuration(proxyBeanMethods = false)
+public class JacksonHttpConverters implements WebMvcConfigurer {
 
-/**
- * @author jokerCN <a href="https://github.com/jocker-cn">
- */
-@Slf4j
-public class JacksonHttpConverters {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JacksonHttpConverters.class);
 
-    private final ObjectMapper objectMapper;
+    private final JacksonJsonHttpMessageConverter converter;
 
-    public JacksonHttpConverters(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        log.info("### JacksonHttpConverters#init ###");
+    public JacksonHttpConverters(JsonMapper mapper, ObjectProvider<JacksonJsonHttpMessageConverter> converters) {
+        LOGGER.info("### JacksonHttpConverters#init ###");
+        converter = converters.getIfAvailable(() -> new JacksonJsonHttpMessageConverter(mapper));
     }
 
-
-    @Bean
-    public HttpMessageConverters httpMessageConverters() {
-        return new HttpMessageConverters(buildJackson2HttpMessageConverter());
-    }
-
-    public MappingJackson2HttpMessageConverter buildJackson2HttpMessageConverter() {
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
-        converter.setDefaultCharset(StandardCharsets.UTF_8);
-        converter.setSupportedMediaTypes(Lists.newArrayList(
-                MediaType.APPLICATION_JSON,
-                MediaType.APPLICATION_ATOM_XML,
-                MediaType.APPLICATION_FORM_URLENCODED,
-                MediaType.APPLICATION_OCTET_STREAM,
-                MediaType.APPLICATION_PDF,
-                MediaType.APPLICATION_RSS_XML,
-                MediaType.APPLICATION_XHTML_XML,
-                MediaType.APPLICATION_XML,
-                MediaType.IMAGE_GIF,
-                MediaType.IMAGE_JPEG,
-                MediaType.IMAGE_PNG,
-                MediaType.TEXT_EVENT_STREAM,
-                MediaType.TEXT_HTML,
-                MediaType.TEXT_MARKDOWN,
-                MediaType.TEXT_PLAIN,
-                MediaType.TEXT_XML,
-                MediaType.ALL
-        ));
-        return converter;
+    @Override
+    public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
+        LOGGER.info("### JacksonHttpConverters#JacksonJsonHttpMessageConverter ###");
+        // Replace the native JSON slot, rather than prepending a second converter ahead of text/binary.
+        builder.withJsonConverter(converter);
     }
 }

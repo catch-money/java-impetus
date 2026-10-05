@@ -1,10 +1,10 @@
 package io.github.jockerCN.query.columns;
 
-import io.github.jockerCN.customize.SelectColumn;
-import io.github.jockerCN.customize.annotation.Columns;
-import io.github.jockerCN.customize.annotation.JpaQuery;
-import io.github.jockerCN.customize.annotation.where.Equals;
-import io.github.jockerCN.customize.enums.SqlFunctionEnum;
+import io.github.jockerCN.jpa.query.model.SelectColumn;
+import io.github.jockerCN.jpa.annotation.Columns;
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.Equals;
+import io.github.jockerCN.jpa.query.operator.SqlFunctionEnum;
 import io.github.jockerCN.entity.PayEntity;
 import io.github.jockerCN.jpa.JpaQueryManager;
 import io.github.jockerCN.number.NumberUtils;
@@ -90,6 +90,37 @@ public class ColumnsQueryTest implements QueryAnnotationTest {
 
         setBuilder = setBuilder.clear();
         asserts(setBuilder.size() == 0, "@Columns");
+
+        columnsQueryTestParam.setColumns(SelectColumn.SetBuilder.create()
+                .column("orderPrice").function(SqlFunctionEnum.round, 0).alias("roundedPrice").add()
+                .add(SelectColumn.expression("visiblePhone", (cb, root, param) -> cb.<String>selectCase()
+                        .when(cb.isTrue(root.get("active")), root.get("customerPhone"))
+                        .otherwise(cb.nullLiteral(String.class)))
+                        .when(param -> ((ColumnsQueryTestParam) param).isCanViewPhone()))
+                .add(SelectColumn.nullValue("visiblePhone", String.class)
+                        .when(param -> !((ColumnsQueryTestParam) param).isCanViewPhone()))
+                .build());
+
+        columnsQueryTestParam.setId(1);
+        Tuple visible = jpaQueryManager.queryList(columnsQueryTestParam, Tuple.class).getFirst();
+        asserts(NumberUtils.eq(visible.get("roundedPrice", BigDecimal.class), NumberUtils.fromBigDecimal(500)), "@Columns function + CASE");
+        asserts("13725090127".equals(visible.get("visiblePhone", String.class)), "@Columns function + CASE");
+
+        columnsQueryTestParam.setId(34);
+        Tuple inactive = jpaQueryManager.queryList(columnsQueryTestParam, Tuple.class).getFirst();
+        asserts(inactive.get("visiblePhone", String.class) == null, "@Columns CASE false branch");
+
+        columnsQueryTestParam.setId(1);
+        columnsQueryTestParam.setCanViewPhone(false);
+        Tuple hidden = jpaQueryManager.queryList(columnsQueryTestParam, Tuple.class).getFirst();
+        asserts(hidden.get("visiblePhone", String.class) == null, "@Columns omitted sensitive column");
+
+        columnsQueryTestParam.setId(null);
+        columnsQueryTestParam.setColumns(SelectColumn.SetBuilder.create()
+                .column("orderPrice").function(SqlFunctionEnum.min).alias("minOrderPrice").add()
+                .build());
+        Tuple minimum = jpaQueryManager.queryList(columnsQueryTestParam, Tuple.class).getFirst();
+        asserts(NumberUtils.eq(minimum.get("minOrderPrice", BigDecimal.class), NumberUtils.fromBigDecimal(0.01)), "@Columns MIN");
     }
 
 
@@ -103,5 +134,7 @@ public class ColumnsQueryTest implements QueryAnnotationTest {
 
         @Columns
         private Set<SelectColumn> columns;
+
+        private boolean canViewPhone = true;
     }
 }
