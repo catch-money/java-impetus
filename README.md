@@ -1,5 +1,5 @@
 
-# Java Impetus ![Java](https://img.shields.io/badge/Java-21-orange?style=flat&logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen?style=flat&logo=spring-boot&logoColor=white) ![Maven](https://img.shields.io/badge/Maven-Build%20Tool-blue?style=flat&logo=apache-maven&logoColor=white) ![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/catch-money/java-impetus)
+# Java Impetus ![Java](https://img.shields.io/badge/Java-21-orange?style=flat&logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen?style=flat&logo=spring-boot&logoColor=white) ![Maven](https://img.shields.io/badge/Maven-Build%20Tool-blue?style=flat&logo=apache-maven&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-blue.svg) ![Ask DeepWiki](https://deepwiki.com/catch-money/java-impetus)
 
 > 基于 Java 21 和 Spring Boot 4.x 的企业级快速开发框架
 
@@ -55,6 +55,28 @@ java-impetus-crypto 提供独立的加密、哈希与旧密文兼容能力，不
 - **Spring Boot**: 4.x
 - **Maven**: 3.8+
 
+### 本地构建与发布签名
+
+普通构建及本地安装不执行 GPG 签名。BOM 不属于根 reactor，需要先单独安装；当前发布范围不包含 `java-impetus-native-image`：
+
+```bash
+mvn -f java-impetus-dependencies/pom.xml install
+mvn -pl '!java-impetus-native-image' -am -DskipTests install
+```
+
+发布构建通过 `-Prelease` 显式启用签名，并在 `verify` 阶段生成签名文件，先于 `install` 和 `deploy`。因此 `-Prelease install` 仍会签名，但不会上传；Maven Central 发布不能跳过签名。`release` 是构建 profile，而不是 Maven 生命周期阶段。
+
+签名私钥保存在开发机或 CI 的密钥库中，不得提交到仓库；Maven 的 `gpg.executable`、`gpg.homedir` 和 `gpg.keyname` 应与实际密钥一致。
+
+发布脚本使用 `central-publishing-maven-plugin` 向 [Central Publisher Portal](https://central.sonatype.com) 发布，不再使用旧 OSSRH 地址或 `altDeploymentRepository`。先发布独立 BOM，再发布根项目和库模块；在仓库根目录执行：
+
+```bash
+bash deploy/deploy_dependencies.sh
+bash deploy/deploy_impetus.sh
+```
+
+两个脚本都根据自身位置定位项目目录，不依赖调用时的工作目录，并保持 `-Prelease` 签名；第二个脚本排除 `java-impetus-native-image`。`settings.xml` 中 `sonatype` server 的凭据必须是 Portal 生成的 User Token。当前 `release` 配置启用 `autoPublish`，执行上述脚本会实际上传并在验证通过后自动公开发布，不是本地安装或演练。
+
 ### 📥 版本管理
 
 在你的 `pom.xml` 中添加依赖管理：
@@ -80,4 +102,4 @@ java-impetus-crypto 提供独立的加密、哈希与旧密文兼容能力，不
 **jockerCN** - [GitHub](https://github.com/jocker-cn)
 
 # License
-Java Impetus 基于 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) 开源协议。
+Java Impetus 基于 [MIT License](LICENSE) 开源协议。

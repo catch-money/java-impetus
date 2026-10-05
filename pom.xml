@@ -52,8 +52,8 @@
 
     <licenses>
         <license>
-            <name>Apache License</name>
-            <url>https://www.apache.org/licenses/</url>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
         </license>
     </licenses>
 
@@ -72,20 +72,6 @@
                 <configuration>
                     <publishingServerId>sonatype</publishingServerId>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>${maven-gpg-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
