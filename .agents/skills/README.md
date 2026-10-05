@@ -13,6 +13,7 @@
 | [java-impetus-crypto](java-impetus-crypto/SKILL.md) | `io.github.jocker-cn:java-impetus-crypto` | AES-GCM、RSA、HMAC、Base64 与摘要 |
 | [java-impetus-jackson](java-impetus-jackson/SKILL.md) | `io.github.jocker-cn:java-impetus-jackson` | Jackson 3 默认配置与 JSON 便捷 API |
 | [java-impetus-jpa](java-impetus-jpa/SKILL.md) | `io.github.jocker-cn:java-impetus-jpa` | 注解驱动查询、动态选列、分页与结果处理 |
+| [java-impetus-auth](java-impetus-auth/SKILL.md) | `io.github.jocker-cn:java-impetus-auth` | 动态认证策略、密码／TOTP、凭据生命周期、访问规则与可选 Security 适配 |
 
 `extend-jpa-query`、`maintain-impetus-autoconfiguration` 属于本仓库维护者使用的开发 skill，不是第三方接入某个模块所必需的内容。
 

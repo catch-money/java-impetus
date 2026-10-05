@@ -150,12 +150,6 @@
 
 
             <dependency>
-                <groupId>io.github.jocker-cn</groupId>
-                <artifactId>java-impetus-auth-impl</artifactId>
-                <version>${java-impetus.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-compress</artifactId>
                 <version>${commons-compress.version}</version>

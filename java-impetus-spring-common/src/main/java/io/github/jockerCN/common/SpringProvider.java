@@ -98,7 +98,7 @@ public class SpringProvider implements ApplicationContextAware, DisposableBean {
         return requiredContext().getEnvironment().getRequiredProperty(name, targetType);
     }
 
-    /** Accepts Spring profile expressions, for example "dev & !cloud". */
+    /** Accepts Spring profile expressions, for example {@code dev & !cloud}. */
     public static boolean acceptsProfile(String expression) {
         return requiredContext().getEnvironment().acceptsProfiles(Profiles.of(expression));
     }

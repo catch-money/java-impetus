@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 
 import java.util.List;
+import java.util.Objects;
 
 @TestConfiguration
 public class ProjectionFindTypeQueryTest implements QueryAnnotationTest {
@@ -29,6 +30,10 @@ public class ProjectionFindTypeQueryTest implements QueryAnnotationTest {
         asserts(array != null && array.length == 2 && Long.valueOf(1L).equals(array[0])
                         && "13725090127".equals(array[1]),
                 "@Columns honors explicit Object[] findType");
+        Object untypedRow = queryManager.query(queryParam, Object.class);
+        asserts(untypedRow instanceof Object[] values && values.length == 2
+                        && Long.valueOf(1L).equals(values[0]) && "13725090127".equals(values[1]),
+                "Object findType preserves a multi-column array result");
 
         Tuple tuple = queryManager.query(queryParam, Tuple.class);
         asserts(tuple != null && Long.valueOf(1L).equals(tuple.get("id", Long.class)),
@@ -49,6 +54,8 @@ public class ProjectionFindTypeQueryTest implements QueryAnnotationTest {
         Object[] partial = queryManager.query(queryParam, Object[].class);
         asserts(partial != null && partial.length == 1 && Long.valueOf(1L).equals(partial[0]),
                 "explicit findType follows dynamic columns");
+        asserts(Long.valueOf(1L).equals(queryManager.query(queryParam, Object.class)),
+                "Object findType preserves a single-column scalar result on the same parameter");
 
         queryParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("customerPhone"));
         PayEntity implicitEntity = queryManager.query(queryParam);
@@ -61,6 +68,12 @@ public class ProjectionFindTypeQueryTest implements QueryAnnotationTest {
         NameView nameView = queryManager.query(queryParam, NameView.class);
         asserts(nameView != null && nameView.name != null,
                 "changing selected columns allows a matching DTO findType on the same parameter");
+
+        queryParam.columns = List.of(SelectColumn.of("customerName"), SelectColumn.of("customerPhone"));
+        String[] textColumns = queryManager.query(queryParam, String[].class);
+        asserts(textColumns != null && textColumns.length == 2
+                        && Objects.equals(Objects.requireNonNull(nameView).name, textColumns[0]) && "13725090127".equals(textColumns[1]),
+                "typed array findType preserves the provider's element order and array type");
     }
 
     @JpaQuery(PayEntity.class)

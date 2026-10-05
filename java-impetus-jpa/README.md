@@ -264,7 +264,7 @@ SelectColumn.SetBuilder
 ```
 - 支持查询函数使用,请参考 [SqlFunctionEnum 函数说明] 部分
 - 投影字段的顺序决定 `Object[]` 和构造函数参数顺序。需要固定顺序时使用 `List<SelectColumn>`；`SelectColumn.SetBuilder` 也会保留添加顺序。普通 `HashSet` 不保证顺序。
-- `@Columns` 使用 Criteria `multiselect`。同一个查询参数可在不同调用中显式传入 `Tuple.class`、`Object[].class` 或与当前选列顺序和类型匹配的 DTO 构造器类型。**不传 `findType` 时使用实体类型**，仅填充选中字段，未选中的字段保持 `null`；不能把它当完整实体使用。动态调整选列时，调用方需要保证本次 `findType` 与选列匹配。
+- `@Columns` 使用 Criteria `select`，按本次 `findType` 构建 `tuple`、`array` 或 `construct` 投影，不再调用已弃用的 `multiselect`。同一个查询参数可在不同调用中显式传入 `Tuple.class`、`Object[].class` 或与当前选列顺序和类型匹配的 DTO 构造器类型。**不传 `findType` 时使用实体类型**，仅填充选中字段，未选中的字段保持 `null`；不能把它当完整实体使用。动态调整选列时，调用方需要保证本次 `findType` 与选列匹配。`Object.class` 单列返回该列的值、多列返回 `Object[]`；指定其他数组类型时沿用 Hibernate 的类型化数组投影。
 - `SelectColumn.when(param -> ...)` 按本次原始查询参数决定是否选择该列；构建器也支持 `.when(...)`。条件为 `false` 时不会构造该列的 Criteria 表达式。
 - `SelectColumn.constant(alias, value)` 选择非 `null` 常量；`SelectColumn.nullValue(alias, type)` 选择指定类型的 SQL `NULL`。它们不读取实体属性。需要同一别名按条件返回实体字段或掩码时，可以在 `List<SelectColumn>` 中放入两项互斥的条件列：
 

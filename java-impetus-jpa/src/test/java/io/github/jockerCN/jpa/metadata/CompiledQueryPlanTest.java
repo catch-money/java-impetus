@@ -7,6 +7,7 @@ import io.github.jockerCN.jpa.query.operator.RelatedOperatorEnum;
 import io.github.jockerCN.jpa.query.operator.SqlFunctionEnum;
 import io.github.jockerCN.jpa.query.model.OderByCondition;
 import io.github.jockerCN.jpa.query.model.SelectColumn;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class CompiledQueryPlanTest {
         queryParam.pageSize = 10;
 
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Path idPath = mock(Path.class);
         Predicate predicate = mock(Predicate.class);
@@ -73,13 +74,13 @@ class CompiledQueryPlanTest {
 
     @Test
     @SuppressWarnings({"rawtypes", "unchecked"})
-    void appliesCompiledColumnsWithMultiselect() {
+    void appliesCompiledColumnsWithTupleSelection() {
         EntityMetadata metadata = metadata(TupleQueryParam.class);
         TupleQueryParam queryParam = new TupleQueryParam();
         queryParam.columns = Set.of(SelectColumn.of("id"));
 
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Path idPath = mock(Path.class);
         when(root.get("id")).thenReturn(idPath);
@@ -88,7 +89,8 @@ class CompiledQueryPlanTest {
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
         ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(idPath);
         verify(criteriaBuilder, never()).array(any(Selection[].class));
         verify(criteriaBuilder, never()).construct(any(), any(Selection[].class));
@@ -105,7 +107,7 @@ class CompiledQueryPlanTest {
         queryParam.columns = List.of(SelectColumn.of("id"), SelectColumn.of("second"));
 
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Path idPath = mock(Path.class);
         Path secondPath = mock(Path.class);
@@ -121,7 +123,7 @@ class CompiledQueryPlanTest {
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
         InOrder stageOrder = inOrder(criteriaQuery);
-        stageOrder.verify(criteriaQuery).multiselect(any(Selection[].class));
+        stageOrder.verify(criteriaQuery).select(any(Selection.class));
         stageOrder.verify(criteriaQuery).distinct(true);
         stageOrder.verify(criteriaQuery).groupBy(any(List.class));
         stageOrder.verify(criteriaQuery).orderBy(any(List.class));
@@ -167,7 +169,7 @@ class CompiledQueryPlanTest {
         );
 
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Path<String> phonePath = mock(Path.class);
         Expression<String> nullExpression = mock(Expression.class);
@@ -179,7 +181,8 @@ class CompiledQueryPlanTest {
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
         ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(nullExpression);
         verify(root, never()).get("phone");
 
@@ -187,7 +190,8 @@ class CompiledQueryPlanTest {
         queryParam.canViewPhone = true;
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(phonePath);
         verify(root).get("phone");
         verify(criteriaBuilder, never()).nullLiteral(String.class);
@@ -200,7 +204,7 @@ class CompiledQueryPlanTest {
         ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
         queryParam.columns = List.of(SelectColumn.constant("phone", "hidden"));
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Expression<String> literal = mock(Expression.class);
         when(criteriaBuilder.literal("hidden")).thenReturn(literal);
@@ -209,7 +213,8 @@ class CompiledQueryPlanTest {
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
         ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(literal);
         verifyNoInteractions(root);
     }
@@ -227,7 +232,7 @@ class CompiledQueryPlanTest {
         );
 
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Path amountPath = mock(Path.class);
         Expression roundedZero = mock(Expression.class);
@@ -241,7 +246,8 @@ class CompiledQueryPlanTest {
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
         ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(roundedZero, roundedOne);
         verify(criteriaBuilder).round(amountPath, 0);
         verify(criteriaBuilder).round(amountPath, 1);
@@ -261,7 +267,7 @@ class CompiledQueryPlanTest {
         }));
 
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Expression<String> literal = mock(Expression.class);
         Expression<String> nullExpression = mock(Expression.class);
@@ -272,13 +278,15 @@ class CompiledQueryPlanTest {
 
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
         ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(literal);
 
         clearInvocations(criteriaBuilder, criteriaQuery, root, literal, nullExpression);
         queryParam.dynamicValue = null;
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(nullExpression);
         assertThat(calls).hasValue(2);
         verifyNoInteractions(root);
@@ -297,7 +305,7 @@ class CompiledQueryPlanTest {
         }).when(param -> true));
 
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         CriteriaBuilder.Case<String> caseExpression = mock(CriteriaBuilder.Case.class);
         Path<Boolean> visiblePath = mock(Path.class);
@@ -316,7 +324,8 @@ class CompiledQueryPlanTest {
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
         ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(caseExpression);
         verify(criteriaBuilder).selectCase();
         verify(caseExpression).when(visiblePredicate, phonePath);
@@ -332,7 +341,7 @@ class CompiledQueryPlanTest {
         column.setQueryExpression((criteriaBuilder, root) -> criteriaBuilder.literal("overridden"));
         queryParam.columns = List.of(column);
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Expression<String> literal = mock(Expression.class);
         when(criteriaBuilder.literal("overridden")).thenReturn(literal);
@@ -341,7 +350,8 @@ class CompiledQueryPlanTest {
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
         ArgumentCaptor<Selection<?>[]> selections = ArgumentCaptor.forClass(Selection[].class);
-        verify(criteriaQuery).multiselect(selections.capture());
+        verify(criteriaBuilder).tuple(selections.capture());
+        verify(criteriaQuery).select(any(Selection.class));
         assertThat(selections.getValue()).containsExactly(literal);
         verifyNoInteractions(root);
     }
@@ -353,7 +363,7 @@ class CompiledQueryPlanTest {
         ConditionalColumnsQueryParam queryParam = new ConditionalColumnsQueryParam();
         queryParam.columns = List.of(SelectColumn.of("phone").when(param -> false));
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
 
         assertThatThrownBy(() -> metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam))
@@ -388,7 +398,7 @@ class CompiledQueryPlanTest {
         queryParam.columns = Set.of(SelectColumn.of("id"));
         queryParam.orderBy = Set.of("id");
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         Path idPath = mock(Path.class);
         Order order = mock(Order.class);
@@ -398,7 +408,8 @@ class CompiledQueryPlanTest {
 
         metadata.buildCriteriaQuery(criteriaBuilder, criteriaQuery, root, queryParam);
 
-        verify(criteriaQuery).multiselect(any(Selection[].class));
+        verify(criteriaQuery).select(any(Selection.class));
+        verify(criteriaBuilder).tuple(any(Selection[].class));
         verify(criteriaBuilder).asc(idPath);
         verify(criteriaBuilder, never()).desc(idPath);
     }
@@ -409,7 +420,7 @@ class CompiledQueryPlanTest {
         EntityMetadata metadata = metadata(ExecutableQueryParam.class);
         ExecutableQueryParam queryParam = new ExecutableQueryParam();
         CriteriaBuilder criteriaBuilder = mock(CriteriaBuilder.class);
-        CriteriaQuery criteriaQuery = mock(CriteriaQuery.class);
+        CriteriaQuery criteriaQuery = tupleQuery(criteriaBuilder);
         Root root = mock(Root.class);
         TypedQuery typedQuery = mock(TypedQuery.class);
 
@@ -522,6 +533,14 @@ class CompiledQueryPlanTest {
                 .doesNotThrowAnyException();
         assertThat(JpaQueryEntityProcess.getEntityMetadata(secondQueryParam))
                 .isSameAs(firstMetadata);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static CriteriaQuery<Tuple> tupleQuery(CriteriaBuilder builder) {
+        CriteriaQuery<Tuple> query = mock(CriteriaQuery.class);
+        when(query.getResultType()).thenReturn(Tuple.class);
+        when(builder.tuple(any(Selection[].class))).thenReturn(mock(CompoundSelection.class));
+        return query;
     }
 
     public static EntityMetadata metadata(Class<?> queryParamType) {

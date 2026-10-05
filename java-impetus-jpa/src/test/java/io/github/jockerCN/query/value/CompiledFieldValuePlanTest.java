@@ -10,6 +10,8 @@ import io.github.jockerCN.jpa.metadata.JpaQueryEntityBuilder;
 import io.github.jockerCN.jpa.query.model.SelectColumn;
 import io.github.jockerCN.jpa.query.value.QueryParamProcessor;
 import io.github.jockerCN.jpa.query.value.QueryValueProvider;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CompoundSelection;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
@@ -69,6 +71,9 @@ class CompiledFieldValuePlanTest {
 
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         CriteriaQuery cq = mock(CriteriaQuery.class);
+        when(cq.getResultType()).thenReturn(Tuple.class);
+        CompoundSelection<Tuple> tuple = mock(CompoundSelection.class);
+        when(cb.tuple(any(jakarta.persistence.criteria.Selection[].class))).thenReturn(tuple);
         Root root = mock(Root.class);
         Path ownerPath = mock(Path.class);
         Path idPath = mock(Path.class);
@@ -80,7 +85,8 @@ class CompiledFieldValuePlanTest {
 
         assertThat(metadata.buildPersistenceList(cb, root, param)).containsExactly(predicate);
         metadata.buildCriteriaQuery(cb, cq, root, param);
-        verify(cq).multiselect(any(jakarta.persistence.criteria.Selection[].class));
+        verify(cq).select(tuple);
+        verify(cb).tuple(any(jakarta.persistence.criteria.Selection[].class));
         assertThat(ownerCalls).hasValue(0);
         assertThat(columnCalls).hasValue(0);
     }
