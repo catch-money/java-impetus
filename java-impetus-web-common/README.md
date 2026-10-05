@@ -1,5 +1,9 @@
 # java-impetus-web-common
 
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
+
 Java 21、Spring Boot 4 / Spring MVC 7 的 Web 集成工具，使用 Jackson 3。
 它复用 Spring 原生过滤器、AOP、MVC 转换器和异常处理，不接管 MVC，也不提供新的 Web 框架。
 
@@ -240,3 +244,21 @@ MDC 不会自动传播到用户新建的线程或异步计算任务，只在过�
 不另加一套重复属性。复杂拦截器、安全头、鉴权和业务策略由应用提供原生 Bean 实现。
 
 本次 2.0 重构删除了无实现的 Gson 文件与硬编码 `SecurityConfig`，不维护这些旧入口的兼容。
+
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-web-common` skill](../.agents/skills/java-impetus-web-common/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-web-common/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-web-common/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-web-common 按需开启 CORS、异常响应和动态 @AutoLog 日志。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。

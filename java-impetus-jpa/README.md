@@ -1,5 +1,10 @@
-# java-impetus-jpa ![Static Badge](https://img.shields.io/badge/spring_data_jpa-3.5.3-brightgreen?style=flat&logo=spring-boot&logoColor=white)
-java-impetus-jpa 是对[spring-data-jpa](https://spring.io/projects/spring-data-jpa)的扩展.
+# java-impetus-jpa
+
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
+
+java-impetus-jpa 是对 [Spring Data JPA](https://spring.io/projects/spring-data-jpa) 的注解查询扩展，不替代原生 JPA。当前 BOM 使用 Spring Boot 4.1.1、Jakarta Persistence 3.2 和 Hibernate 7.4.5.Final。
 
 该模块提供了注解驱动的单表查询和对JpaRepository接口的自动化管理.
 您可以以极为简单的方式完成单表的查询逻辑,不再需要针对不同的数据库实体类(Entity)去实现不同的扩展接口,对于查询参数的添加和删除成本也非常低,让更多的重心放在业务功能开发上.
@@ -11,28 +16,29 @@ java-impetus-jpa 自动管理Entity实体对应的Jpa Repository接口,你可以
 
 ## 快速开始
 
-### 在你的 `pom.xml` 中添加依赖管理：
+### 在你的 `pom.xml` 中添加依赖：
+
+先使用应用的 Boot 4.1.1 parent 或导入 [Java Impetus BOM](../java-impetus-dependencies/README.md)，由它管理 starter 和数据库驱动版本：
 
 ```xml
 <!--Spring Data Jpa-->
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-data-jpa</artifactId>
-    <version>3.5.3</version>
 </dependency>
 
 <!--java-impetus-jpa-->
 <dependency>
     <groupId>io.github.jocker-cn</groupId>
     <artifactId>java-impetus-jpa</artifactId>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
 </dependency>
 
 <!--数据库依赖,被Spring-Data-Jpa 支持的数据库均可,java-impetus-jpa不限制数据库类型-->
 <dependency>
     <groupId>com.mysql</groupId>
     <artifactId>mysql-connector-j</artifactId>
-    <version>9.3.0</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -80,10 +86,14 @@ public class PayEntity {
 ```
 
 ### 编写查询Param类
+
 - 使用@JpaQuery 注解指定查询类对应的数据库实体
 - 使用对应查询逻辑的注解,标注查询字段
 ```java
-package io.github.jockerCN.query; //包路径与@EntityScan 中配置的保持一致
+package io.github.jockerCN.query; // 对应 @EnableAutoJpa 的查询参数扫描路径
+
+import io.github.jockerCN.jpa.annotation.JpaQuery;
+import io.github.jockerCN.jpa.annotation.where.Equals;
 
 @JpaQuery(PayEntity.class)  //指定该查询参数对应的数据库实体
 @Data
@@ -104,7 +114,7 @@ List<PayEntity> queryList = JpaRepositoryUtils.queryList(param, PayEntity.class)
 
 查询参数不需要继承框架基类，也不需要提供无参构造方法；`@EnableAutoJpa` 启动时扫描 `@JpaQuery` 类并编译查询元数据。分页便利方法使用 `PageParam` 接口，不占用调用方的类继承位置；具体查询参数自行声明带 `@Page`、`@PageSize` 的字段。实体也不需要继承 `JpaPojo`、`AbstractBaseJapPojo` 或 `JpaPojoDTO`，但仍需符合 JPA 自身的实体映射要求（如主键与无参构造器）。
 
-2.0 API 迁移要点：`BaseQueryParam` / `PageQueryParam` 已移除，只有分页便利方法需要实现 `PageParam`；`@Columns` 已移除固定结果类型的 `value` 属性，改由本次查询的 `findType` 指定结果类型。未接入处理链的旧 `@Min` 已移除；当前需要 `MIN` 选列时，可在 `@Columns` 中使用 `SelectColumn.of(name, alias, SqlFunctionEnum.min)`。后续更多函数是否需要独立注解，待实际场景明确后再设计。`JpaPojo` 等基类仍可作为可选便利类使用，不是实体映射或查询的前提。
+2.0 API 迁移要点：`BaseQueryParam` / `PageQueryParam` 已移除，只有分页便利方法需要实现 `PageParam`；`@Columns` 已移除固定结果类型的 `value` 属性，改由本次查询的 `findType` 指定结果类型。未接入处理链的旧 `@Min` 已移除；当前需要 `MIN` 选列时，可在 `@Columns` 中使用 `SelectColumn.of(name, alias, SqlFunctionEnum.min)`。`JpaPojo` 等基类仍可作为可选便利类使用，不是实体映射或查询的前提。
 
 ### 查询前的有效值处理
 
@@ -201,6 +211,7 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 ## 支持的查询注解
 
 ### 设计理念
+
 - 查询注解旨在简化单表操作,消除重复模板代码,简化查询参数增减的复杂性.
 - 对于复杂的SQL(如多层嵌套函数,逻辑判断等)和多表操作建议继续使用原生SQL处理,如果SQL过于复杂,任何的实现逻辑都会复杂,这只会增加开发过程中的心智负担和提高不必要的学习成本.
 
@@ -210,14 +221,14 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 2. **空值处理**：WHERE/HAVING 条件字段的 `null`、空集合和空数组通常不生成对应谓词；动态选列等查询形态注解遵循各自语义。需要表达“未提供值”时，请使用包装类型。
 3. **字段映射**：WHERE/HAVING 等注解的 `value` 属性指定的是 Java 实体属性名，不是数据库列名；不指定时通常使用查询参数字段名。
 4. **分页机制**：`@Page` 和 `@PageSize` 必须同时使用才能生效，页码从 0 开始计算
-5. **Having 复杂性**：`@Having` 注解较为复杂，支持分组、排序、多条件逻辑组合等高级功能
+5. **HAVING 组合**：`@Having` 对分组结果构造聚合条件；SQL 分组与排序分别由 `@GroupBy` 和 `@OrderBy` 指定
 6. **查询参数类型**：查询参数类需要使用 `@JpaQuery` 注解；可以继承任意自定义基类，也可以不继承基类。只有使用分页便利方法时才需要实现 `PageParam`，普通注解查询不需要实现它
-7. **注解限制**：所有查询字段只能使用单个注解,不管是条件注解还是聚合函数,当多个查询注解标注在同一个字段时则会抛出异常 `has multiple JPA-related annotations that should not coexist`
+7. **注解限制**：每个字段最多携带一个注册的查询操作注解；`@QueryDefault` 是独立的取值扩展，可以与该操作注解并用。多个查询操作注解标注在同一个字段时会抛出异常 `has multiple JPA-related annotations that should not coexist`
 
 
 ### WHERE 条件注解
 
-- 用于构建 SQL 查询的 WHERE 子句条件，支持各种比较操作符和逻辑判断。
+- 注解位于 `io.github.jockerCN.jpa.annotation.where`；用于构建 SQL 查询的 WHERE 子句条件。
 
 | 注解 | 等同SQL条件 | 参数类型                      | 说明                                                          |
 |------|-------------|---------------------------|-------------------------------------------------------------|
@@ -238,7 +249,7 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 | `@IsNotNull` | `WHERE field IS NOT NULL` | Boolean                   | **非空判断**。当值为 `true` 时生效，⚠️ **必须**使用 Boolean 类型              |
 | `@IsTrueOrFalse` | `WHERE field = true/false` | Boolean                   | **布尔值查询**。根据参数值决定查询 true 还是false                            |
 
-`@ILike` / `@NotILike` 与 `@Like` / `@NotLike` 一样，`value` 指向实体的 Java 属性名，省略时使用查询参数字段名；参数为 `null` 时跳过条件。两者要求查询参数字段为 `String`，并依赖 Hibernate 6.6 的 Criteria 扩展，不是 Jakarta Persistence 标准 API；实际 SQL 由 Hibernate 方言生成。
+`@ILike` / `@NotILike` 与 `@Like` / `@NotLike` 一样，`value` 指向实体的 Java 属性名，省略时使用查询参数字段名；参数为 `null` 时跳过条件。两者要求查询参数字段为 `String`，并依赖 Hibernate 的 Criteria 扩展，不是 Jakarta Persistence 标准 API；实际 SQL 由 Hibernate 方言生成。
 
 ### SELECT 查询字段注解
 
@@ -250,6 +261,7 @@ JpaRepository<PayEntity, Long> jpaRepository = JpaRepositoryUtils.getJpaReposito
 | `@Distinct` | `SELECT DISTINCT` | Boolean | **去重查询**。当值为 `true` 时对查询结果去重 |
 
 #### SelectColumn
+
 - 支持设置字段名和别名
 ```java
 SelectColumn.SetBuilder
@@ -262,9 +274,9 @@ SelectColumn.SetBuilder
      .alias("orderPriceSum").add()  //sum函数 字段别名为 orderPriceSum
      .build()
 ```
-- 支持查询函数使用,请参考 [SqlFunctionEnum 函数说明] 部分
+- 支持查询函数使用，请参考 [SqlFunctionEnum 函数说明](#sqlfunctionenum-函数说明)
 - 投影字段的顺序决定 `Object[]` 和构造函数参数顺序。需要固定顺序时使用 `List<SelectColumn>`；`SelectColumn.SetBuilder` 也会保留添加顺序。普通 `HashSet` 不保证顺序。
-- `@Columns` 使用 Criteria `select`，按本次 `findType` 构建 `tuple`、`array` 或 `construct` 投影，不再调用已弃用的 `multiselect`。同一个查询参数可在不同调用中显式传入 `Tuple.class`、`Object[].class` 或与当前选列顺序和类型匹配的 DTO 构造器类型。**不传 `findType` 时使用实体类型**，仅填充选中字段，未选中的字段保持 `null`；不能把它当完整实体使用。动态调整选列时，调用方需要保证本次 `findType` 与选列匹配。`Object.class` 单列返回该列的值、多列返回 `Object[]`；指定其他数组类型时沿用 Hibernate 的类型化数组投影。
+- `@Columns` 使用 Criteria `select`，按本次 `findType` 构建 `tuple`、`array` 或 `construct` 投影，不再调用已弃用的 `multiselect`。同一个查询参数可在不同调用中显式传入 `Tuple.class`、`Object[].class` 或与当前选列顺序和类型匹配的 DTO 构造器类型。**不传 `findType` 时使用实体类型**，选列会走该类型的构造投影，也必须提供与有效列顺序／类型匹配的构造器；这不等同于自动给无参实体逐字段赋值。需要按别名动态赋值时使用下文的 `ResultAssembler.bean(...)`。动态调整选列时，调用方需要保证本次 `findType` 与选列匹配。`Object.class` 单列返回该列的值、多列返回 `Object[]`；指定其他数组类型时沿用 Hibernate 的类型化数组投影。
 - `SelectColumn.when(param -> ...)` 按本次原始查询参数决定是否选择该列；构建器也支持 `.when(...)`。条件为 `false` 时不会构造该列的 Criteria 表达式。
 - `SelectColumn.constant(alias, value)` 选择非 `null` 常量；`SelectColumn.nullValue(alias, type)` 选择指定类型的 SQL `NULL`。它们不读取实体属性。需要同一别名按条件返回实体字段或掩码时，可以在 `List<SelectColumn>` 中放入两项互斥的条件列：
 
@@ -304,7 +316,7 @@ SelectColumn.SetBuilder
 
 `@Columns`、`@GroupBy`、`@OrderBy` 同时使用时，执行顺序固定为投影、去重、分组、排序，与查询参数字段的声明顺序无关。多个字段的先后顺序由集合迭代顺序决定；需要多字段排序或固定构造函数参数顺序时，建议使用 `List`。
 
-`@OrderBy(nulls = NullOrder.LAST)` 使用 Hibernate 6.6 的 Criteria 扩展；不填写 `nulls` 时仍走标准 Criteria 排序，不额外指定 NULL 优先级。`FIRST` / `LAST` 会应用于本次集合中的每个排序字段，但不会改变这些字段在集合中的先后顺序。实际 SQL 由 Hibernate 方言生成。
+`@OrderBy(nulls = NullOrder.LAST)` 使用 Hibernate 的 Criteria 扩展；不填写 `nulls` 时仍走标准 Criteria 排序，不额外指定 NULL 优先级。`FIRST` / `LAST` 会应用于本次集合中的每个排序字段，但不会改变这些字段在集合中的先后顺序。实际 SQL 由 Hibernate 方言生成。
 
 动态选列也可以与聚合函数、`@Having`、排序和注解分页组合：`@Having` 过滤分组结果，`@Page` / `@PageSize` 对排序后的结果分页。同一个参数对象再次查询时会读取当前的选列和页码。调用方仍需保证本次选列、分组字段、排序字段和 `findType` 构成合法查询；`@OrderBy` 的元素是实体属性名，不是 `SelectColumn` 的别名。
 
@@ -316,7 +328,7 @@ SelectColumn.SetBuilder
 
 | 属性 | 类型 | 默认值 | 说明                                          |
 |------|------|--------|---------------------------------------------|
-| `value` | String | `""` | **数据库字段名**。指定要应用聚合函数的字段，默认使用字段属性名     |
+| `value` | String | `""` | **Java 实体属性名**。指定要应用函数的属性，默认使用参数字段名     |
 | `group` | int | `0` | **分组编号**。相同编号的多个 Having 条件会被组合在一起           |
 | `sort` | int | `0` | **同组排序**。在同一个 group 内，按 sort 值决定条件的执行顺序     |
 | `operator` | HavingOperatorEnum | `no` | **比较操作符**。定义聚合结果与参数值的比较方式                   |
@@ -398,7 +410,7 @@ SelectColumn.SetBuilder
 public class OrderHavingQueryParam {
     
     @GroupBy  // 必须先分组
-    private Set<String> groupFields = Set.of("status", "user_id");
+    private List<String> groupFields = List.of("status", "userId");
     
     // 示例1：简单聚合条件 - HAVING COUNT(*) > 5
     @Having(function = SqlFunctionEnum.countAll, operator = HavingOperatorEnum.gt)
@@ -451,7 +463,7 @@ public class PayQueryParam {
     private String orderIdLike; // 需要自己添加%，如："%123%"
     
     @OrderBy(OderByCondition.DESC)  // ORDER BY create_time DESC
-    private Set<String> orderFields = Set.of("createTime");
+    private List<String> orderFields = List.of("createTime");
     
     @Page  // 分页：页码
     private Integer page;
@@ -489,6 +501,7 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 | `delete(T entity)`                                 | `void`          | **删除实体**。根据实体对象删除数据库记录                     |
 
 #### 查询操作
+
 - 条件查询内实际使用的JpaQueryManager查询管理器
 
 | 方法                                               | 返回类型  | 说明                                                         |
@@ -524,10 +537,30 @@ java-impetus-jpa 提供了两个主要的 API 接口用于数据库操作：`Jpa
 
 
 ## 类型安全
+
 - 启动期类型校验：java-impetus-jpa 会对声明了类型约束的查询注解字段进行校验；不满足约束时抛出 [JpaProcessException.java](src/main/java/io/github/jockerCN/jpa/exception/JpaProcessException.java)，使查询参数注册失败。
 - `@Having` 会按 [HavingOperatorEnum.java](src/main/java/io/github/jockerCN/jpa/query/operator/HavingOperatorEnum.java) 的 `supportType()` 校验参数字段；这不等于框架已完整校验所选 SQL 函数的输入类型和数据库方言兼容性。[AllType.java](src/main/java/io/github/jockerCN/jpa/query/operator/AllType.java) 表示该处不限制 Java 字段类型。
 - 调用方仍需确认函数与实际字段、参数及数据库方言的组合是否合法；框架不对任意 SQL 语义做全面预检。
 
 
 ## 接口统一分页处理
+
 可查阅java-impetus-web-page文档[README.md](../java-impetus-web-page/README.md)
+
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-jpa` skill](../.agents/skills/java-impetus-jpa/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-jpa/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-jpa/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-jpa 为我的实体设计 @JpaQuery 参数、动态选列和注解分页，不引入框架基类。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。

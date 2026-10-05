@@ -1,5 +1,9 @@
 # java-impetus-web-page
 
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
+
 为 java-impetus-jpa 提供一个统一的 `GET /module/page` 分页入口。
 2.0 使用 Java 21、Spring Boot 4 / Spring MVC 7；Web 层只处理模块路由、请求参数绑定和分页响应，
 查询参数调整和默认字段值直接复用 JPA，不另加一套业务扩展接口。
@@ -40,7 +44,7 @@ public class Application {
 在查询参数类上声明 `io.github.jockerCN.page.PageModule`，无需再实现 `PageMapperImpl`：
 
 ```java
-import io.github.jockerCN.jpa.annotation.Equals;
+import io.github.jockerCN.jpa.annotation.where.Equals;
 import io.github.jockerCN.jpa.annotation.JpaQuery;
 import io.github.jockerCN.jpa.annotation.Page;
 import io.github.jockerCN.jpa.annotation.PageSize;
@@ -182,3 +186,21 @@ GROUP BY、HAVING 等对 count 的限制仍由 JPA 和调用方的查询设计�
 - 不提供 `PageQuery` 中间层；Web 模块不缓存参数和结果。
 - `QueryPair` 更新到 JPA 当前包路径；日期处理不再替 MVC 创建独立 conversion service。
 - 旧的绑定测试不再启动 MySQL；MVC 测试使用可控 JPA 替身，真实 SQL 能力由 JPA 测试验证。
+
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-web-page` skill](../.agents/skills/java-impetus-web-page/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-web-page/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-web-page/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-web-page 用 @PageModule 和 ComponentScan 接入统一分页接口。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。

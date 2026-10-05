@@ -1,6 +1,10 @@
-# java-impetus-common ![Static Badge](https://img.shields.io/badge/java-21-blue?style=flat&logo=openjdk&logoColor=white)
+# java-impetus-common
 
-java-impetus-common 是整个 java-impetus 框架的基础工具库，提供了丰富的通用工具类和核心功能组件。
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
+
+java-impetus-common 是独立的 Java 基础工具库，提供通用工具和可复用的流程编排能力。
 
 该模块不依赖 Spring 框架，提供数字计算、时间处理、流式处理、异步执行与流程编排等基础能力。加密和可选 Java 工具依赖分别由独立模块提供。
 
@@ -9,12 +13,11 @@ java-impetus-common 是整个 java-impetus 框架的基础工具库，提供了�
 ## 核心特性
 
 - **🔢 数字计算工具**：[NumberUtils.java](src/main/java/io/github/jockerCN/number/NumberUtils.java) 提供精确的 BigDecimal 计算工具，支持各种数学运算
-- **🔐 加密解密工具**：已迁至独立的 [java-impetus-crypto](../java-impetus-crypto/README.md) 模块
 - **📦 流式处理工具**：[StreamUtils.java](src/main/java/io/github/jockerCN/stream/StreamUtils.java)增强的 Stream API 工具，简化集合操作
 - **🔑 编号生成工具**：[SnowflakeIdGenerator.java](src/main/java/io/github/jockerCN/generator/SnowflakeIdGenerator.java) 与 [SerialNoUtils.java](src/main/java/io/github/jockerCN/generator/SerialNoUtils.java)提供 ID 和可组合业务编号
 - **🏷️ 枚举工具**：[EnumUtils.java](src/main/java/io/github/jockerCN/enums/EnumUtils.java)支持普通枚举的任意字段匹配
-- **📝 表达式解析**：已迁至可选的 [java-impetus-toolkit](../java-impetus-toolkit/README.md) 模块
-- **📊 二维码生成**：已迁至可选的 [java-impetus-toolkit](../java-impetus-toolkit/README.md) 模块
+- **日期时间**：`DateTimeUtils` 按目标类型解析常见格式，提供时间计算、差值、时区与时间戳转换
+- **结果与异步**：`Result`、`AsyncExecutorUtils` 和 `ProcessFlow`
 
 ## 快速开始
 
@@ -59,10 +62,6 @@ int exact = NumberUtils.convertToIntExact("2K"); // 小数或溢出时抛出异�
 
 `convertToInt` 保留原有截断行为；需要拒绝小数和整数溢出时使用 `convertToIntExact`。`RegexTemplate` 提供手机号、国际号码、邮箱、UUID、整数、小数等常用格式正则；这些表达式只检查格式，不验证号码分配或邮箱是否真实存在。`PASSWORD_COMPLEX_PATTERN` 匹配 8–64 位无空白的 ASCII 可打印字符，且须同时包含大小写字母、数字和标点符号；这是可选的格式策略，不检测常见密码或泄露密码。
 
-### 🔐 加密解密工具
-
-加密能力不再由 `common` 传递依赖。新项目按需引入 [java-impetus-crypto](../java-impetus-crypto/README.md)，并使用其 AES-GCM 接口；旧的 AES/ECB 接口仅保留用于解密已有数据。
-
 ### 📦 流式处理工具 - StreamUtils
 
 增强的集合流式处理工具，简化复杂的集合操作：
@@ -85,7 +84,7 @@ List<String> visibleNames = StreamUtils.mapNotNull(users, User::getVisibleName);
 BigDecimal totalAmount = StreamUtils.reduceAdd(orders, Order::getAmount);
 
 // 排序转换
-List<User> sortedUsers = StreamUtils.sortToList(users, User::getCreateTime.reversed());
+List<User> sortedUsers = StreamUtils.sortToList(users, Comparator.comparing(User::getCreateTime).reversed());
 ```
 
 空集合或 `null` 集合会提前返回空结果，不执行 mapper / predicate；返回的 List、Set 和 Map 均可修改。普通 `toSet`、`groupByKey`、`groupCount`、`toMap`、`partition` 使用哈希集合／映射，不保证迭代顺序；`sortToSet` 保留排序后的迭代顺序。`toMap` 遇到重复键默认保留第一个值，可传入合并函数自定义行为。`distinctByKey` 使用顺序流，结果保持输入顺序。
@@ -159,33 +158,6 @@ LocalDateTime utc = DateTimeUtils.fromEpochMillisUtc(millis);
 不提供额外 formatter 时，解析按目标类型使用独立的默认格式组：`LocalDate` 只接受完整日期，`LocalDateTime` 只接受无偏移的完整日期时间，`LocalTime` 只接受纯时间，`OffsetDateTime` 只接受带偏移的日期时间；不会把一个类型的默认格式混到另一个类型。默认格式覆盖 ISO、年在前的横线／斜杠／点号／中文日期、紧凑数字、可变小数秒、中文时间和 RFC 1123 等常见输入。未知业务格式可显式传入 `DateTimeFormatter`；全部候选不匹配时抛 `DateTimeParseException`。`yyyy-MM` / `MM-dd` 继续分别使用 `YearMonth` / `MonthDay`，不补造缺失字段；`null` 和空串保持返回 `null`。
 
 日期加减使用 `addDays/addMonths/addYears`，日期时间还支持 `addHours/addMinutes/addSeconds`；负数表示减。`daysBetween/monthsBetween/yearsBetween/hoursBetween/minutesBetween/secondsBetween` 返回从起点到终点的完整单位数，终点更早时为负。纯 `LocalTime` 的差值不推断跨天。毫秒时间戳可显式传 `ZoneId`，不传时在调用时读取系统默认时区；另有 `toEpochMillisUtc/fromEpochMillisUtc` 与 `toUtc/fromUtc/convertZone`。纯 `LocalTime` 转时间戳必须同时提供日期和时区。`FORMATTER_YMD_THMS_MILLIS_Z` 的 `Z` 仍是旧格式中的字面量，真实偏移请用 `parseOffsetDateTime`。
-
-### 📝 表达式解析工具 - ExpressionParse
-
-此工具已迁至 `java-impetus-toolkit`，Java 包名不变；使用前需引入该模块。支持数学表达式和 EL 表达式的解析计算：
-
-```java
-// 数学表达式计算
-Result<BigDecimal> result = ExpressionParse.evalNumberFormulaExpression(
-    "price * quantity * (1 + taxRate)", 
-    Map.of("price", 100, "quantity", 2, "taxRate", 0.1)
-);
-
-// EL 表达式判断
-boolean passed = ExpressionParse.elProcess("score.math > 80 && score.english > 75", student);
-```
-
-### 📊 二维码生成工具 - ZxingUtils
-
-此工具已迁至 `java-impetus-toolkit`，Java 包名不变；使用前需改为引入该模块。基于 ZXing 的二维码和条形码生成示例：
-
-```java
-// 生成二维码
-Result<BufferedImage> qrResult = ZxingUtils.createQR("https://example.com", 300, 300, false);
-
-// 生成条形码
-Result<BufferedImage> barcodeResult = ZxingUtils.createBarcode("1234567890", 400, 100, false);
-```
 
 ### 🔑 ID 生成工具 - SnowflakeIdGenerator
 
@@ -342,15 +314,33 @@ builder.failTogether(reserve, charge);
 
 一方抛异常时，框架记录其 `FAILED`，通知另一方协作停止；另一方若已上报成功，可在 `awaitTogether()` 返回后回滚，再结束为 `FAILED_BY_PEER`。组合双方都终结前，双方的后继都不会调度；`dependsOn` 的既有规则不变，后继仍可读取失败状态。`skip`／`stopNode` 使组合得到 `STOPPED`，不伪装成业务异常。业务操作在 `publishSuccess()` 之后应只继续等待、必要的补偿和返回；若继续执行可能失败的新业务，已获成功信号的同伴无法自动回到已结束的节点中回滚。回滚异常记在回滚节点自身，首个同伴异常仍保留。
 
-`timeout(...)` 是每次执行的流程级协作式期限：到期后不再启动新节点，向运行中节点发停止信号，唤醒 `awaitState`／`awaitTogether`；`FlowView.timedOut()` 区分超时与人工停止。`completion()` 仍需等待正在运行的用户代码退出；同步入口在调用线程运行的代码及任何忽略停止信号的阻塞操作都无法被强制撤销或立即终止。更多设计边界见 [flow-design.md](flow-design.md)。
+`timeout(...)` 是每次执行的流程级协作式期限：到期后不再启动新节点，向运行中节点发停止信号，唤醒 `awaitState`／`awaitTogether`；`FlowView.timedOut()` 区分超时与人工停止。`completion()` 仍需等待正在运行的用户代码退出；同步入口在调用线程运行的代码及任何忽略停止信号的阻塞操作都无法被强制撤销或立即终止。业务补偿与停止响应由调用方实现，框架不强制中断用户代码。
 
 ## 其他实用工具
 
-旧 `fluent` 与 `function` 包已从 common 移除；流程编排使用上文的 `ProcessFlow`。`auth` 模块仍有对旧函数接口的引用，留待其后续重构。
+旧 `fluent` 与 `function` 包已从 common 移除；流程编排使用上文的 `ProcessFlow`。
 
 ## 依赖库
 
 - **SLF4J、JSR-305 注解**：日志及现有空值标注
 
-common 不再为下游传递 Guava、`commons-collections4`、Commons Lang、Caffeine、ZXing、Jakarta EL、EvalEx 或 Jakarta Annotation API。原 `CacheManager` 仅为简单的 Caffeine 包装，已移除；缓存能力留待独立模块重新设计。常用 Java 工具依赖、`ExpressionParse` 与 `ZxingUtils` 可从 [java-impetus-toolkit](../java-impetus-toolkit/README.md) 选择引入。`jsr305` 仍供 `DateTimeUtils` 的 `javax.annotation.Nullable` 使用；依赖版本由 `java-impetus-dependencies` 管理。
+common 不再为下游传递 Guava、`commons-collections4`、Commons Lang、Caffeine、ZXing、Jakarta EL、EvalEx 或 Jakarta Annotation API。原 `CacheManager` 仅为简单的 Caffeine 包装，已移除；本模块不提供缓存管理器。常用 Java 工具依赖、`ExpressionParse` 与 `ZxingUtils` 可从 [java-impetus-toolkit](../java-impetus-toolkit/README.md) 选择引入。`jsr305` 仍供 `DateTimeUtils` 的 `javax.annotation.Nullable` 使用；依赖版本由 `java-impetus-dependencies` 管理。
+
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-common` skill](../.agents/skills/java-impetus-common/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-common/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-common/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-common 用 ProcessFlow 定义可复用流程，包含顺序节点、显式并行节点和运行快照。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。
 

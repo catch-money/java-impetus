@@ -1,5 +1,9 @@
 # java-impetus-spring-common
 
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
+
 Spring Boot 4 扩展模块，提供 Spring 容器访问、事务回调、Jakarta Validation 适配和少量 Spring 工具。Java Impetus 版本与仓库根 POM 保持一致；Spring Boot 版本由 BOM 管理。
 
 ## 自动配置与依赖
@@ -110,3 +114,21 @@ record Contact(String email, String phone) {}
 - 枚举校验不再依赖 `BaseEnum`。旧的 `@Validator(enumType = ..., enumProperty = ...)` 改为 `@EnumValue(enumType = ..., property = ...)`。
 - 旧的白名单和去重适配器用法分别改为 `@AllowedValues`、`@UniqueElements`；`@Validator` 现在只接受自定义 `adapter`。
 - `SpringExecutorHandle.execute(Supplier<T>)` 不再把失败 `Result` 强转为 `T`，而是传播异常。需要结果包装时使用 `executeResult`。
+
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-spring-common` skill](../.agents/skills/java-impetus-spring-common/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-spring-common/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-spring-common/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-spring-common 为业务操作添加提交后的事务回调和枚举字段校验。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。

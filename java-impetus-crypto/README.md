@@ -1,5 +1,9 @@
 # java-impetus-crypto
 
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
+
 独立的密码学工具模块，基于 Java 21 JCA/JCE，不依赖 Spring。2.0.0 提供对称加密、非对称加密、消息认证以及编解码/摘要工具；不提供 JWT、内置固定密钥或密钥托管。1.x 的 AES/ECB 接口和密文不在本模块的兼容范围内。
 
 ```xml
@@ -69,3 +73,21 @@ boolean valid = mac.verifySha256Hex("order:42", tag);
 ## 编解码与摘要：`CryptoUtils`
 
 `base64Encode/base64Decode` 处理二进制；`base64EncodeUtf8/base64DecodeUtf8` 处理字符串。`sha256`、`sha512`、`md5` 返回字节数组，`sha256Hex`、`sha512Hex`、`md5Hex` 返回小写十六进制。Base64 是编码而非加密；普通摘要不提供来源认证。MD5 只适用于非安全校验，不用于密码存储或安全验证。密码存储应使用专用的密码哈希方案，而非上述普通摘要或可逆加密。
+
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-crypto` skill](../.agents/skills/java-impetus-crypto/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-crypto/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-crypto/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-crypto 使用调用方提供的密钥，为业务数据添加 AES-GCM 加密与解密。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。

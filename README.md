@@ -1,85 +1,37 @@
+# Java Impetus
 
-# Java Impetus ![Java](https://img.shields.io/badge/Java-21-orange?style=flat&logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen?style=flat&logo=spring-boot&logoColor=white) ![Maven](https://img.shields.io/badge/Maven-Build%20Tool-blue?style=flat&logo=apache-maven&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-blue.svg) ![Ask DeepWiki](https://deepwiki.com/catch-money/java-impetus)
+[中文](README.md) | [English](README_EN.md)
 
-> 基于 Java 21 和 Spring Boot 4.x 的企业级快速开发框架
+![Java 21](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen?logo=spring-boot&logoColor=white) ![Version](https://img.shields.io/badge/Version-2.0.0-blue) [![MIT License](.github/assets/license-mit.svg)](LICENSE) [![DeepWiki](.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
 
-Java Impetus 是一个专注于提供**语法糖式工具类**和**框架扩展封装**的企业级开发类库。它不对现有框架进行任务的修改，而是在原有基础上提供更便捷的 API 和工具，以减少开发过程中繁琐的配置和封装。
+Java Impetus 是一组 Java 工具库和 Spring Boot 扩展，提供开箱即用的工具 API、注解查询和可选集成配置，减少重复模板代码。它不是单个可运行应用，也不替代 JPA、Spring MVC 或 Spring Security。
 
+2.0.0 基于 Java 21 与 Spring Boot 4；不维护 1.x 的接口兼容。模块按需引入，不要求使用整个库。
 
-## [java-impetus-jpa](java-impetus-jpa)
+## 模块与文档
 
-java-impetus-jpa 是一个基于 JPA 的增强工具库，通过注解驱动的方式简化复杂查询的编写。它提供了丰富的查询注解、自动化的 Repository 管理、以及声明式的查询参数处理
+| 模块 | 能力 | 中文 | English |
+| --- | --- | --- | --- |
+| java-impetus-dependencies | 独立 BOM：依赖与插件版本管理 | [文档](java-impetus-dependencies/README.md) | [Docs](java-impetus-dependencies/README_EN.md) |
+| java-impetus-common | Result、时间、数字、集合、枚举、编号、虚拟线程与流程编排 | [文档](java-impetus-common/README.md) | [Docs](java-impetus-common/README_EN.md) |
+| java-impetus-toolkit | 可选工具依赖、Jakarta EL、EvalEx、ZXing | [文档](java-impetus-toolkit/README.md) | [Docs](java-impetus-toolkit/README_EN.md) |
+| java-impetus-crypto | 独立 AES-GCM、RSA、HMAC、Base64 与摘要工具 | [文档](java-impetus-crypto/README.md) | [Docs](java-impetus-crypto/README_EN.md) |
+| java-impetus-spring-common | Spring 容器、配置、资源、事务回调与校验 | [文档](java-impetus-spring-common/README.md) | [Docs](java-impetus-spring-common/README_EN.md) |
+| java-impetus-jackson | Jackson 3 默认 JsonMapper 与 JSON 便捷 API | [文档](java-impetus-jackson/README.md) | [Docs](java-impetus-jackson/README_EN.md) |
+| java-impetus-redis | Redis 静态工具、Redisson 自动配置、计数与锁 | [文档](java-impetus-redis/README.md) | [Docs](java-impetus-redis/README_EN.md) |
+| java-impetus-jpa | 注解驱动 Criteria 查询、动态选列、分页与结果处理 | [文档](java-impetus-jpa/README.md) | [Docs](java-impetus-jpa/README_EN.md) |
+| java-impetus-web-common | 可选 CORS、日志、JSON HTTP 转换、异常响应与绑定 | [文档](java-impetus-web-common/README.md) | [Docs](java-impetus-web-common/README_EN.md) |
+| java-impetus-web-page | 单一模块分页接口、注解映射与请求绑定 | [文档](java-impetus-web-page/README.md) | [Docs](java-impetus-web-page/README_EN.md) |
+| java-impetus-auth | 动态认证策略、密码/TOTP、凭据、方法保护与可选 Security 桥接 | [文档](java-impetus-auth/README.md) | [Docs](java-impetus-auth/README_EN.md) |
+| java-impetus-native-image | 实验性脚手架，**不在 2.0.0 发布范围** | [文档](java-impetus-native-image/README.md) | [Docs](java-impetus-native-image/README_EN.md) |
 
-使用方式和内容可查询文档[README.md](java-impetus-jpa/README.md)
+原 auth-impl、Gson、独立 JSON 抽象、simple-security 等旧入口不在当前版本中。加密不使用固定公共密钥；复杂多表 SQL 与外部认证协议继续交给应用或成熟框架。
 
-## [java-impetus-spring-common](java-impetus-spring-common)
-java-impetus-spring-common 封装了[Spring Boot](https://github.com/spring-projects/spring-boot) 开发过程中的一些常用操作
+## 快速开始
 
-使用方式和内容可查阅文档[README.md](java-impetus-spring-common/README.md)
+环境：Java 21+；Spring 集成模块使用 Spring Boot 4.1.1 / Spring Framework 7；本地构建使用 Maven 3.8+。
 
-## [java-impetus-web-common](java-impetus-web-common)
-java-impetus-web-common 封装了web开发过程中的跨域处理、异常统一处理、日志处理、消息处理等操作
-
-使用方式和内容可查阅文档[README.md](java-impetus-web-common/README.md)
-
-## [java-impetus-web-page](java-impetus-web-page)
-
-java-impetus-web-page 基于[java-impetus-jpa](java-impetus-jpa)实现分页查询的统一处理,只需单个接口即可实现所有单表的分页查询
-
-使用方式和内容可查阅文档[README.md](java-impetus-web-page/README.md)
-
-## [java-impetus-common](java-impetus-common)
-java-impetus-common 提供了开发过程中的一些常用的工具类
-
-使用方式和内容可查阅文档[README.md](java-impetus-common/README.md)
-
-## [java-impetus-toolkit](java-impetus-toolkit)
-java-impetus-toolkit 是可选的 Java 工具集依赖入口，提供常用集合工具依赖、表达式解析及二维码、条形码工具
-
-使用方式和内容可查阅文档[README.md](java-impetus-toolkit/README.md)
-
-## [java-impetus-crypto](java-impetus-crypto)
-java-impetus-crypto 提供独立的加密、哈希与旧密文兼容能力，不依赖 Spring
-
-使用方式和内容可查阅文档[README.md](java-impetus-crypto/README.md)
-
-## 模块 Skills
-
-第三方项目可按依赖模块单独选用 skill；目录与复制说明见 [.agents/skills/README.md](.agents/skills/README.md)。目前已提供 [java-impetus-common skill](.agents/skills/java-impetus-common/SKILL.md)。
-
-## 🚀 快速开始
-
-### 📋 环境要求
-
-- **Java**: 21+
-- **Spring Boot**: 4.x
-- **Maven**: 3.8+
-
-### 本地构建与发布签名
-
-普通构建及本地安装不执行 GPG 签名。BOM 不属于根 reactor，需要先单独安装；当前发布范围不包含 `java-impetus-native-image`：
-
-```bash
-mvn -f java-impetus-dependencies/pom.xml install
-mvn -pl '!java-impetus-native-image' -am -DskipTests install
-```
-
-发布构建通过 `-Prelease` 显式启用签名，并在 `verify` 阶段生成签名文件，先于 `install` 和 `deploy`。因此 `-Prelease install` 仍会签名，但不会上传；Maven Central 发布不能跳过签名。`release` 是构建 profile，而不是 Maven 生命周期阶段。
-
-签名私钥保存在开发机或 CI 的密钥库中，不得提交到仓库；Maven 的 `gpg.executable`、`gpg.homedir` 和 `gpg.keyname` 应与实际密钥一致。
-
-发布脚本使用 `central-publishing-maven-plugin` 向 [Central Publisher Portal](https://central.sonatype.com) 发布，不再使用旧 OSSRH 地址或 `altDeploymentRepository`。先发布独立 BOM，再发布根项目和库模块；在仓库根目录执行：
-
-```bash
-bash deploy/deploy_dependencies.sh
-bash deploy/deploy_impetus.sh
-```
-
-两个脚本都根据自身位置定位项目目录，不依赖调用时的工作目录，并保持 `-Prelease` 签名；第二个脚本排除 `java-impetus-native-image`。`settings.xml` 中 `sonatype` server 的凭据必须是 Portal 生成的 User Token。当前 `release` 配置启用 `autoPublish`，执行上述脚本会实际上传并在验证通过后自动公开发布，不是本地安装或演练。
-
-### 📥 版本管理
-
-在你的 `pom.xml` 中添加依赖管理：
+先导入 BOM，再添加实际使用的模块：
 
 ```xml
 <dependencyManagement>
@@ -93,13 +45,31 @@ bash deploy/deploy_impetus.sh
         </dependency>
     </dependencies>
 </dependencyManagement>
+
+<dependencies>
+    <dependency>
+        <groupId>io.github.jocker-cn</groupId>
+        <artifactId>java-impetus-common</artifactId>
+    </dependency>
+</dependencies>
 ```
 
-## 🐛 报告问题
-如果你发现了 bug 或有功能建议，请在 [Issues](https://github.com/catch-money/java-impetus/issues) 中创建一个新的问题。
+BOM 只管理版本，不会引入全部库。Spring starters 在部分模块中为 `provided`，由应用明确提供运行环境；Redis、Security 等可选集成也需按模块文档选择依赖。Maven groupId 是 `io.github.jocker-cn`，Java 包根是大小写敏感的 `io.github.jockerCN`。
 
-## 👨‍💻 作者
-**jockerCN** - [GitHub](https://github.com/jocker-cn)
+## Skills：按模块指导编码助手
 
-# License
-Java Impetus 基于 [MIT License](LICENSE) 开源协议。
+10 个使用方模块各自提供独立 skill，位于 [`.agents/skills/`](.agents/skills/README.md)。选择项目实际依赖的模块，把对应**完整目录**复制到使用方项目的 `.agents/skills/`，不要只复制 `SKILL.md`。
+
+例如使用 JPA：
+
+```text
+$java-impetus-jpa 为我的 Customer 实体添加注解查询、动态选列和分页。
+```
+
+各模块 README 均提供入口和调用示例；个人全局安装、按模块下载、目录结构与注意事项见 [Skills 使用说明](.agents/skills/README.md)。Skill 是 AI 编码说明，不会安装 Maven 依赖、自动启用组件或改变应用行为。BOM 与实验性 native-image 暂无独立使用方 skill。
+
+## 反馈与协议
+
+通过 [GitHub Issues](https://github.com/catch-money/java-impetus/issues) 反馈问题。作者：[jockerCN](https://github.com/jocker-cn)。
+
+Java Impetus 使用 [MIT License](LICENSE)。

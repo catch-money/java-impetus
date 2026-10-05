@@ -1,5 +1,9 @@
 # java-impetus-redis
 
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
+
 面向 Spring Boot 4 的 Redis 静态便捷 API。模块提供 `RedisUtils` 与 `RedissonUtils`，通过 `JavaImpetusRedissonAutoConfiguration` 统一装配工具 Bean 和默认 `RedissonClient`。
 
 应用引入 `java-impetus-redis:2.0.0`，并自行引入 `spring-boot-starter-data-redis` 提供 Spring Data Redis 运行环境和连接驱动；本模块将该 starter 声明为 `provided`。连接配置沿用 `spring.data.redis.*`，无需另写一套 Redisson 连接属性。
@@ -57,3 +61,21 @@ public Config redissonConfig() {
 `RedissonUtils` Bean 在启动时一次性注入客户端，业务代码直接调用 `RedissonUtils.increment(key, duration)` 或 `getLock(key)`，每次调用不会再查询 Spring 容器。`increment` 保持原有的 `getAndIncrement` 语义，返回**递增前的值**；`duration` 非空时仅在 key 尚无 TTL 时设置过期时间，不覆盖已存在的 TTL。默认不替用户指定 codec；使用 Redisson 的对象存取 API 时，按业务对象和共享数据格式选择原生 codec。
 
 这些工具封装的是常用操作，不替代 Spring Data Redis 或 Redisson 的完整 API。涉及事务、Lua 脚本、复杂管道和锁所有权时，直接使用底层客户端。
+
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-redis` skill](../.agents/skills/java-impetus-redis/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-redis/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-redis/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-redis 在应用现有 Redis 配置上使用 RedisUtils，并提供带过期时间的计数器。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。

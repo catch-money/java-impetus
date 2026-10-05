@@ -1,6 +1,12 @@
 # Java Impetus Skills
 
-面向使用方的 skill 按 Maven 模块独立存放：`.agents/skills/<artifactId>/`。每个目录包含自己的 `SKILL.md` 和所需参考资料，可单独复制或安装，不依赖其他模块的 skill。以后新增模块时沿用同一结构；只选择项目实际引入的模块。
+[中文](README.md) | [English](README_EN.md) | [项目首页](../../README.md)
+
+[![MIT License](../../.github/assets/license-mit.svg)](../../LICENSE)
+
+面向第三方使用方的 skills 按 Maven 模块独立提供。它们帮助编码助手按当前 2.0.0 API 接入工具、配置和扩展点，不会引入依赖或执行初始化。只选应用实际使用的模块；每个 skill 可独立安装，不要求把其他模块 skills 一起装上。
+
+## 选择模块
 
 | 使用方 skill | 对应依赖 | 用途 |
 | --- | --- | --- |
@@ -15,6 +21,56 @@
 | [java-impetus-jpa](java-impetus-jpa/SKILL.md) | `io.github.jocker-cn:java-impetus-jpa` | 注解驱动查询、动态选列、分页与结果处理 |
 | [java-impetus-auth](java-impetus-auth/SKILL.md) | `io.github.jocker-cn:java-impetus-auth` | 动态认证策略、密码／TOTP、凭据生命周期、访问规则与可选 Security 适配 |
 
-`extend-jpa-query`、`maintain-impetus-autoconfiguration` 属于本仓库维护者使用的开发 skill，不是第三方接入某个模块所必需的内容。
+`java-impetus-dependencies` 是 BOM，`java-impetus-native-image` 是不发布的实验脚手架，两者暂无独立使用方 skill。`extend-jpa-query` 和 `maintain-impetus-autoconfiguration` 面向本库维护者，不是第三方接入所必需的内容。
 
-复制选中的**整个目录**到使用方项目的 `.agents/skills/`，或安装到个人 skills 目录；不要只复制 `SKILL.md`，否则其 `references/` 中的用法约定会缺失。skill 是编码指导，不会替代应用的 Maven 依赖。
+## 获取与安装
+
+在 GitHub 仓库的版本分支中选择 `.agents/skills/<模块名>/`。可以下载仓库 ZIP 后只复制所需目录，或让 Codex 的 skill-installer 只安装指定模块：
+
+```text
+$skill-installer 从 https://github.com/catch-money/java-impetus 的 2.0.0 分支安装 .agents/skills/java-impetus-jpa
+```
+
+手动安装时复制**整个目录**，包括 `SKILL.md`、`references/` 和其他配套文件：
+
+```text
+使用方项目/
+  .agents/
+    skills/
+      java-impetus-jpa/
+        SKILL.md
+        references/
+        ...
+```
+
+项目安装位置为 `<项目>/.agents/skills/<模块名>/`。个人全局安装可放在 `~/.agents/skills/<模块名>/`，Windows 对应用户目录下的 `.agents/skills/`。同一名称不要同时重复安装到多个位置；Codex 不会把同名内容自动合并。若未显示新安装的 skill，可重启 Codex。[官方 skills 说明](https://learn.chatgpt.com/docs/build-skills)
+
+使用其他支持 Agent Skills 的编码助手时，完整保留目录内容，按该工具自己的安装与选择方式使用；不假设所有工具都使用同一安装路径。
+
+## 在请求中使用
+
+先按模块 README 配好 Maven 依赖、运行环境及需要的 Bean／注解。随后在 Codex 的 skill 选择器中选中模块，或明确写出 `$<skill 名称>`：
+
+```text
+$java-impetus-jpa 为我的 Customer 实体编写 @JpaQuery 参数，
+支持按 ownerId 筛选、动态 Columns 和注解分页，不继承框架基类。
+```
+
+```text
+$java-impetus-common 使用 ProcessFlow 定义可复用流程，
+保持默认顺序执行，只把显式 asyncThen 节点并行化。
+```
+
+一个请求可以明确选多个模块，例如同时使用 JPA 与 web-page。支持隐式匹配的工具也可以按任务描述选择 skill；显式指定更便于确认本次使用哪个模块。[官方调用说明](https://learn.chatgpt.com/docs/build-skills)
+
+## 使用边界
+
+- Skills 面向**接入和使用**，不是自动重构本库的指令。
+- 不替代模块 README、Maven 依赖或应用配置，不保证任意生成代码无需核对即可运行。
+- 版本升级时，同时更新相关 skill 目录与 Maven 模块；不要把 1.x 文档与 2.0.0 API 混用。
+- 各目录内的 references 使用相对路径，不要只复制单个 SKILL.md。
+- 不需要把所有维护者 skills 或整个仓库放进第三方应用。
+
+## License
+
+Skills 与本库使用 [MIT License](../../LICENSE)。

@@ -1,4 +1,8 @@
-# Java Impetus Auth 2.0
+# java-impetus-auth
+
+[中文](README.md) | [English](README_EN.md) | [项目首页](../README.md)
+
+![Java 21](https://img.shields.io/badge/Java-21-orange) [![MIT License](../.github/assets/license-mit.svg)](../LICENSE) [![DeepWiki](../.github/assets/deepwiki.svg)](https://deepwiki.com/catch-money/java-impetus)
 
 认证基础设施，提供启动绑定的批量路径规则、Spring 方法拦截及显式检查，不提供用户/RBAC 表、Controller、Servlet Filter 或默认 SecurityFilterChain。2.0 不兼容原来的 auth/auth-impl；auth-impl 和旧的数据库/Web/Token 模板已移除。
 
@@ -842,7 +846,7 @@ id 在注册期唯一，proofType 校验入参类型，只执行被本次选择�
 - resend(..., newOperationId)：显式重发原挑战，不重新 begin，保持 challengeId。
 - replaceChallenge(..., newOperationId)：不能重发/挑战过期时，在原阶段创建新版本。旧挑战失效，不重置事务期限/尝试数。
 - 明确提交失败不通知；结果不明先确认同一操作，不盲目重开。
-- 进程在提交后、通知前退出可能未发送；本批无持久 outbox 或自动可靠投递。
+- 进程在提交后、通知前退出可能未发送；不提供持久 outbox 或自动可靠投递。
 
 终态不重新激活；终止清理挑战/证据，保留有限期限的元数据，重开使用新的发起操作标识。保留期后删除去重记录，不是无限期防重放表。
 
@@ -966,10 +970,26 @@ mvn -pl java-impetus-auth -am "-Dtest=Auth*Test,RedisAuthStringCodecTest" -Dsure
 
 扩展回归覆盖三种方式的可选注册、challenge-first、跨调用归属、原提交回执恢复、过期不调用 provider、通知失败后显式重发、替换不重置次数；凭据覆盖固定/活动 key、历史 key 恢复与退役、KEEP/ROTATE、初始 attributes、终态清理、类型白名单/大小和 50 请求并发签发/轮换中的快照一致性。
 
-源码、测试源码与 JAR/source/Javadoc 产物验证使用以下命令，不触发 verify 阶段的签名或发布；`-DskipTests` 不代表测试已运行：
+编译与打包可使用以下命令；`-DskipTests` 不代表测试已运行：
 
 ```shell
 mvn -pl java-impetus-auth -am -DskipTests package
 ```
 
-使用方 skill 可独立复制 [java-impetus-auth](../.agents/skills/java-impetus-auth/SKILL.md) 的整个目录，包含基础接入、规则、清理、凭据及 Security 边界说明。
+## Skills：让编码助手使用本模块
+
+本模块提供独立的 [`java-impetus-auth` skill](../.agents/skills/java-impetus-auth/SKILL.md)，面向第三方项目的接入与使用，不用于修改库内部实现。
+
+1. 从仓库取得 `.agents/skills/java-impetus-auth/` **整个目录**，保留 `references/` 等配套文件。
+2. 复制到使用方项目的 `.agents/skills/java-impetus-auth/`；个人全局安装与按模块下载见 [Skills 使用说明](../.agents/skills/README.md)。
+3. 在 Codex 中选择该 skill，或在请求中显式写出其名称，例如：
+
+```text
+$java-impetus-auth 配置密码与 TOTP 策略，先使用本地存储，不启用 Spring Security。
+```
+
+Skill 是编码助手的接入说明，不会安装 Maven 依赖、自动启用 Bean 或替代应用配置；依赖与运行环境仍按本文配置。
+
+## License
+
+本模块使用 [MIT License](../LICENSE)。
